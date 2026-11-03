@@ -418,7 +418,7 @@ El jugador empieza con el negocio 1 gratis. Todos los valores viven en un archiv
 
 ### 9.4 Prestigio
 
-Se ganan Parejas Reunidas (el prestigio se llama Centrifugado) según el dinero ganado en toda la vida del jugador (*E_vida*, no solo desde el último reinicio). *S* es la constante de escala, ajustable en config; su valor inicial es `1e12`, un placeholder no verificado que el simulador calibra para que el primer reinicio llegue entre los 45 y 90 minutos de juego.
+Se ganan Parejas Reunidas (el prestigio se llama Centrifugado) según el dinero ganado en toda la vida del jugador (*E_vida*, no solo desde el último reinicio). *S* es la constante de escala, ajustable en config; su valor inicial era `1e12` (placeholder); el simulador lo calibró a `1e14` (ver `docs/BALANCE.md`) para que el primer reinicio llegue entre los 45 y 90 minutos de juego.
 
 ```latex
 P_{total} = \left\lfloor 150 \cdot \sqrt{\frac{E_{vida}}{S}} \right\rfloor
@@ -443,7 +443,7 @@ P_{total} = \left\lfloor 150 \cdot \sqrt{\frac{E_{vida}}{S}} \right\rfloor
 - Usar una clase de número grande (mantisa + exponente) desde el día uno; los `double` revientan en \~1.8×10³⁰⁸, como le pasó a AdCap.
 - **Ojo con el español:** "billón" en español es 10¹², pero "billion" en inglés es 10⁹. Para evitar confusión, usar mil, millón, mil millones (MM), billón… o sufijos cortos.
 - Ajuste en configuración: nombres, sufijos cortos o notación científica (queja #12).
-- **Formato por defecto (pendiente de confirmar):** sufijos K, M, B, T (convención de los idle games) y notación científica desde 1e15. Ojo: la "B" es 10⁹ (en México "billón" es 10¹²); el modo "nombres" usa mil millones, billón, etc.
+- **Formato por defecto (confirmado):** sufijos K, M, B, T (convención de los idle games) y luego aa, ab, ac… az, ba, bb… La notación científica es un ajuste opcional. Ojo: la "B" es 10⁹ (en México "billón" es 10¹²); el modo "nombres" usa mil millones, billón, etc.
 - **En JSON y en el save:** los números grandes se guardan como string en notación científica (`"2.15e10"`) o como mantisa y exponente, nunca como decimal de 64 bits. Punto decimal en toda la spec.
 
 ### 9.7 Guardado
@@ -729,7 +729,7 @@ Fondo de un solo color liso. Sin texto, sin marcas de agua, sin personajes de ot
 - Tope offline: 4 h base, ampliable hasta 24 h.
 - Notificaciones: se piden entre el minuto 10 y 20 de juego; máximo una al día.
 - Nombre: Calcetinópolis.
-- Pendiente: formato de sufijos de números (ver 9.6).
+- Formato de números: K, M, B, T, aa, ab… (ver 9.6).
 
 ### 12.2 Fuentes
 

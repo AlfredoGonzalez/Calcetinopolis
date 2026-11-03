@@ -1,0 +1,270 @@
+import 'dart:math' as math;
+
+import '../big_num.dart';
+import '../config/economy_config.dart';
+import '../state/game_state.dart';
+import 'formulas.dart';
+
+/// Núcleo de economía: lógica pura y determinista, sin UI (spec 11.2).
+class Economy {
+  Economy(this.config);
+
+  final EconomyConfig config;
+
+  GameState newGame() => GameState.initial(config.businesses.length);
+
+  // ---------------------------------------------------------------- consulta
+
+  /// Cuántos umbrales de velocidad cumple [owned].
+  int _thresholdsReached(int owned) =>
+      config.thresholds.where((t) => owned >= t).length;
+
+  /// Halvings del ciclo: propios + globales ("Everything").
+  int halvings(GameState s, int i) {
+    final own = _thresholdsReached(s.businesses[i].owned);
+    final minOwned = s.businesses.map((b) => b.owned).reduce(math.min);
+    return own + _thresholdsReached(minOwned);
+  }
+
+  double cycleSeconds(GameState s, int i) => Formulas.cycleSeconds(
+    config.businesses[i].baseCycleSeconds,
+    halvings(s, i),
+  );
+
+  /// Multiplicador de ganancia por pasos grandes de unidades (desde 500).
+  double profitUnlockMultiplier(int owned) {
+    if (owned < config.profitStepStart) return 1;
+    final steps =
+        (owned - config.profitStepStart) ~/ config.profitStepEvery + 1;
+    return math.pow(config.profitStepMultiplier, steps).toDouble();
+  }
+
+  /// Producto de multiplicadores M (sin el boost de anuncio).
+  BigNum multiplier(GameState s, int i) {
+    final b = config.businesses[i];
+    var m = BigNum.one;
+    for (final u in config.upgrades) {
+      if (!s.upgrades.contains(u.id)) continue;
+      if (u.target == 'all' || u.target == b.id) m = m.mulDouble(u.multiplier);
+    }
+    m = m.mulDouble(profitUnlockMultiplier(s.businesses[i].owned));
+    m = m * Formulas.pairsMultiplier(s.pairsClaimed, config.prestige.pairBonus);
+    return m;
+  }
+
+  BigNum incomePerCycle(GameState s, int i) => Formulas.cycleIncome(
+    config.businesses[i].baseIncome,
+    s.businesses[i].owned,
+    multiplier(s, i),
+  );
+
+  BigNum incomePerSecond(GameState s, int i) =>
+      incomePerCycle(s, i) / BigNum.fromDouble(cycleSeconds(s, i));
+
+  /// $/s total de los negocios con manager (base de las ganancias offline).
+  BigNum managedIncomePerSecond(GameState s) {
+    var total = BigNum.zero;
+    for (var i = 0; i < s.businesses.length; i++) {
+      final b = s.businesses[i];
+      if (b.owned > 0 && b.hasManager) total += incomePerSecond(s, i);
+    }
+    return total;
+  }
+
+  // ------------------------------------------------------------------ dinero
+
+  void addMoney(GameState s, BigNum amount) {
+    s.money += amount;
+    s.lifetimeEarnings += amount;
+  }
+
+  // ------------------------------------------------------------------ tick
+
+  /// Avanza el juego [dt] segundos. Determinista.
+  ///
+  /// Con manager la producción es continua: ingreso = I * dt / T, sin importar
+  /// si el ciclo es largo o menor a 0.25 s (spec 9.3 regla 3). Sin manager,
+  /// el negocio paga una vez al completar un ciclo iniciado con [tap].
+  void tick(GameState s, double dt) {
+    if (dt <= 0) return;
+    final boosted = math.min(dt, s.boostSeconds);
+    final boostFactor = (dt + (config.boost.multiplier - 1) * boosted) / dt;
+
+    for (var i = 0; i < s.businesses.length; i++) {
+      final b = s.businesses[i];
+      if (b.owned == 0) continue;
+      final t = cycleSeconds(s, i);
+      if (b.hasManager) {
+        final cycles = dt / t;
+        addMoney(s, incomePerCycle(s, i).mulDouble(cycles * boostFactor));
+        b.progress = (b.progress + cycles) % 1.0;
+      } else if (b.running) {
+        b.progress += dt / t;
+        if (b.progress >= 1) {
+          addMoney(s, incomePerCycle(s, i).mulDouble(boostFactor));
+          b.progress = 0;
+          b.running = false;
+        }
+      }
+    }
+    s.boostSeconds = math.max(0, s.boostSeconds - dt);
+  }
+
+  /// El jugador toca un negocio sin manager para iniciar su ciclo.
+  bool tap(GameState s, int i) {
+    final b = s.businesses[i];
+    if (b.owned == 0 || b.hasManager || b.running) return false;
+    b.running = true;
+    b.progress = 0;
+    return true;
+  }
+
+  // ------------------------------------------------------------------ compras
+
+  bool isUnlocked(GameState s, int i) => s.businesses[i].owned > 0;
+
+  int _room(GameState s, int i) =>
+      config.businesses[i].maxOwned - s.businesses[i].owned;
+
+  BigNum costOf(GameState s, int i, int n) {
+    final c = config.businesses[i];
+    return Formulas.costBulk(
+      c.baseCost,
+      c.coefficient,
+      s.businesses[i].owned,
+      n,
+    );
+  }
+
+  int maxAffordable(GameState s, int i) {
+    final c = config.businesses[i];
+    return Formulas.maxAffordable(
+      c.baseCost,
+      c.coefficient,
+      s.businesses[i].owned,
+      s.money,
+      limit: _room(s, i),
+    );
+  }
+
+  /// Unidades que faltan para el siguiente umbral de velocidad; null si ya no hay.
+  int? unitsToNextThreshold(GameState s, int i) {
+    final owned = s.businesses[i].owned;
+    for (final t in config.thresholds) {
+      if (owned < t) return t - owned;
+    }
+    return null;
+  }
+
+  bool buy(GameState s, int i, int n) {
+    if (n <= 0 || n > _room(s, i)) return false;
+    final cost = costOf(s, i, n);
+    if (cost > s.money) return false;
+    s.money -= cost;
+    s.businesses[i].owned += n;
+    return true;
+  }
+
+  /// Compra hasta alcanzar el siguiente umbral (botón "Siguiente umbral").
+  bool buyToNextThreshold(GameState s, int i) {
+    final n = unitsToNextThreshold(s, i);
+    return n != null && buy(s, i, n);
+  }
+
+  bool buyMax(GameState s, int i) {
+    final n = maxAffordable(s, i);
+    return n > 0 && buy(s, i, n);
+  }
+
+  bool buyManager(GameState s, int i) {
+    final b = s.businesses[i];
+    final cfg = config.businesses[i].manager;
+    if (b.hasManager || b.owned == 0 || cfg.cost > s.money) return false;
+    s.money -= cfg.cost;
+    b.hasManager = true;
+    b.running = false;
+    return true;
+  }
+
+  bool buyUpgrade(GameState s, String id) {
+    if (s.upgrades.contains(id)) return false;
+    final u = config.upgrades.firstWhere((u) => u.id == id);
+    if (u.cost > s.money) return false;
+    s.money -= u.cost;
+    s.upgrades.add(id);
+    return true;
+  }
+
+  // ------------------------------------------------------------------ boost
+
+  /// Una vista suma horas de boost, con tope (spec 10.1).
+  void addBoostView(GameState s) {
+    final add = config.boost.hoursPerView * 3600;
+    s.boostSeconds = math.min(
+      s.boostSeconds + add,
+      config.boost.maxHours * 3600,
+    );
+  }
+
+  // ------------------------------------------------------------------ offline
+
+  double offlineCapSeconds(double capHours) =>
+      math.min(capHours, config.offline.maxCapHours) * 3600;
+
+  /// Ganancia offline: $/s de negocios con manager * tiempo, con tope.
+  /// Tiempo negativo (reloj atrasado) cuenta como cero. No modifica el estado.
+  BigNum offlineGain(GameState s, double secondsAway, {double? capHours}) {
+    final cap = offlineCapSeconds(capHours ?? config.offline.baseCapHours);
+    final secs = secondsAway.isNaN ? 0.0 : secondsAway.clamp(0.0, cap);
+    if (secs <= 0) return BigNum.zero;
+    return managedIncomePerSecond(s).mulDouble(secs);
+  }
+
+  // ------------------------------------------------------------------ prestigio
+
+  /// P_total con la E_vida actual.
+  BigNum pairsTotal(GameState s) => Formulas.prestigeTotal(
+    s.lifetimeEarnings,
+    config.prestige.scale,
+    base: config.prestige.base,
+  );
+
+  /// Parejas por cobrar al centrifugar ahora.
+  BigNum pairsPending(GameState s) {
+    final d = pairsTotal(s) - s.pairsClaimed;
+    return d.isPositive ? d : BigNum.zero;
+  }
+
+  /// "Buen momento": por cobrar >= actuales (y hay algo por cobrar).
+  bool isGoodTimeToPrestige(GameState s) {
+    final pending = pairsPending(s);
+    return pending.isPositive && pending >= s.pairsClaimed;
+  }
+
+  /// Multiplicador de ganancias después de centrifugar.
+  BigNum multiplierAfterPrestige(GameState s) => Formulas.pairsMultiplier(
+    s.pairsClaimed + pairsPending(s),
+    config.prestige.pairBonus,
+  );
+
+  /// Centrifugado. Devuelve las Parejas nuevas (0 = no hace nada).
+  /// Conserva Parejas, Hilvanes y E_vida; reinicia dinero, negocios,
+  /// managers, upgrades y boost.
+  BigNum prestige(GameState s) {
+    final pending = pairsPending(s);
+    if (!pending.isPositive) return BigNum.zero;
+    s.pairsClaimed += pending;
+    s.hilvanes += (pending.mulDouble(config.prestige.hilvanesPerPair)).floor();
+    s.money = BigNum.zero;
+    s.upgrades.clear();
+    s.boostSeconds = 0;
+    for (var i = 0; i < s.businesses.length; i++) {
+      s.businesses[i]
+        ..owned = i == 0 ? 1 : 0
+        ..hasManager = false
+        ..progress = 0
+        ..running = false;
+    }
+    return pending;
+  }
+}

@@ -1,0 +1,420 @@
+{
+  "businesses": [
+    {
+      "id": "tendedero",
+      "name": "Tendedero de pelusas",
+      "base_cost": "4e0",
+      "coefficient": 1.07,
+      "base_cycle_seconds": 1,
+      "base_income": "1e0",
+      "max_owned": 2000,
+      "manager": {
+        "name": "Doña Pinza",
+        "pattern": "rayas",
+        "cost": "1e3"
+      }
+    },
+    {
+      "id": "cesto",
+      "name": "Cesto de ropa sucia",
+      "base_cost": "5e1",
+      "coefficient": 1.14,
+      "base_cycle_seconds": 3,
+      "base_income": "4e1",
+      "max_owned": 2000,
+      "manager": {
+        "name": "Sir Zurcido",
+        "pattern": "parches",
+        "cost": "1.5e4"
+      }
+    },
+    {
+      "id": "rincon",
+      "name": "Rincón bajo el sofá",
+      "base_cost": "6e2",
+      "coefficient": 1.13,
+      "base_cycle_seconds": 6,
+      "base_income": "4e2",
+      "max_owned": 2000,
+      "manager": {
+        "name": "Madame Pelusa",
+        "pattern": "lunares",
+        "cost": "1e5"
+      }
+    },
+    {
+      "id": "lavanderia",
+      "name": "Lavandería de burbujas",
+      "base_cost": "7.2e3",
+      "coefficient": 1.12,
+      "base_cycle_seconds": 12,
+      "base_income": "3.6e3",
+      "max_owned": 2000,
+      "manager": {
+        "name": "Capitán Espuma",
+        "pattern": "ondas azules",
+        "cost": "5e5"
+      }
+    },
+    {
+      "id": "secadora",
+      "name": "Secadora giratoria",
+      "base_cost": "8.64e4",
+      "coefficient": 1.11,
+      "base_cycle_seconds": 30,
+      "base_income": "4e4",
+      "max_owned": 2000,
+      "manager": {
+        "name": "Remolina Mareada",
+        "pattern": "espirales",
+        "cost": "1.2e6"
+      }
+    },
+    {
+      "id": "cajon",
+      "name": "Cajón de calcetines",
+      "base_cost": "1.04e6",
+      "coefficient": 1.1,
+      "base_cycle_seconds": 90,
+      "base_income": "4.5e5",
+      "max_owned": 2000,
+      "manager": {
+        "name": "Marita Orden",
+        "pattern": "cuadros",
+        "cost": "1.4e7"
+      }
+    },
+    {
+      "id": "taller",
+      "name": "Taller de tejido",
+      "base_cost": "1.24e7",
+      "coefficient": 1.09,
+      "base_cycle_seconds": 300,
+      "base_income": "5.5e6",
+      "max_owned": 2000,
+      "manager": {
+        "name": "Aguja Pérez",
+        "pattern": "rombos",
+        "cost": "1.3e8"
+      }
+    },
+    {
+      "id": "fabrica",
+      "name": "Fábrica de estambre",
+      "base_cost": "1.5e8",
+      "coefficient": 1.08,
+      "base_cycle_seconds": 900,
+      "base_income": "6e7",
+      "max_owned": 2000,
+      "manager": {
+        "name": "Estambrina Lanas",
+        "pattern": "tejido navideño",
+        "cost": "1.8e9"
+      }
+    },
+    {
+      "id": "tren",
+      "name": "Tren del tendedero",
+      "base_cost": "1.8e9",
+      "coefficient": 1.08,
+      "base_cycle_seconds": 3600,
+      "base_income": "7e8",
+      "max_owned": 2000,
+      "manager": {
+        "name": "Maquinista Hilario",
+        "pattern": "tartán",
+        "cost": "2e10"
+      }
+    },
+    {
+      "id": "portal",
+      "name": "Portal de la lavadora",
+      "base_cost": "2.15e10",
+      "coefficient": 1.07,
+      "base_cycle_seconds": 10800,
+      "base_income": "9e9",
+      "max_owned": 2000,
+      "manager": {
+        "name": "La Gran Centrifugadora",
+        "pattern": "arcoíris",
+        "cost": "3e11"
+      }
+    }
+  ],
+  "unlocks": {
+    "speed_thresholds": [
+      25,
+      50,
+      100,
+      200,
+      300,
+      400
+    ],
+    "profit_step_start": 500,
+    "profit_step_every": 100,
+    "profit_step_multiplier": 2
+  },
+  "upgrades": [
+    {
+      "id": "tendedero_x3_1",
+      "name": "Detergente para Tendedero de pelusas",
+      "target": "tendedero",
+      "multiplier": 3,
+      "cost": "2.5e4"
+    },
+    {
+      "id": "tendedero_x3_2",
+      "name": "Suavizante para Tendedero de pelusas",
+      "target": "tendedero",
+      "multiplier": 3,
+      "cost": "6.25e5"
+    },
+    {
+      "id": "tendedero_x3_3",
+      "name": "Aire fresco para Tendedero de pelusas",
+      "target": "tendedero",
+      "multiplier": 3,
+      "cost": "1.5625e7"
+    },
+    {
+      "id": "cesto_x3_1",
+      "name": "Detergente para Cesto de ropa sucia",
+      "target": "cesto",
+      "multiplier": 3,
+      "cost": "3.75e5"
+    },
+    {
+      "id": "cesto_x3_2",
+      "name": "Suavizante para Cesto de ropa sucia",
+      "target": "cesto",
+      "multiplier": 3,
+      "cost": "9.375e6"
+    },
+    {
+      "id": "cesto_x3_3",
+      "name": "Aire fresco para Cesto de ropa sucia",
+      "target": "cesto",
+      "multiplier": 3,
+      "cost": "2.34375e8"
+    },
+    {
+      "id": "rincon_x3_1",
+      "name": "Detergente para Rincón bajo el sofá",
+      "target": "rincon",
+      "multiplier": 3,
+      "cost": "2.5e6"
+    },
+    {
+      "id": "rincon_x3_2",
+      "name": "Suavizante para Rincón bajo el sofá",
+      "target": "rincon",
+      "multiplier": 3,
+      "cost": "6.25e7"
+    },
+    {
+      "id": "rincon_x3_3",
+      "name": "Aire fresco para Rincón bajo el sofá",
+      "target": "rincon",
+      "multiplier": 3,
+      "cost": "1.5625e9"
+    },
+    {
+      "id": "lavanderia_x3_1",
+      "name": "Detergente para Lavandería de burbujas",
+      "target": "lavanderia",
+      "multiplier": 3,
+      "cost": "1.25e7"
+    },
+    {
+      "id": "lavanderia_x3_2",
+      "name": "Suavizante para Lavandería de burbujas",
+      "target": "lavanderia",
+      "multiplier": 3,
+      "cost": "3.125e8"
+    },
+    {
+      "id": "lavanderia_x3_3",
+      "name": "Aire fresco para Lavandería de burbujas",
+      "target": "lavanderia",
+      "multiplier": 3,
+      "cost": "7.8125e9"
+    },
+    {
+      "id": "secadora_x3_1",
+      "name": "Detergente para Secadora giratoria",
+      "target": "secadora",
+      "multiplier": 3,
+      "cost": "3e7"
+    },
+    {
+      "id": "secadora_x3_2",
+      "name": "Suavizante para Secadora giratoria",
+      "target": "secadora",
+      "multiplier": 3,
+      "cost": "7.5e8"
+    },
+    {
+      "id": "secadora_x3_3",
+      "name": "Aire fresco para Secadora giratoria",
+      "target": "secadora",
+      "multiplier": 3,
+      "cost": "1.875e10"
+    },
+    {
+      "id": "cajon_x3_1",
+      "name": "Detergente para Cajón de calcetines",
+      "target": "cajon",
+      "multiplier": 3,
+      "cost": "3.5e8"
+    },
+    {
+      "id": "cajon_x3_2",
+      "name": "Suavizante para Cajón de calcetines",
+      "target": "cajon",
+      "multiplier": 3,
+      "cost": "8.75e9"
+    },
+    {
+      "id": "cajon_x3_3",
+      "name": "Aire fresco para Cajón de calcetines",
+      "target": "cajon",
+      "multiplier": 3,
+      "cost": "2.1875e11"
+    },
+    {
+      "id": "taller_x3_1",
+      "name": "Detergente para Taller de tejido",
+      "target": "taller",
+      "multiplier": 3,
+      "cost": "3.25e9"
+    },
+    {
+      "id": "taller_x3_2",
+      "name": "Suavizante para Taller de tejido",
+      "target": "taller",
+      "multiplier": 3,
+      "cost": "8.125e10"
+    },
+    {
+      "id": "taller_x3_3",
+      "name": "Aire fresco para Taller de tejido",
+      "target": "taller",
+      "multiplier": 3,
+      "cost": "2.03125e12"
+    },
+    {
+      "id": "fabrica_x3_1",
+      "name": "Detergente para Fábrica de estambre",
+      "target": "fabrica",
+      "multiplier": 3,
+      "cost": "4.5e10"
+    },
+    {
+      "id": "fabrica_x3_2",
+      "name": "Suavizante para Fábrica de estambre",
+      "target": "fabrica",
+      "multiplier": 3,
+      "cost": "1.125e12"
+    },
+    {
+      "id": "fabrica_x3_3",
+      "name": "Aire fresco para Fábrica de estambre",
+      "target": "fabrica",
+      "multiplier": 3,
+      "cost": "2.8125e13"
+    },
+    {
+      "id": "tren_x3_1",
+      "name": "Detergente para Tren del tendedero",
+      "target": "tren",
+      "multiplier": 3,
+      "cost": "5e11"
+    },
+    {
+      "id": "tren_x3_2",
+      "name": "Suavizante para Tren del tendedero",
+      "target": "tren",
+      "multiplier": 3,
+      "cost": "1.25e13"
+    },
+    {
+      "id": "tren_x3_3",
+      "name": "Aire fresco para Tren del tendedero",
+      "target": "tren",
+      "multiplier": 3,
+      "cost": "3.125e14"
+    },
+    {
+      "id": "portal_x3_1",
+      "name": "Detergente para Portal de la lavadora",
+      "target": "portal",
+      "multiplier": 3,
+      "cost": "7.5e12"
+    },
+    {
+      "id": "portal_x3_2",
+      "name": "Suavizante para Portal de la lavadora",
+      "target": "portal",
+      "multiplier": 3,
+      "cost": "1.875e14"
+    },
+    {
+      "id": "portal_x3_3",
+      "name": "Aire fresco para Portal de la lavadora",
+      "target": "portal",
+      "multiplier": 3,
+      "cost": "4.6875e15"
+    },
+    {
+      "id": "all_x3_1",
+      "name": "Ciclo largo de lavado 1",
+      "target": "all",
+      "multiplier": 3,
+      "cost": "5e5"
+    },
+    {
+      "id": "all_x3_2",
+      "name": "Ciclo largo de lavado 2",
+      "target": "all",
+      "multiplier": 3,
+      "cost": "5e8"
+    },
+    {
+      "id": "all_x3_3",
+      "name": "Ciclo largo de lavado 3",
+      "target": "all",
+      "multiplier": 3,
+      "cost": "5e11"
+    },
+    {
+      "id": "all_x3_4",
+      "name": "Ciclo largo de lavado 4",
+      "target": "all",
+      "multiplier": 3,
+      "cost": "5e14"
+    },
+    {
+      "id": "all_x3_5",
+      "name": "Ciclo largo de lavado 5",
+      "target": "all",
+      "multiplier": 3,
+      "cost": "5e17"
+    }
+  ],
+  "prestige": {
+    "scale": "1e14",
+    "base": 150,
+    "pair_bonus": 0.02,
+    "hilvanes_per_pair": 1,
+    "first_target_pairs": 100
+  },
+  "offline": {
+    "base_cap_hours": 4,
+    "max_cap_hours": 24
+  },
+  "boost": {
+    "multiplier": 2,
+    "hours_per_view": 4,
+    "max_hours": 12
+  }
+}

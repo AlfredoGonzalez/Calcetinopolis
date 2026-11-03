@@ -1,0 +1,222 @@
+import 'dart:convert';
+
+import '../big_num.dart';
+
+class ManagerConfig {
+  const ManagerConfig({
+    required this.name,
+    required this.pattern,
+    required this.cost,
+  });
+  final String name;
+  final String pattern;
+  final BigNum cost;
+}
+
+class BusinessConfig {
+  const BusinessConfig({
+    required this.id,
+    required this.name,
+    required this.baseCost,
+    required this.coefficient,
+    required this.baseCycleSeconds,
+    required this.baseIncome,
+    required this.manager,
+    required this.maxOwned,
+  });
+
+  final String id;
+  final String name;
+  final BigNum baseCost;
+  final double coefficient;
+  final double baseCycleSeconds;
+  final BigNum baseIncome;
+  final ManagerConfig manager;
+  final int maxOwned;
+}
+
+class UpgradeConfig {
+  const UpgradeConfig({
+    required this.id,
+    required this.name,
+    required this.target,
+    required this.multiplier,
+    required this.cost,
+  });
+  final String id;
+  final String name;
+
+  /// id de negocio, o "all" para todos.
+  final String target;
+  final double multiplier;
+  final BigNum cost;
+}
+
+class PrestigeConfig {
+  const PrestigeConfig({
+    required this.scale,
+    required this.base,
+    required this.pairBonus,
+    required this.hilvanesPerPair,
+    required this.firstTargetPairs,
+  });
+
+  /// S de la fórmula P = floor(base * sqrt(E_vida / S)).
+  final BigNum scale;
+  final double base;
+  final double pairBonus;
+  final double hilvanesPerPair;
+
+  /// Parejas por cobrar con las que el simulador considera "primer prestigio".
+  final int firstTargetPairs;
+}
+
+class OfflineConfig {
+  const OfflineConfig({required this.baseCapHours, required this.maxCapHours});
+  final double baseCapHours;
+  final double maxCapHours;
+}
+
+class BoostConfig {
+  const BoostConfig({
+    required this.multiplier,
+    required this.hoursPerView,
+    required this.maxHours,
+  });
+  final double multiplier;
+  final double hoursPerView;
+  final double maxHours;
+}
+
+class EconomyConfig {
+  const EconomyConfig({
+    required this.businesses,
+    required this.thresholds,
+    required this.profitStepStart,
+    required this.profitStepEvery,
+    required this.profitStepMultiplier,
+    required this.upgrades,
+    required this.prestige,
+    required this.offline,
+    required this.boost,
+  });
+
+  final List<BusinessConfig> businesses;
+
+  /// Umbrales que reducen el ciclo a la mitad (25, 50, 100, ...).
+  final List<int> thresholds;
+  final int profitStepStart;
+  final int profitStepEvery;
+  final double profitStepMultiplier;
+  final List<UpgradeConfig> upgrades;
+  final PrestigeConfig prestige;
+  final OfflineConfig offline;
+  final BoostConfig boost;
+
+  factory EconomyConfig.fromJsonString(String source) =>
+      EconomyConfig.fromJson(jsonDecode(source) as Map<String, dynamic>);
+
+  factory EconomyConfig.fromJson(Map<String, dynamic> j) {
+    BigNum big(Object? v) => BigNum.parse(v.toString());
+
+    final businesses = (j['businesses'] as List).map((raw) {
+      final b = raw as Map<String, dynamic>;
+      final m = b['manager'] as Map<String, dynamic>;
+      return BusinessConfig(
+        id: b['id'] as String,
+        name: b['name'] as String,
+        baseCost: big(b['base_cost']),
+        coefficient: (b['coefficient'] as num).toDouble(),
+        baseCycleSeconds: (b['base_cycle_seconds'] as num).toDouble(),
+        baseIncome: big(b['base_income']),
+        manager: ManagerConfig(
+          name: m['name'] as String,
+          pattern: m['pattern'] as String,
+          cost: big(m['cost']),
+        ),
+        maxOwned: (b['max_owned'] as num?)?.toInt() ?? 2000,
+      );
+    }).toList();
+
+    final unlocks = j['unlocks'] as Map<String, dynamic>;
+    final p = j['prestige'] as Map<String, dynamic>;
+    final o = j['offline'] as Map<String, dynamic>;
+    final bo = j['boost'] as Map<String, dynamic>;
+
+    final config = EconomyConfig(
+      businesses: businesses,
+      thresholds: (unlocks['speed_thresholds'] as List)
+          .map((e) => (e as num).toInt())
+          .toList(),
+      profitStepStart: (unlocks['profit_step_start'] as num).toInt(),
+      profitStepEvery: (unlocks['profit_step_every'] as num).toInt(),
+      profitStepMultiplier: (unlocks['profit_step_multiplier'] as num)
+          .toDouble(),
+      upgrades: (j['upgrades'] as List).map((raw) {
+        final u = raw as Map<String, dynamic>;
+        return UpgradeConfig(
+          id: u['id'] as String,
+          name: u['name'] as String,
+          target: u['target'] as String,
+          multiplier: (u['multiplier'] as num).toDouble(),
+          cost: big(u['cost']),
+        );
+      }).toList(),
+      prestige: PrestigeConfig(
+        scale: big(p['scale']),
+        base: (p['base'] as num).toDouble(),
+        pairBonus: (p['pair_bonus'] as num).toDouble(),
+        hilvanesPerPair: (p['hilvanes_per_pair'] as num).toDouble(),
+        firstTargetPairs: (p['first_target_pairs'] as num).toInt(),
+      ),
+      offline: OfflineConfig(
+        baseCapHours: (o['base_cap_hours'] as num).toDouble(),
+        maxCapHours: (o['max_cap_hours'] as num).toDouble(),
+      ),
+      boost: BoostConfig(
+        multiplier: (bo['multiplier'] as num).toDouble(),
+        hoursPerView: (bo['hours_per_view'] as num).toDouble(),
+        maxHours: (bo['max_hours'] as num).toDouble(),
+      ),
+    );
+    config.validate();
+    return config;
+  }
+
+  void validate() {
+    if (businesses.isEmpty) {
+      throw const FormatException('Sin negocios');
+    }
+    final ids = <String>{};
+    for (final b in businesses) {
+      if (!ids.add(b.id)) {
+        throw FormatException('Negocio duplicado: ${b.id}');
+      }
+      if (b.coefficient <= 1) {
+        throw FormatException('Coeficiente <= 1 en ${b.id}');
+      }
+      if (b.baseCycleSeconds <= 0) {
+        throw FormatException('Ciclo <= 0 en ${b.id}');
+      }
+    }
+    final upgradeIds = <String>{};
+    for (final u in upgrades) {
+      if (!upgradeIds.add(u.id)) {
+        throw FormatException('Upgrade duplicado: ${u.id}');
+      }
+      if (u.target != 'all' && !ids.contains(u.target)) {
+        throw FormatException('Upgrade ${u.id} apunta a negocio inexistente');
+      }
+    }
+    for (var i = 1; i < thresholds.length; i++) {
+      if (thresholds[i] <= thresholds[i - 1]) {
+        throw const FormatException('Umbrales no crecientes');
+      }
+    }
+    if (prestige.scale <= BigNum.zero) {
+      throw const FormatException('S <= 0');
+    }
+  }
+
+  int businessIndex(String id) => businesses.indexWhere((b) => b.id == id);
+}

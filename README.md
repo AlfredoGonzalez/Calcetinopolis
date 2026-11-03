@@ -17,7 +17,17 @@ Flutter + Flame · Android primero · solo español · MXN · 13+ · anuncios so
 
 Una fase por sesión (sección 11.4 del spec): F0 base, F1 economía y simulador, F2 loop jugable, F3 persistencia, F4 prestigio, F5 retención, F6 arte y sonido, F7 monetización, F8 lanzamiento, F9 v1.1.
 
-**Estado:** F0 y F1 en curso.
+**Estado:** F0 (base) y F1 (economía + simulador) listas. Siguiente: F2, loop jugable.
+
+## Desarrollo
+
+```bash
+flutter pub get
+flutter test                                # fórmulas, motor, config y metas del simulador
+dart run tool/simulate.dart config/economy.json 5   # reporte de balance
+```
+
+Estructura: `lib/core` (lógica pura: `big_num`, `economy/`, `config/`, `sim/`), `lib/services` (interfaces y mocks), `config/economy.json` (todo el balance), `docs/BALANCE.md` (reporte del simulador).
 
 ## Reglas del proyecto
 
