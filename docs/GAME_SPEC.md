@@ -32,7 +32,7 @@ Hoy el juego tiene cuatro "destinos" (Tierra, Luna, Marte y Vacay Island, añadi
 5. Cuando comprar lo siguiente tarda demasiado, reinicia para cobrar ángeles.
 6. Cierra la app; el dinero sigue creciendo.
 
-&#91;embedded content: loop principal de AdCap · 6 pasos\]
+*(Diagrama del loop principal omitido en la exportación; el loop es la lista numerada de arriba.)*
 
 El prestigio cierra el círculo: cada vuelta empieza desde cero pero con un multiplicador mayor, así que el muro llega más tarde.
 
@@ -241,6 +241,8 @@ Fuentes: [Mega Tickets](https://adventure-capitalist.fandom.com/wiki/Mega_Ticket
 
 ### 6.4 Cambios recientes (2025–2026)
 
+> **Contexto, no verificado.** Estos datos vienen de búsquedas y no se pudieron reverificar. Ninguna decisión de diseño depende de ellos.
+
 | Versión | Fecha | Cambio |
 | --- | --- | --- |
 | 9.27 | Sep 2026 | Opción de saltar pasos del tutorial |
@@ -408,21 +410,24 @@ El jugador empieza con el negocio 1 gratis. Todos los valores viven en un archiv
 
 1. **Costo y compra masiva:** fórmulas de la sección 3.2. Botones x1, x10, x100, "Siguiente umbral" y Max.
 2. **Producción:** al terminar el ciclo se paga `ingreso × cantidad × multiplicadores`. Sin manager, el jugador toca el negocio para iniciar cada ciclo.
-3. **Ciclos muy rápidos:** si el ciclo baja de 0.25 s, la barra se muestra llena y el negocio paga de forma continua por segundo (evita animaciones imposibles).
-4. **Unlocks por negocio:** con 25, 50, 100, 200, 300 y 400 unidades, el ciclo se reduce a la mitad. Desde 500, cada +100 unidades duplica la ganancia.
+3. **Ciclos muy rápidos:** con manager, la producción siempre se calcula con un acumulador fraccionario (`ciclos = dt / T`), sin saltos ni diferencia entre online y offline. Si el ciclo baja de 0.25 s, solo cambia la animación: la barra se muestra llena y la tarjeta muestra $/s. Sin manager el umbral no aplica, porque el jugador toca para iniciar cada ciclo.
+4. **Unlocks por negocio:** con 25, 50, 100, 200, 300 y 400 unidades, el ciclo se reduce a la mitad. Desde 500, cada +100 unidades duplica la ganancia. Un `max_owned` configurable por negocio (por ejemplo 2,000) sirve de seguro; el simulador confirma que ningún negocio se dispare.
 5. **Unlocks globales:** cuando todos los negocios alcanzan un umbral, todos reciben ×2 de velocidad adicional.
 6. **Upgrades de efectivo:** lista fija por negocio (×3) y globales (×3 a todo); se compran una vez por partida.
 7. **Managers:** uno por negocio, se compran con dinero, se pierden al reiniciar.
 
 ### 9.4 Prestigio
 
-Se ganan Parejas Reunidas (el prestigio se llama Centrifugado) según el dinero ganado desde el último reinicio. *S* es la constante de escala, ajustable en config; el valor inicial se calibra con el simulador para que el primer reinicio llegue entre los 45 y 90 minutos de juego.
+Se ganan Parejas Reunidas (el prestigio se llama Centrifugado) según el dinero ganado en toda la vida del jugador (*E_vida*, no solo desde el último reinicio). *S* es la constante de escala, ajustable en config; su valor inicial es `1e12`, un placeholder no verificado que el simulador calibra para que el primer reinicio llegue entre los 45 y 90 minutos de juego.
 
 ```latex
-P = \left\lfloor 150 \cdot \sqrt{\frac{E}{S}} \right\rfloor
+P_{total} = \left\lfloor 150 \cdot \sqrt{\frac{E_{vida}}{S}} \right\rfloor
 ```
 
-- Cada Pareja Reunida da +2% a todas las ganancias (aditivo, como en AdCap).
+- Al centrifugar se cobran `P_total − parejas_ya_cobradas` Parejas nuevas.
+- **Dos monedas separadas, el bono nunca baja:**
+  - **Parejas Reunidas:** permanentes, nunca se gastan. Cada una da +2% a todas las ganancias (aditivo, como en AdCap).
+  - **Hilvanes:** moneda gastable de la tienda de mejoras permanentes. Se gana 1 Hilván por cada Pareja nueva obtenida en un Centrifugado.
 - La pantalla de prestigio muestra: Parejas Reunidas actuales, Parejas por cobrar, y el multiplicador antes y después.
 - Indicador "buen momento para reiniciar" cuando las Parejas por cobrar ≥ las actuales.
 - **Diferencia con AdCap:** en lugar de sacrificar unidades, se gastan en una tienda de mejoras permanentes con su propia moneda de prestigio. Así el jugador nunca siente que pierde su bono al comprar.
@@ -437,7 +442,9 @@ P = \left\lfloor 150 \cdot \sqrt{\frac{E}{S}} \right\rfloor
 
 - Usar una clase de número grande (mantisa + exponente) desde el día uno; los `double` revientan en \~1.8×10³⁰⁸, como le pasó a AdCap.
 - **Ojo con el español:** "billón" en español es 10¹², pero "billion" en inglés es 10⁹. Para evitar confusión, usar mil, millón, mil millones (MM), billón… o sufijos cortos.
-- Ajuste en configuración: nombres, sufijos cortos (K, M, B…) o notación científica (queja #12).
+- Ajuste en configuración: nombres, sufijos cortos o notación científica (queja #12).
+- **Formato por defecto (pendiente de confirmar):** sufijos K, M, B, T (convención de los idle games) y notación científica desde 1e15. Ojo: la "B" es 10⁹ (en México "billón" es 10¹²); el modo "nombres" usa mil millones, billón, etc.
+- **En JSON y en el save:** los números grandes se guardan como string en notación científica (`"2.15e10"`) o como mantisa y exponente, nunca como decimal de 64 bits. Punto decimal en toda la spec.
 
 ### 9.7 Guardado
 
@@ -490,7 +497,7 @@ El recorrido está pensado para que el jugador sienta recompensa en los primeros
 
 La navegación es una barra inferior de cinco pestañas (Negocios, Mejoras, Centrifugado, Metas y Tienda), una barra superior fija con las monedas y un engranaje que abre Ajustes. Todo lo demás son ventanas emergentes.
 
-&#91;embedded content: mapa de navegación · 5 pestañas, ajustes y ventanas emergentes\]
+*(Diagrama del mapa de navegación omitido en la exportación; ver el párrafo anterior y 9.12.)*
 
 El diagrama es el resumen; el detalle de cada pantalla está en 9.12.
 
@@ -524,7 +531,7 @@ Regla de oro: el jugador nunca ve un anuncio que no pidió, y todo el contenido 
 
 | Ubicación | Recompensa | Límite |
 | --- | --- | --- |
-| Botón de boost | ×2 a todas las ganancias por 4 h; se acumula hasta 12 h | 3 vistas por bloque de 4 h |
+| Botón de boost | Cada vista suma 4 h de ×2 a todas las ganancias; máximo 12 h acumuladas | Tope de 12 h acumuladas (3 vistas con la reserva vacía); sin otro límite |
 | Bienvenida offline | ×2 a lo ganado offline | 1 por regreso |
 | Regalo diario | Un poco de moneda premium | 1 al día |
 | Saltar espera | Avanza 15 min de producción (mini time warp) | 3 al día |
@@ -700,7 +707,7 @@ Fondo de un solo color liso. Sin texto, sin marcas de agua, sin personajes de ot
 
 ## 12. Preguntas abiertas y fuentes
 
-### 12.1 Decisiones pendientes antes de F0
+### 12.1 Decisiones tomadas antes de F0
 
 - [x] Temática base elegida: Calcetines perdidos (sección 8.5)
 - [x] ¿Motor: Flutter + Flame (recomendado), Godot o Unity?
@@ -709,6 +716,20 @@ Fondo de un solo color liso. Sin texto, sin marcas de agua, sin personajes de ot
 - [x] ¿Lanzar primero en Android, iOS o ambos? (iOS requiere cuenta de Apple Developer de US$99/año).
 - [x] ¿Tope de ganancias offline: 4 h base está bien o prefieres más generoso?
 - [x] ¿Precios: en USD con conversión automática o con niveles pensados para México?
+
+**Respuestas:**
+
+- Motor: Flutter + Flame.
+- Plataforma: Android primero.
+- Idioma: solo español.
+- Precios: MXN, con niveles pensados para México.
+- Audiencia: 13+, sin dirigirse a menores.
+- Anuncios: solo recompensados y opcionales.
+- Compras: IAP justas, sin cajas sorpresa y sin suscripción para quitar anuncios.
+- Tope offline: 4 h base, ampliable hasta 24 h.
+- Notificaciones: se piden entre el minuto 10 y 20 de juego; máximo una al día.
+- Nombre: Calcetinópolis.
+- Pendiente: formato de sufijos de números (ver 9.6).
 
 ### 12.2 Fuentes
 
