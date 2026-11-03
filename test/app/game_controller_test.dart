@@ -1,12 +1,16 @@
 import 'dart:io';
 
 import 'package:calcetinopolis/app/game_controller.dart';
+import 'package:calcetinopolis/app/save_manager.dart';
+import 'package:calcetinopolis/services/services.dart';
 import 'package:calcetinopolis/core/big_num.dart';
 import 'package:calcetinopolis/core/config/economy_config.dart';
 import 'package:calcetinopolis/core/economy/engine.dart';
+import 'package:calcetinopolis/core/state/game_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  persistenceTests();
   final config = EconomyConfig.fromJsonString(
     File('config/economy.json').readAsStringSync(),
   );
@@ -88,4 +92,187 @@ void main() {
     c.step();
     c.dispose();
   });
+}
+
+// ---------------------------------------------------------------- F3
+void persistenceTests() {
+  final config = EconomyConfig.fromJsonString(
+    File('config/economy.json').readAsStringSync(),
+  );
+  final t0 = DateTime.utc(2026, 11, 3, 12);
+
+  late MemorySaveService store;
+  late SaveManager manager;
+  late FakeTimeService time;
+  late MockAdService ads;
+  late MemoryAnalyticsService analytics;
+
+  GameController make({bool withAds = true, GameState? initial}) {
+    final c = GameController(
+      Economy(config),
+      initial: initial,
+      saveManager: manager,
+      time: time,
+      ads: withAds ? ads : null,
+      analytics: analytics,
+      lastSeen: t0,
+    );
+    c.state.businesses[0]
+      ..owned = 10
+      ..hasManager = true;
+    return c;
+  }
+
+  setUp(() {
+    store = MemorySaveService();
+    manager = SaveManager(store, SaveCodec(config.businesses.length));
+    time = FakeTimeService(t0);
+    ads = MockAdService();
+    analytics = MemoryAnalyticsService();
+  });
+
+  group('offline y guardado', () {
+    test('menos de 60 s fuera: no hay ventana', () {
+      final c = make();
+      time.advance(const Duration(seconds: 30));
+      c.checkOffline(t0);
+      expect(c.pendingOffline, isNull);
+    });
+
+    test('al volver deja la ganancia pendiente y recogerla la suma', () async {
+      final c = make();
+      time.advance(const Duration(hours: 1));
+      c.checkOffline(t0);
+      final gain = c.pendingOffline!.gain;
+      expect(gain.isPositive, isTrue);
+      expect(c.state.money, BigNum.zero, reason: 'no se paga hasta recoger');
+      await c.claimOffline();
+      expect(c.state.money, gain);
+      expect(c.state.lifetimeEarnings, gain, reason: 'cuenta para E_vida');
+      expect(c.pendingOffline, isNull);
+      expect(analytics.events.single.$1, 'offline_claim');
+    });
+
+    test(
+      'x2 viendo un anuncio duplica; si el anuncio falla, paga normal',
+      () async {
+        final c = make();
+        time.advance(const Duration(hours: 1));
+        c.checkOffline(t0);
+        final gain = c.pendingOffline!.gain;
+        await c.claimOffline(doubled: true);
+        expect(c.state.money, gain.mulDouble(2));
+        expect(ads.shown, ['offline_x2']);
+
+        final c2 = GameController(
+          Economy(config),
+          saveManager: manager,
+          time: time,
+          ads: MockAdService(completes: false),
+          lastSeen: t0,
+        );
+        c2.state.businesses[0]
+          ..owned = 10
+          ..hasManager = true;
+        c2.checkOffline(t0);
+        final g2 = c2.pendingOffline!.gain;
+        await c2.claimOffline(doubled: true);
+        expect(c2.state.money, g2);
+      },
+    );
+
+    test('sin servicio de anuncios no hay x2 aunque se pida', () async {
+      final c = make(withAds: false);
+      time.advance(const Duration(hours: 1));
+      c.checkOffline(t0);
+      final gain = c.pendingOffline!.gain;
+      await c.claimOffline(doubled: true);
+      expect(c.state.money, gain);
+    });
+
+    test('reloj atrasado: no hay ventana', () {
+      final c = make();
+      time.advance(const Duration(hours: -5));
+      c.checkOffline(t0);
+      expect(c.pendingOffline, isNull);
+    });
+
+    test('recoger sin pendiente no hace nada', () async {
+      final c = make();
+      await c.claimOffline();
+      expect(c.state.money, BigNum.zero);
+    });
+
+    test('pausar guarda; volver calcula lo ganado fuera', () async {
+      final c = make();
+      await c.onPaused();
+      expect(store.data[0], isNotNull);
+      time.advance(const Duration(hours: 2));
+      c.onResumed();
+      expect(c.pendingOffline, isNotNull);
+      expect(c.pendingOffline!.secondsAway, closeTo(7200, 1));
+    });
+
+    test('no se acumula una segunda ventana si ya hay una pendiente', () {
+      final c = make();
+      time.advance(const Duration(hours: 1));
+      c.onResumed();
+      final first = c.pendingOffline;
+      time.advance(const Duration(hours: 1));
+      c.onResumed();
+      expect(identical(c.pendingOffline, first), isTrue);
+    });
+
+    test('autoguardado cada 30 s de juego', () async {
+      final c = make();
+      for (var i = 0; i < 29; i++) {
+        c.advance(1);
+      }
+      expect(store.data, isEmpty);
+      c.advance(1);
+      await Future<void>.delayed(Duration.zero);
+      expect(store.data[0], isNotNull);
+    });
+
+    test('guarda al comprar manager o upgrade', () async {
+      final c = make();
+      c.state.money = BigNum.parse('1e9');
+      c.state.businesses[1].owned = 1;
+      c.buyManager(1);
+      await Future<void>.delayed(Duration.zero);
+      expect(store.data[0], isNotNull);
+      store.data.clear();
+      c.buyUpgrade('all_x3_1');
+      await Future<void>.delayed(Duration.zero);
+      expect(store.data[0], isNotNull);
+    });
+
+    test('un fallo de disco no tumba el juego', () async {
+      final c = GameController(
+        Economy(config),
+        saveManager: SaveManager(_BrokenStore(), SaveCodec(10)),
+        time: time,
+      );
+      await c.save();
+      c.advance(1);
+    });
+
+    test('guardar y cargar devuelve la misma partida', () async {
+      final c = make();
+      c.state.money = BigNum.parse('7e7');
+      await c.save();
+      final loaded = await manager.load();
+      expect(loaded.data!.state.money, BigNum.parse('7e7'));
+      expect(loaded.data!.savedAt, t0);
+    });
+  });
+}
+
+class _BrokenStore implements SaveService {
+  @override
+  Future<String?> read(int slot) async =>
+      throw const FileSystemException('disco lleno');
+  @override
+  Future<void> write(int slot, String data) async =>
+      throw const FileSystemException('disco lleno');
 }

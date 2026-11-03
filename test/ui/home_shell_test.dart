@@ -4,6 +4,7 @@ import 'package:calcetinopolis/app/game_controller.dart';
 import 'package:calcetinopolis/core/big_num.dart';
 import 'package:calcetinopolis/core/config/economy_config.dart';
 import 'package:calcetinopolis/core/economy/engine.dart';
+import 'package:calcetinopolis/services/services.dart';
 import 'package:calcetinopolis/ui/home_shell.dart';
 import 'package:calcetinopolis/ui/theme.dart';
 import 'package:flutter/material.dart';
@@ -175,5 +176,71 @@ void main() {
       find.byType(LinearProgressIndicator).first,
     );
     expect(bar.value, 1);
+  });
+
+  testWidgets('ventana de bienvenida offline: aparece y Recoger paga', (
+    t,
+  ) async {
+    final t0 = DateTime.utc(2026, 11, 3, 12);
+    final time = FakeTimeService(t0);
+    c = GameController(Economy(config), time: time, lastSeen: t0);
+    c.state.businesses[0]
+      ..owned = 10
+      ..hasManager = true;
+    time.advance(const Duration(hours: 2));
+    c.checkOffline(t0);
+    final gain = c.pendingOffline!.gain;
+
+    await t.binding.setSurfaceSize(const Size(400, 900));
+    addTearDown(() => t.binding.setSurfaceSize(null));
+    await t.pumpWidget(
+      MaterialApp(
+        theme: buildTheme(),
+        home: HomeShell(controller: c),
+      ),
+    );
+    await t.pumpAndSettle();
+
+    expect(find.text('¡Tus calcetines trabajaron!'), findsOneWidget);
+    expect(
+      find.byKey(const Key('offline-x2')),
+      findsNothing,
+      reason: 'sin anuncios hasta F7',
+    );
+    await t.tap(find.byKey(const Key('offline-claim')));
+    await t.pumpAndSettle();
+    expect(find.text('¡Tus calcetines trabajaron!'), findsNothing);
+    expect(c.state.money, gain);
+    expect(c.pendingOffline, isNull);
+  });
+
+  testWidgets('con anuncios disponibles ofrece Recoger x2', (t) async {
+    final t0 = DateTime.utc(2026, 11, 3, 12);
+    final time = FakeTimeService(t0);
+    c = GameController(
+      Economy(config),
+      time: time,
+      lastSeen: t0,
+      ads: MockAdService(),
+    );
+    c.state.businesses[0]
+      ..owned = 10
+      ..hasManager = true;
+    time.advance(const Duration(hours: 2));
+    c.checkOffline(t0);
+    final gain = c.pendingOffline!.gain;
+
+    await t.binding.setSurfaceSize(const Size(400, 900));
+    addTearDown(() => t.binding.setSurfaceSize(null));
+    await t.pumpWidget(
+      MaterialApp(
+        theme: buildTheme(),
+        home: HomeShell(controller: c),
+      ),
+    );
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('offline-x2')));
+    await t.pumpAndSettle();
+    expect(c.state.money, gain.mulDouble(2));
   });
 }

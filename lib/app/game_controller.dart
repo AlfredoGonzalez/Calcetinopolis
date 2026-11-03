@@ -4,7 +4,10 @@ import 'package:flutter/foundation.dart';
 
 import '../core/big_num.dart';
 import '../core/economy/engine.dart';
+import '../core/economy/offline.dart';
 import '../core/state/game_state.dart';
+import '../services/services.dart';
+import 'save_manager.dart';
 
 /// Cantidad elegida en el selector de compra (un solo selector para toda la lista).
 enum BuyAmount { one, ten, hundred, nextThreshold, max }
@@ -12,11 +15,36 @@ enum BuyAmount { one, ten, hundred, nextThreshold, max }
 /// Une el núcleo puro con la UI: corre el reloj y expone acciones.
 /// La UI solo lee [state] y llama estas acciones; nunca calcula economía.
 class GameController extends ChangeNotifier {
-  GameController(this.economy, {GameState? initial})
-    : state = initial ?? economy.newGame();
+  GameController(
+    this.economy, {
+    GameState? initial,
+    this.saveManager,
+    TimeService? time,
+    this.ads,
+    this.analytics,
+    this.lastSeen,
+  }) : state = initial ?? economy.newGame(),
+       time = time ?? DeviceTimeService();
 
   final Economy economy;
   final GameState state;
+  final SaveManager? saveManager;
+  final TimeService time;
+
+  /// Si es null, el botón "x2 viendo un anuncio" no se ofrece (llega en F7).
+  final AdService? ads;
+  final AnalyticsService? analytics;
+
+  /// Última vez que se guardó o se pausó la app; base de la ganancia offline.
+  DateTime? lastSeen;
+
+  /// Ganancia offline pendiente de recoger (ventana de bienvenida).
+  OfflineReport? pendingOffline;
+
+  /// Segundos mínimos fuera para mostrar la ventana de bienvenida.
+  static const minAwaySeconds = 60.0;
+  static const autosaveEvery = 30.0;
+  double _sinceSave = 0;
 
   BuyAmount amount = BuyAmount.one;
   Timer? _timer;
@@ -38,8 +66,67 @@ class GameController extends ChangeNotifier {
 
   /// Avanza [dt] segundos (separado de [step] para poder probarlo).
   void advance(double dt) {
-    economy.tick(state, dt.clamp(0.0, 1.0));
+    final step = dt.clamp(0.0, 1.0);
+    economy.tick(state, step);
+    _sinceSave += step;
+    if (_sinceSave >= autosaveEvery) save();
     notifyListeners();
+  }
+
+  // ------------------------------------------------------------ guardado
+
+  /// Guarda ya. Nunca lanza: un fallo de disco no debe tumbar el juego.
+  Future<void> save() async {
+    _sinceSave = 0;
+    final m = saveManager;
+    if (m == null) return;
+    final now = time.now();
+    lastSeen = now;
+    try {
+      await m.save(state, now);
+    } catch (e) {
+      debugPrint('No se pudo guardar: $e');
+    }
+  }
+
+  /// La app pasa a segundo plano.
+  Future<void> onPaused() => save();
+
+  /// La app vuelve: calcula lo ganado mientras estuvo fuera.
+  void onResumed() {
+    final seen = lastSeen;
+    if (seen == null || pendingOffline != null) return;
+    checkOffline(seen);
+    notifyListeners();
+  }
+
+  /// Calcula la ganancia offline desde [since]; si vale la pena la deja
+  /// pendiente. Lo ganado nunca se pierde por reloj atrasado: solo se ignora.
+  OfflineReport checkOffline(DateTime since) {
+    final r = computeOffline(economy, state, lastSeen: since, now: time.now());
+    if (r.gain.isPositive && r.secondsAway >= minAwaySeconds) {
+      pendingOffline = r;
+    }
+    return r;
+  }
+
+  /// Recoge la ganancia offline. [doubled] pide el x2 viendo un anuncio.
+  Future<void> claimOffline({bool doubled = false}) async {
+    final r = pendingOffline;
+    if (r == null) return;
+    var mult = 1.0;
+    if (doubled && ads != null && await ads!.showRewarded('offline_x2')) {
+      mult = 2;
+    }
+    economy.addMoney(state, r.gain.mulDouble(mult));
+    analytics?.log('offline_claim', {
+      'seconds': r.secondsCounted,
+      'doubled': mult == 2,
+    });
+    pendingOffline = null;
+    lastSeen = time.now();
+    notifyListeners();
+    await save();
   }
 
   void setAmount(BuyAmount a) {
@@ -89,11 +176,17 @@ class GameController extends ChangeNotifier {
   }
 
   void buyManager(int i) {
-    if (economy.buyManager(state, i)) notifyListeners();
+    if (economy.buyManager(state, i)) {
+      notifyListeners();
+      save();
+    }
   }
 
   void buyUpgrade(String id) {
-    if (economy.buyUpgrade(state, id)) notifyListeners();
+    if (economy.buyUpgrade(state, id)) {
+      notifyListeners();
+      save();
+    }
   }
 
   /// Compra todos los upgrades asequibles, del más barato al más caro.
@@ -107,7 +200,10 @@ class GameController extends ChangeNotifier {
     for (final u in list) {
       if (economy.buyUpgrade(state, u.id)) bought++;
     }
-    if (bought > 0) notifyListeners();
+    if (bought > 0) {
+      notifyListeners();
+      save();
+    }
     return bought;
   }
 

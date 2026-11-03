@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'app/game_controller.dart';
+import 'app/save_manager.dart';
 import 'core/config/economy_config.dart';
 import 'core/economy/engine.dart';
+import 'services/file_save_service.dart';
 import 'ui/home_shell.dart';
 import 'ui/theme.dart';
 
@@ -12,7 +15,21 @@ Future<void> main() async {
   final config = EconomyConfig.fromJsonString(
     await rootBundle.loadString('config/economy.json'),
   );
-  final controller = GameController(Economy(config))..start();
+  final economy = Economy(config);
+  final dir = await getApplicationSupportDirectory();
+  final manager = SaveManager(
+    FileSaveService(dir),
+    SaveCodec(config.businesses.length),
+  );
+  final loaded = await manager.load();
+  final controller = GameController(
+    economy,
+    initial: loaded.data?.state,
+    saveManager: manager,
+    lastSeen: loaded.data?.savedAt,
+  );
+  if (loaded.data != null) controller.checkOffline(loaded.data!.savedAt);
+  controller.start();
   runApp(CalcetinopolisApp(controller: controller));
 }
 

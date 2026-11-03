@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../app/game_controller.dart';
 import '../core/number_format.dart';
 import 'businesses_page.dart';
+import 'offline_dialog.dart';
 import 'theme.dart';
 import 'upgrades_page.dart';
 
@@ -21,8 +22,48 @@ class HomeShell extends StatefulWidget {
   State<HomeShell> createState() => _HomeShellState();
 }
 
-class _HomeShellState extends State<HomeShell> {
+class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   int _tab = 0;
+  bool _dialogOpen = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    widget.controller.addListener(_maybeShowOffline);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowOffline());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    widget.controller.removeListener(_maybeShowOffline);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      widget.controller.onPaused();
+    } else if (state == AppLifecycleState.resumed) {
+      widget.controller.onResumed();
+    }
+  }
+
+  // Una sola ventana a la vez (spec 9.11).
+  void _maybeShowOffline() {
+    if (_dialogOpen || !mounted || widget.controller.pendingOffline == null) {
+      return;
+    }
+    _dialogOpen = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (mounted && widget.controller.pendingOffline != null) {
+        await showOfflineDialog(context, widget.controller, widget.formatter);
+      }
+      _dialogOpen = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -4,9 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('mocks de servicios', () async {
     final save = MemorySaveService();
-    expect(await save.load(), isNull);
-    await save.save('x');
-    expect(await save.load(), 'x');
+    expect(await save.read(0), isNull);
+    await save.write(0, 'x');
+    expect(await save.read(0), 'x');
 
     final ads = MockAdService(completes: false);
     expect(await ads.showRewarded('boost'), isFalse);

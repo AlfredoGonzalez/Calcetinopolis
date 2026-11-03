@@ -1,8 +1,11 @@
 /// Interfaces de servicios (spec 11.2). La UI y los tests usan los mocks
 /// hasta la fase de monetización (F7) y nube (F8).
+/// Almacén por ranuras (0 = la más reciente). Las implementaciones deben
+/// escribir de forma atómica para no dejar archivos a medias.
 abstract class SaveService {
-  Future<String?> load();
-  Future<void> save(String data);
+  static const slots = 3;
+  Future<String?> read(int slot);
+  Future<void> write(int slot, String data);
 }
 
 abstract class AdService {
@@ -25,11 +28,11 @@ abstract class TimeService {
 }
 
 class MemorySaveService implements SaveService {
-  String? _data;
+  final data = <int, String>{};
   @override
-  Future<String?> load() async => _data;
+  Future<String?> read(int slot) async => data[slot];
   @override
-  Future<void> save(String data) async => _data = data;
+  Future<void> write(int slot, String value) async => data[slot] = value;
 }
 
 class MockAdService implements AdService {
@@ -56,6 +59,11 @@ class MemoryAnalyticsService implements AnalyticsService {
   @override
   void log(String event, [Map<String, Object?> params = const {}]) =>
       events.add((event, params));
+}
+
+class DeviceTimeService implements TimeService {
+  @override
+  DateTime now() => DateTime.now();
 }
 
 class FakeTimeService implements TimeService {
