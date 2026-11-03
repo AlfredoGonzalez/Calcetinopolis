@@ -147,9 +147,9 @@ void main() {
 
   testWidgets('pestañas futuras muestran marcador', (t) async {
     await pumpApp(t);
-    await t.tap(find.text('Centrifugado'));
+    await t.tap(find.text('Metas'));
     await t.pump();
-    expect(find.text('Llega en F4.'), findsOneWidget);
+    expect(find.text('Llega en F5.'), findsOneWidget);
   });
 
   testWidgets('Atrás vuelve a Negocios', (t) async {
@@ -242,5 +242,120 @@ void main() {
     await t.tap(find.byKey(const Key('offline-x2')));
     await t.pumpAndSettle();
     expect(c.state.money, gain.mulDouble(2));
+  });
+
+  group('Centrifugado', () {
+    Future<void> openTab(WidgetTester t) async {
+      await pumpApp(t);
+      await t.tap(find.text('Centrifugado'));
+      await t.pumpAndSettle();
+    }
+
+    testWidgets('sin Parejas por cobrar el botón está inactivo', (t) async {
+      await openTab(t);
+      expect(
+        t.widget<FilledButton>(find.byKey(const Key('centrifuge'))).onPressed,
+        isNull,
+      );
+      expect(find.byKey(const Key('good-time')), findsNothing);
+      expect(t.widget<Text>(find.byKey(const Key('pairs-pending'))).data, '+0');
+    });
+
+    testWidgets('muestra antes y después, y buen momento', (t) async {
+      await openTab(t);
+      c.state.lifetimeEarnings = BigNum.parse('1e14');
+      c.advance(0);
+      await t.pump();
+      expect(
+        t.widget<Text>(find.byKey(const Key('pairs-pending'))).data,
+        '+150',
+      );
+      expect(t.widget<Text>(find.byKey(const Key('bonus-now'))).data, 'x1');
+      expect(t.widget<Text>(find.byKey(const Key('bonus-after'))).data, 'x4');
+      expect(find.byKey(const Key('good-time')), findsOneWidget);
+    });
+
+    testWidgets('cancelar no cambia nada', (t) async {
+      await openTab(t);
+      c.state.lifetimeEarnings = BigNum.parse('1e14');
+      c.state.money = BigNum.fromInt(500);
+      c.advance(0);
+      await t.pump();
+      await t.tap(find.byKey(const Key('centrifuge')));
+      await t.pumpAndSettle();
+      expect(find.text('Se pierde:'), findsOneWidget);
+      expect(find.text('Se conserva:'), findsOneWidget);
+      await t.tap(find.byKey(const Key('cancel-centrifuge')));
+      await t.pumpAndSettle();
+      expect(c.state.pairsClaimed, BigNum.zero);
+      expect(c.state.money, BigNum.fromInt(500));
+    });
+
+    testWidgets('confirmar centrifuga, anima (se puede saltar) y da Hilvanes', (
+      t,
+    ) async {
+      await openTab(t);
+      c.state.lifetimeEarnings = BigNum.parse('1e14');
+      c.state.money = BigNum.fromInt(500);
+      c.advance(0);
+      await t.pump();
+      await t.tap(find.byKey(const Key('centrifuge')));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('confirm-centrifuge')));
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 300));
+      expect(find.byKey(const Key('centrifuge-anim')), findsOneWidget);
+      expect(
+        find.byKey(const Key('centrifuge-result')),
+        findsNothing,
+        reason: 'aún animando',
+      );
+      await t.tap(find.byKey(const Key('centrifuge-anim')));
+      await t.pump();
+      expect(find.byKey(const Key('centrifuge-result')), findsOneWidget);
+      await t.tap(find.byKey(const Key('centrifuge-done')));
+      await t.pumpAndSettle();
+      expect(c.state.pairsClaimed, BigNum.fromInt(150));
+      expect(c.state.hilvanes, BigNum.fromInt(150));
+      expect(c.state.money, BigNum.zero);
+      expect(t.widget<Text>(find.byKey(const Key('pairs-now'))).data, '150');
+    });
+
+    testWidgets('la animación termina sola en 3.5 s', (t) async {
+      await openTab(t);
+      c.state.lifetimeEarnings = BigNum.parse('1e14');
+      c.advance(0);
+      await t.pump();
+      await t.tap(find.byKey(const Key('centrifuge')));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('confirm-centrifuge')));
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 3600));
+      expect(find.byKey(const Key('centrifuge-result')), findsOneWidget);
+    });
+
+    testWidgets('tienda: comprar con Hilvanes y botón inactivo sin ellas', (
+      t,
+    ) async {
+      await openTab(t);
+      expect(
+        t
+            .widget<FilledButton>(find.byKey(const Key('shop-detergente')))
+            .onPressed,
+        isNull,
+      );
+      c.state.hilvanes = BigNum.fromInt(1000);
+      c.advance(0);
+      await t.pump();
+      await t.tap(find.byKey(const Key('shop-detergente')));
+      await t.pump();
+      expect(c.economy.shopLevel(c.state, 'detergente'), 1);
+      expect(c.state.hilvanes, BigNum.fromInt(600));
+      expect(
+        t.widget<Text>(find.byKey(const Key('shop-now-detergente'))).data,
+        contains('x1.25'),
+      );
+      expect(c.state.pairsClaimed, BigNum.zero);
+    });
   });
 }

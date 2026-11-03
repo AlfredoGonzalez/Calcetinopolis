@@ -14,6 +14,7 @@ GameState sample() {
     ..lifetimeEarnings = BigNum.parse('3e45')
     ..pairsClaimed = BigNum.fromInt(120)
     ..hilvanes = BigNum.fromInt(70)
+    ..shopLevels.addAll({'detergente': 2, 'suerte': 1})
     ..boostSeconds = 1234.5
     ..upgrades.addAll(['all_x3_1', 'tendedero_x3_1']);
   s.businesses[0]
@@ -34,6 +35,7 @@ void expectSame(GameState a, GameState b) {
   expect(b.hilvanes, a.hilvanes);
   expect(b.boostSeconds, a.boostSeconds);
   expect(b.upgrades, a.upgrades);
+  expect(b.shopLevels, a.shopLevels);
   for (var i = 0; i < a.businesses.length; i++) {
     expect(b.businesses[i].owned, a.businesses[i].owned, reason: '$i');
     expect(b.businesses[i].hasManager, a.businesses[i].hasManager);
@@ -88,9 +90,31 @@ void main() {
       final s = codec.decode(v0).state;
       expect(s.money, BigNum.parse('5e3'));
       expect(s.hilvanes, BigNum.zero);
+      expect(s.shopLevels, isEmpty, reason: 'v0 -> v1 -> v2 encadenadas');
       expect(s.boostSeconds, 0);
       expect(s.businesses[0].owned, 12);
       expect(s.businesses.length, 10, reason: 'rellena negocios nuevos');
+    });
+
+    test('migra una v1 (sin tienda) a v2', () {
+      final d = jsonEncode({
+        'money': '1e3',
+        'lifetime': '1e5',
+        'businesses': [
+          {'owned': 3},
+        ],
+        'hilvanes': '9',
+        'boostSeconds': 0,
+      });
+      final v1 = jsonEncode({
+        'v': 1,
+        't': 0,
+        'h': SaveCodec.checksum(d),
+        'd': d,
+      });
+      final s = codec.decode(v1).state;
+      expect(s.hilvanes, BigNum.fromInt(9));
+      expect(s.shopLevels, isEmpty);
     });
 
     test('rechaza guardados de una versión más nueva', () {

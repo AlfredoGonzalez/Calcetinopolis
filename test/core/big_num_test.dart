@@ -86,6 +86,23 @@ void main() {
       expect(BigNum.fromInt(1234).toInt(), 1234);
     });
 
+    test('enteros exactos: 1000 - 400 es 600 y no 599.999', () {
+      expect(BigNum.fromInt(1000) - BigNum.fromInt(400), BigNum.fromInt(600));
+      expect(
+        (BigNum.fromInt(1000) - BigNum.fromInt(400)).floor(),
+        BigNum.fromInt(600),
+      );
+      for (var a = 1; a < 300; a += 7) {
+        for (var b = 1; b < a; b += 11) {
+          expect(
+            BigNum.fromInt(a) - BigNum.fromInt(b),
+            BigNum.fromInt(a - b),
+            reason: '$a-$b',
+          );
+        }
+      }
+    });
+
     test('división entre cero lanza error', () {
       expect(() => BigNum.one / BigNum.zero, throwsArgumentError);
     });

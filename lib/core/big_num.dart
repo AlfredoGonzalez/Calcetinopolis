@@ -18,7 +18,11 @@ class BigNum implements Comparable<BigNum> {
       throw ArgumentError('Mantisa infinita');
     }
     final shift = (math.log(mantissa.abs()) / math.ln10).floor();
-    var m = mantissa / math.pow(10, shift);
+    // Dividir/multiplicar por potencias positivas de 10 (exactas hasta 1e22)
+    // evita errores como 0.6 / 0.1 = 5.999999999999999.
+    var m = shift >= 0
+        ? mantissa / math.pow(10, shift)
+        : mantissa * math.pow(10, -shift);
     var e = exponent + shift;
     // Corrige errores de redondeo en el borde.
     if (m.abs() >= 10) {
@@ -27,6 +31,13 @@ class BigNum implements Comparable<BigNum> {
     } else if (m.abs() < 1) {
       m *= 10;
       e -= 1;
+    }
+    // Se redondea a 12 cifras significativas: limpia el ruido binario
+    // (3.0000000000000004 -> 3) para que enteros como 1000 - 400 queden exactos.
+    m = (m * 1e11).roundToDouble() / 1e11;
+    if (m.abs() >= 10) {
+      m /= 10;
+      e += 1;
     }
     return BigNum._(m, e);
   }

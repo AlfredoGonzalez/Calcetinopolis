@@ -38,7 +38,15 @@ class _Candidate {
 
 /// Simulador sin interfaz (spec 11.2): un bot que compra lo de mejor retorno.
 class Simulator {
-  Simulator(this.economy, {this.dt = 1.0, this.tapDelay = 2.0});
+  Simulator(
+    this.economy, {
+    this.dt = 1.0,
+    this.tapDelay = 2.0,
+    this.useShop = true,
+  });
+
+  /// El bot gasta Hilvanes en la tienda de prestigio (la mejora más barata primero).
+  final bool useShop;
 
   final Economy economy;
   final double dt;
@@ -165,8 +173,26 @@ class Simulator {
       report.pairsAtEnd = economy.pairsPending(s);
       report.earnedInRun = s.lifetimeEarnings - lifetimeAtStart;
       economy.prestige(s);
+      if (useShop) _spendHilvanes(s);
     }
     return SimReport(runs);
+  }
+
+  void _spendHilvanes(GameState s) {
+    while (true) {
+      String? pick;
+      BigNum? best;
+      for (final it in economy.config.shop) {
+        final next = economy.nextShopLevel(s, it.id);
+        if (next == null || next.cost > s.hilvanes) continue;
+        if (best == null || next.cost < best) {
+          best = next.cost;
+          pick = it.id;
+        }
+      }
+      if (pick == null) return;
+      economy.buyShop(s, pick);
+    }
   }
 
   /// Compra mientras convenga. Devuelve el costo de la compra más barata

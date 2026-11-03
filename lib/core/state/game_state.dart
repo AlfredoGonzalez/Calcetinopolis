@@ -47,12 +47,14 @@ class GameState {
     Set<String>? upgrades,
     BigNum? pairsClaimed,
     BigNum? hilvanes,
+    Map<String, int>? shopLevels,
     this.boostSeconds = 0,
   }) : money = money ?? BigNum.zero,
        lifetimeEarnings = lifetimeEarnings ?? BigNum.zero,
        upgrades = upgrades ?? <String>{},
        pairsClaimed = pairsClaimed ?? BigNum.zero,
-       hilvanes = hilvanes ?? BigNum.zero;
+       hilvanes = hilvanes ?? BigNum.zero,
+       shopLevels = shopLevels ?? <String, int>{};
 
   /// Partida nueva: el primer negocio viene gratis (spec 9.2).
   factory GameState.initial(int businessCount) => GameState(
@@ -75,6 +77,9 @@ class GameState {
   /// Hilvanes: moneda gastable de la tienda de prestigio.
   BigNum hilvanes;
 
+  /// Nivel comprado de cada mejora de la tienda de Hilvanes (permanente).
+  final Map<String, int> shopLevels;
+
   /// Segundos restantes de boost por anuncio.
   double boostSeconds;
 
@@ -85,6 +90,7 @@ class GameState {
     'upgrades': upgrades.toList()..sort(),
     'pairs': pairsClaimed.toJson(),
     'hilvanes': hilvanes.toJson(),
+    'shop': shopLevels,
     'boostSeconds': boostSeconds,
   };
 
@@ -114,6 +120,10 @@ class GameState {
           .toSet(),
       pairsClaimed: big(j['pairs']),
       hilvanes: big(j['hilvanes']),
+      shopLevels: {
+        for (final e in ((j['shop'] as Map?) ?? const {}).entries)
+          if ((e.value as num) > 0) e.key as String: (e.value as num).toInt(),
+      },
       boostSeconds: boost.isNaN || boost < 0 ? 0 : boost,
     );
   }
@@ -125,6 +135,7 @@ class GameState {
     upgrades: {...upgrades},
     pairsClaimed: pairsClaimed,
     hilvanes: hilvanes,
+    shopLevels: {...shopLevels},
     boostSeconds: boostSeconds,
   );
 }

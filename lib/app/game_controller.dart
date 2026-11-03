@@ -207,6 +207,35 @@ class GameController extends ChangeNotifier {
     return bought;
   }
 
+  // ------------------------------------------------------------ prestigio
+
+  BigNum get pairsPending => economy.pairsPending(state);
+
+  /// Centrifuga. Devuelve las Parejas nuevas (0 si no había nada que cobrar).
+  Future<BigNum> centrifuge() async {
+    final got = economy.prestige(state);
+    if (!got.isPositive) return got;
+    analytics?.log('prestige', {
+      'pairs': got.toJson(),
+      'total': state.pairsClaimed.toJson(),
+    });
+    notifyListeners();
+    await save();
+    return got;
+  }
+
+  bool canBuyShop(String id) {
+    final next = economy.nextShopLevel(state, id);
+    return next != null && next.cost <= state.hilvanes;
+  }
+
+  void buyShop(String id) {
+    if (economy.buyShop(state, id)) {
+      notifyListeners();
+      save();
+    }
+  }
+
   /// ¿Hay algo asequible en Mejoras? (punto de aviso en la pestaña)
   bool get hasAffordableUpgrade {
     for (final u in economy.config.upgrades) {

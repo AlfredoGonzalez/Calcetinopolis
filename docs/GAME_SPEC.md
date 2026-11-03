@@ -428,6 +428,7 @@ P_{total} = \left\lfloor 150 \cdot \sqrt{\frac{E_{vida}}{S}} \right\rfloor
 - **Dos monedas separadas, el bono nunca baja:**
   - **Parejas Reunidas:** permanentes, nunca se gastan. Cada una da +2% a todas las ganancias (aditivo, como en AdCap).
   - **Hilvanes:** moneda gastable de la tienda de mejoras permanentes. Se gana 1 Hilván por cada Pareja nueva obtenida en un Centrifugado.
+  - **Tienda inicial (propuesta, en `config/economy.json`):** Detergente concentrado (multiplicador global), Calcetín de la suerte (Pelusitas al empezar), Primeras ayudas (managers gratis) y Cesto más grande (tope offline hasta 24 h).
 - La pantalla de prestigio muestra: Parejas Reunidas actuales, Parejas por cobrar, y el multiplicador antes y después.
 - Indicador "buen momento para reiniciar" cuando las Parejas por cobrar ≥ las actuales.
 - **Diferencia con AdCap:** en lugar de sacrificar unidades, se gastan en una tienda de mejoras permanentes con su propia moneda de prestigio. Así el jugador nunca siente que pierde su bono al comprar.

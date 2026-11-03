@@ -416,5 +416,99 @@
     "multiplier": 2,
     "hours_per_view": 4,
     "max_hours": 12
-  }
+  },
+  "prestige_shop": [
+    {
+      "id": "detergente",
+      "name": "Detergente concentrado",
+      "description": "Multiplica todas las ganancias.",
+      "type": "global_mult",
+      "levels": [
+        {
+          "cost": 400,
+          "value": 1.25
+        },
+        {
+          "cost": 1600,
+          "value": 1.5
+        },
+        {
+          "cost": 6000,
+          "value": 2
+        },
+        {
+          "cost": 24000,
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "suerte",
+      "name": "Calcetín de la suerte",
+      "description": "Empiezas cada Centrifugado con Pelusitas.",
+      "type": "start_money",
+      "levels": [
+        {
+          "cost": 200,
+          "value": 1000
+        },
+        {
+          "cost": 1200,
+          "value": 1000000.0
+        },
+        {
+          "cost": 6000,
+          "value": 1000000000.0
+        },
+        {
+          "cost": 30000,
+          "value": 1000000000000.0
+        }
+      ]
+    },
+    {
+      "id": "ayudantes",
+      "name": "Primeras ayudas",
+      "description": "Empiezas con managers en los primeros negocios.",
+      "type": "free_managers",
+      "levels": [
+        {
+          "cost": 600,
+          "value": 1
+        },
+        {
+          "cost": 1800,
+          "value": 2
+        },
+        {
+          "cost": 5000,
+          "value": 3
+        },
+        {
+          "cost": 14000,
+          "value": 5
+        }
+      ]
+    },
+    {
+      "id": "cesto_grande",
+      "name": "Cesto más grande",
+      "description": "Más horas de ganancias offline.",
+      "type": "offline_cap_hours",
+      "levels": [
+        {
+          "cost": 800,
+          "value": 8
+        },
+        {
+          "cost": 3000,
+          "value": 12
+        },
+        {
+          "cost": 12000,
+          "value": 24
+        }
+      ]
+    }
+  ]
 }

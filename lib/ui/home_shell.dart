@@ -4,6 +4,7 @@ import '../app/game_controller.dart';
 import '../core/number_format.dart';
 import 'businesses_page.dart';
 import 'offline_dialog.dart';
+import 'prestige_page.dart';
 import 'theme.dart';
 import 'upgrades_page.dart';
 
@@ -74,7 +75,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         final pages = <Widget>[
           BusinessesPage(controller: c, formatter: widget.formatter),
           UpgradesPage(controller: c, formatter: widget.formatter),
-          const _Soon(title: 'Centrifugado', text: 'Llega en F4.'),
+          PrestigePage(controller: c, formatter: widget.formatter),
           const _Soon(title: 'Metas', text: 'Llega en F5.'),
           const _Soon(title: 'Tienda', text: 'Llega en F7.'),
         ];

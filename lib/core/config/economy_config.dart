@@ -88,6 +88,38 @@ class BoostConfig {
   final double maxHours;
 }
 
+class ShopLevel {
+  const ShopLevel({required this.cost, required this.value});
+
+  /// Costo en Hilvanes.
+  final BigNum cost;
+  final double value;
+}
+
+/// Tipos de mejora permanente de la tienda de Hilvanes.
+class ShopType {
+  static const globalMult = 'global_mult';
+  static const startMoney = 'start_money';
+  static const freeManagers = 'free_managers';
+  static const offlineCapHours = 'offline_cap_hours';
+  static const all = {globalMult, startMoney, freeManagers, offlineCapHours};
+}
+
+class ShopItem {
+  const ShopItem({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.type,
+    required this.levels,
+  });
+  final String id;
+  final String name;
+  final String description;
+  final String type;
+  final List<ShopLevel> levels;
+}
+
 class EconomyConfig {
   const EconomyConfig({
     required this.businesses,
@@ -99,6 +131,7 @@ class EconomyConfig {
     required this.prestige,
     required this.offline,
     required this.boost,
+    this.shop = const [],
   });
 
   final List<BusinessConfig> businesses;
@@ -112,6 +145,7 @@ class EconomyConfig {
   final PrestigeConfig prestige;
   final OfflineConfig offline;
   final BoostConfig boost;
+  final List<ShopItem> shop;
 
   factory EconomyConfig.fromJsonString(String source) =>
       EconomyConfig.fromJson(jsonDecode(source) as Map<String, dynamic>);
@@ -173,6 +207,22 @@ class EconomyConfig {
         baseCapHours: (o['base_cap_hours'] as num).toDouble(),
         maxCapHours: (o['max_cap_hours'] as num).toDouble(),
       ),
+      shop: ((j['prestige_shop'] as List?) ?? const []).map((raw) {
+        final it = raw as Map<String, dynamic>;
+        return ShopItem(
+          id: it['id'] as String,
+          name: it['name'] as String,
+          description: it['description'] as String,
+          type: it['type'] as String,
+          levels: (it['levels'] as List).map((l) {
+            final m = l as Map<String, dynamic>;
+            return ShopLevel(
+              cost: big(m['cost']),
+              value: (m['value'] as num).toDouble(),
+            );
+          }).toList(),
+        );
+      }).toList(),
       boost: BoostConfig(
         multiplier: (bo['multiplier'] as num).toDouble(),
         hoursPerView: (bo['hours_per_view'] as num).toDouble(),
@@ -211,6 +261,18 @@ class EconomyConfig {
     for (var i = 1; i < thresholds.length; i++) {
       if (thresholds[i] <= thresholds[i - 1]) {
         throw const FormatException('Umbrales no crecientes');
+      }
+    }
+    final shopIds = <String>{};
+    for (final it in shop) {
+      if (!shopIds.add(it.id)) {
+        throw FormatException('Mejora duplicada: ${it.id}');
+      }
+      if (!ShopType.all.contains(it.type)) {
+        throw FormatException('Tipo de mejora desconocido: ${it.type}');
+      }
+      if (it.levels.isEmpty) {
+        throw FormatException('Mejora sin niveles: ${it.id}');
       }
     }
     if (prestige.scale <= BigNum.zero) {

@@ -17,7 +17,7 @@ Flutter + Flame · Android primero · solo español · MXN · 13+ · anuncios so
 
 Una fase por sesión (sección 11.4 del spec): F0 base, F1 economía y simulador, F2 loop jugable, F3 persistencia, F4 prestigio, F5 retención, F6 arte y sonido, F7 monetización, F8 lanzamiento, F9 v1.1.
 
-**Estado:** F0 (base), F1 (economía + simulador), F2 (loop jugable) y F3 (guardado y ganancias offline) listas. Siguiente: F4, prestigio.
+**Estado:** F0 a F4 listas (base, economía, loop jugable, guardado/offline y prestigio con tienda de Hilvanes). Siguiente: F5, retención (metas, tutorial, ajustes).
 
 ## Desarrollo
 

@@ -49,7 +49,75 @@ class Economy {
     }
     m = m.mulDouble(profitUnlockMultiplier(s.businesses[i].owned));
     m = m * Formulas.pairsMultiplier(s.pairsClaimed, config.prestige.pairBonus);
+    final shopMult = shopValue(s, ShopType.globalMult);
+    if (shopMult != null) m = m.mulDouble(shopMult);
     return m;
+  }
+
+  // ------------------------------------------------------------ tienda de Hilvanes
+
+  ShopItem shopItem(String id) => config.shop.firstWhere((it) => it.id == id);
+
+  int shopLevel(GameState s, String id) => s.shopLevels[id] ?? 0;
+
+  /// Valor actual de la mejora de ese tipo (nivel comprado más alto), o null.
+  double? shopValue(GameState s, String type) {
+    double? best;
+    for (final it in config.shop) {
+      if (it.type != type) continue;
+      final lvl = shopLevel(s, it.id);
+      if (lvl <= 0) continue;
+      final v = it.levels[math.min(lvl, it.levels.length) - 1].value;
+      if (best == null || v > best) best = v;
+    }
+    return best;
+  }
+
+  /// Siguiente nivel de la mejora, o null si ya está al máximo.
+  ShopLevel? nextShopLevel(GameState s, String id) {
+    final it = shopItem(id);
+    final lvl = shopLevel(s, id);
+    return lvl >= it.levels.length ? null : it.levels[lvl];
+  }
+
+  bool buyShop(GameState s, String id) {
+    final next = nextShopLevel(s, id);
+    if (next == null || next.cost > s.hilvanes) return false;
+    final it = shopItem(id);
+    final oldLevel = shopLevel(s, id);
+    s.hilvanes -= next.cost;
+    s.shopLevels[id] = oldLevel + 1;
+    // Las mejoras de arranque también valen para la corrida en curso.
+    if (it.type == ShopType.startMoney) {
+      final before = oldLevel == 0 ? 0.0 : it.levels[oldLevel - 1].value;
+      s.money += BigNum.fromDouble(next.value - before);
+    } else if (it.type == ShopType.freeManagers) {
+      _grantFreeManagers(s);
+    }
+    return true;
+  }
+
+  /// Tope de horas offline: la base o lo que dé la tienda (hasta el máximo).
+  double offlineCapHours(GameState s) {
+    final v = shopValue(s, ShopType.offlineCapHours) ?? 0;
+    return math.min(
+      math.max(v, config.offline.baseCapHours),
+      config.offline.maxCapHours,
+    );
+  }
+
+  /// Estado inicial de una corrida según la tienda (Pelusitas y managers).
+  void _applyRunStart(GameState s) {
+    final money = shopValue(s, ShopType.startMoney);
+    if (money != null) s.money = BigNum.fromDouble(money);
+    _grantFreeManagers(s);
+  }
+
+  void _grantFreeManagers(GameState s) {
+    final managers = shopValue(s, ShopType.freeManagers)?.floor() ?? 0;
+    for (var i = 0; i < math.min(managers, s.businesses.length); i++) {
+      s.businesses[i].hasManager = true;
+    }
   }
 
   BigNum incomePerCycle(GameState s, int i) => Formulas.cycleIncome(
@@ -214,7 +282,7 @@ class Economy {
   /// Ganancia offline: $/s de negocios con manager * tiempo, con tope.
   /// Tiempo negativo (reloj atrasado) cuenta como cero. No modifica el estado.
   BigNum offlineGain(GameState s, double secondsAway, {double? capHours}) {
-    final cap = offlineCapSeconds(capHours ?? config.offline.baseCapHours);
+    final cap = offlineCapSeconds(capHours ?? offlineCapHours(s));
     final secs = secondsAway.isNaN ? 0.0 : secondsAway.clamp(0.0, cap);
     if (secs <= 0) return BigNum.zero;
     return managedIncomePerSecond(s).mulDouble(secs);
@@ -265,6 +333,7 @@ class Economy {
         ..progress = 0
         ..running = false;
     }
+    _applyRunStart(s);
     return pending;
   }
 }
