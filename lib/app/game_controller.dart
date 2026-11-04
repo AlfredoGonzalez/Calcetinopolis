@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../core/big_num.dart';
 import '../core/economy/engine.dart';
 import '../core/economy/offline.dart';
+import '../core/number_format.dart';
 import '../core/state/game_state.dart';
 import '../services/services.dart';
 import 'save_manager.dart';
@@ -27,7 +28,7 @@ class GameController extends ChangeNotifier {
        time = time ?? DeviceTimeService();
 
   final Economy economy;
-  final GameState state;
+  GameState state;
   final SaveManager? saveManager;
   final TimeService time;
 
@@ -68,6 +69,7 @@ class GameController extends ChangeNotifier {
   void advance(double dt) {
     final step = dt.clamp(0.0, 1.0);
     economy.tick(state, step);
+    _trackTutorial();
     _sinceSave += step;
     if (_sinceSave >= autosaveEvery) save();
     notifyListeners();
@@ -205,6 +207,133 @@ class GameController extends ChangeNotifier {
       save();
     }
     return bought;
+  }
+
+  // ------------------------------------------------------------ metas y regalo
+
+  bool canClaimGoal(String id) => economy.canClaimGoal(state, id);
+
+  void claimGoal(String id) {
+    if (economy.claimGoal(state, id)) {
+      analytics?.log('goal_claim', {'id': id});
+      notifyListeners();
+      save();
+    }
+  }
+
+  bool get canClaimDaily => economy.canClaimDaily(state, time.now());
+
+  DailyReward? claimDaily() {
+    final r = economy.claimDaily(state, time.now());
+    if (r != null) {
+      analytics?.log('daily_claim', {'streak': r.streak});
+      notifyListeners();
+      save();
+    }
+    return r;
+  }
+
+  /// Punto de aviso en la pestaña Metas.
+  bool get hasGoalNotice => economy.hasClaimableGoal(state) || canClaimDaily;
+
+  // ------------------------------------------------------------ tutorial
+
+  /// Paso actual del tutorial (0 a 2), o null si ya terminó o se saltó (spec 9.12).
+  int? get tutorialStep {
+    if (state.tutorialDone) return null;
+    if (state.lifetimeEarnings.isZero) return 0; // toca el Tendedero
+    if (state.businesses[0].owned < 2) return 1; // compra el siguiente
+    if (!state.businesses.any((b) => b.hasManager)) {
+      return 2; // contrata un manager
+    }
+    return null;
+  }
+
+  int? _lastTutorialStep;
+
+  void _trackTutorial() {
+    final step = tutorialStep;
+    if (step == _lastTutorialStep) return;
+    _lastTutorialStep = step;
+    if (step == null) {
+      if (!state.tutorialDone) state.tutorialDone = true;
+      analytics?.log('tutorial_step', {'step': 'done'});
+      save();
+    } else {
+      analytics?.log('tutorial_step', {'step': step});
+    }
+  }
+
+  void skipTutorial() {
+    if (state.tutorialDone) return;
+    state.tutorialDone = true;
+    analytics?.log('tutorial_step', {'step': 'skipped'});
+    notifyListeners();
+    save();
+  }
+
+  // ------------------------------------------------------------ ajustes
+
+  NumberFormatter get formatter => NumberFormatter(
+    mode: NumberFormatMode.values.firstWhere(
+      (m) => m.name == state.settings.numberFormat,
+      orElse: () => NumberFormatMode.shortSuffix,
+    ),
+  );
+
+  void setNumberFormat(NumberFormatMode mode) {
+    state.settings.numberFormat = mode.name;
+    notifyListeners();
+    save();
+  }
+
+  void setFontScale(double v) {
+    state.settings.fontScale = v.clamp(0.85, 1.6);
+    notifyListeners();
+    save();
+  }
+
+  void setSound(bool v) {
+    state.settings.sound = v;
+    notifyListeners();
+    save();
+  }
+
+  void setVibration(bool v) {
+    state.settings.vibration = v;
+    notifyListeners();
+    save();
+  }
+
+  /// Texto de la partida para copiar (soporte).
+  String? exportSave() => saveManager?.export(state, time.now());
+
+  /// Reemplaza la partida con un texto exportado. Lanza [SaveFormatException]
+  /// si el texto no sirve y en ese caso no cambia nada.
+  Future<void> importSave(String text) async {
+    final m = saveManager;
+    if (m == null) throw SaveFormatException('guardado no disponible');
+    final data = m.import(text);
+    state = data.state;
+    pendingOffline = null;
+    lastSeen = time.now();
+    notifyListeners();
+    await save();
+  }
+
+  /// Borra la partida pero conserva los ajustes.
+  Future<void> resetGame() async {
+    final settings = state.settings.copy();
+    state = economy.newGame()
+      ..settings.numberFormat = settings.numberFormat
+      ..settings.fontScale = settings.fontScale
+      ..settings.sound = settings.sound
+      ..settings.vibration = settings.vibration;
+    pendingOffline = null;
+    _lastTutorialStep = null;
+    analytics?.log('game_reset');
+    notifyListeners();
+    await save();
   }
 
   // ------------------------------------------------------------ prestigio

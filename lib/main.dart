@@ -40,11 +40,20 @@ class CalcetinopolisApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Calcetinópolis',
-      debugShowCheckedModeBanner: false,
-      theme: buildTheme(),
-      home: HomeShell(controller: controller),
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) => MaterialApp(
+        title: 'Calcetinópolis',
+        debugShowCheckedModeBanner: false,
+        theme: buildTheme(),
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(controller.state.settings.fontScale),
+          ),
+          child: child!,
+        ),
+        home: HomeShell(controller: controller),
+      ),
     );
   }
 }

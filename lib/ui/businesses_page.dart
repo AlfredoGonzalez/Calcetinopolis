@@ -30,6 +30,7 @@ class BusinessesPage extends StatelessWidget {
     final count = c.state.businesses.length;
     return Column(
       children: [
+        _TutorialBanner(controller: c),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: SegmentedButton<BuyAmount>(
@@ -309,6 +310,51 @@ class _BuyButtonState extends State<_BuyButton> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Tutorial de 3 pasos con una flecha de hilo (spec 9.12). Se puede saltar en cualquier momento.
+class _TutorialBanner extends StatelessWidget {
+  const _TutorialBanner({required this.controller});
+  final GameController controller;
+
+  static const _texts = [
+    'Toca el Tendedero para ganar tus primeras Pelusitas.',
+    'Compra otro Tendedero con el botón rojo.',
+    'Contrata a tu primer manager: trabaja solo, incluso con la app cerrada.',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final step = controller.tutorialStep;
+    if (step == null) return const SizedBox.shrink();
+    return Container(
+      key: const Key('tutorial'),
+      margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
+      decoration: BoxDecoration(
+        color: Palette.butter,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Palette.outline, width: 1.5),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.gesture, color: Palette.outline),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Paso ${step + 1} de 3: ${_texts[step]}',
+              key: const Key('tutorial-text'),
+            ),
+          ),
+          TextButton(
+            key: const Key('tutorial-skip'),
+            onPressed: controller.skipTutorial,
+            child: const Text('Saltar'),
+          ),
+        ],
       ),
     );
   }

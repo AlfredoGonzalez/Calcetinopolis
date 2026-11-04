@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../app/game_controller.dart';
-import '../core/number_format.dart';
 import 'businesses_page.dart';
+import 'goals_page.dart';
+import 'settings_page.dart';
 import 'offline_dialog.dart';
 import 'prestige_page.dart';
 import 'theme.dart';
@@ -10,14 +11,9 @@ import 'upgrades_page.dart';
 
 /// Barra superior con monedas + 5 pestañas (spec 9.11).
 class HomeShell extends StatefulWidget {
-  const HomeShell({
-    super.key,
-    required this.controller,
-    this.formatter = const NumberFormatter(),
-  });
+  const HomeShell({super.key, required this.controller});
 
   final GameController controller;
-  final NumberFormatter formatter;
 
   @override
   State<HomeShell> createState() => _HomeShellState();
@@ -60,7 +56,11 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     _dialogOpen = true;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (mounted && widget.controller.pendingOffline != null) {
-        await showOfflineDialog(context, widget.controller, widget.formatter);
+        await showOfflineDialog(
+          context,
+          widget.controller,
+          widget.controller.formatter,
+        );
       }
       _dialogOpen = false;
     });
@@ -73,10 +73,10 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       listenable: c,
       builder: (context, _) {
         final pages = <Widget>[
-          BusinessesPage(controller: c, formatter: widget.formatter),
-          UpgradesPage(controller: c, formatter: widget.formatter),
-          PrestigePage(controller: c, formatter: widget.formatter),
-          const _Soon(title: 'Metas', text: 'Llega en F5.'),
+          BusinessesPage(controller: c, formatter: widget.controller.formatter),
+          UpgradesPage(controller: c, formatter: widget.controller.formatter),
+          PrestigePage(controller: c, formatter: widget.controller.formatter),
+          GoalsPage(controller: c, formatter: c.formatter),
           const _Soon(title: 'Tienda', text: 'Llega en F7.'),
         ];
         return PopScope(
@@ -94,7 +94,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
                   const SizedBox(width: 8),
                   Text(
                     key: const Key('money'),
-                    widget.formatter.format(c.state.money),
+                    widget.controller.formatter.format(c.state.money),
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Palette.outline,
@@ -102,7 +102,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
                   ),
                   const Spacer(),
                   Text(
-                    'Parejas ${widget.formatter.format(c.state.pairsClaimed)}',
+                    'Parejas ${widget.controller.formatter.format(c.state.pairsClaimed)}',
                     style: const TextStyle(
                       fontSize: 14,
                       color: Palette.outline,
@@ -110,11 +110,16 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
                   ),
                 ],
               ),
-              actions: const [
+              actions: [
                 IconButton(
+                  key: const Key('settings'),
                   tooltip: 'Ajustes',
-                  onPressed: null,
-                  icon: Icon(Icons.settings, color: Palette.outline),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => SettingsPage(controller: c),
+                    ),
+                  ),
+                  icon: const Icon(Icons.settings, color: Palette.outline),
                 ),
               ],
             ),
@@ -140,8 +145,13 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
                   icon: Icon(Icons.local_laundry_service),
                   label: 'Centrifugado',
                 ),
-                const NavigationDestination(
-                  icon: Icon(Icons.flag),
+                NavigationDestination(
+                  icon: Badge(
+                    isLabelVisible: c.hasGoalNotice,
+                    smallSize: 8,
+                    backgroundColor: Palette.tomato,
+                    child: const Icon(Icons.flag),
+                  ),
                   label: 'Metas',
                 ),
                 const NavigationDestination(

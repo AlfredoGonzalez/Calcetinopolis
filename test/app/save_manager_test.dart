@@ -15,6 +15,13 @@ GameState sample() {
     ..pairsClaimed = BigNum.fromInt(120)
     ..hilvanes = BigNum.fromInt(70)
     ..shopLevels.addAll({'detergente': 2, 'suerte': 1})
+    ..goalsClaimed.addAll(['own10', 'first_manager'])
+    ..dailyDay = '2026-11-03'
+    ..dailyStreak = 4
+    ..tutorialDone = true
+    ..settings.numberFormat = 'scientific'
+    ..settings.fontScale = 1.3
+    ..settings.sound = false
     ..boostSeconds = 1234.5
     ..upgrades.addAll(['all_x3_1', 'tendedero_x3_1']);
   s.businesses[0]
@@ -36,6 +43,14 @@ void expectSame(GameState a, GameState b) {
   expect(b.boostSeconds, a.boostSeconds);
   expect(b.upgrades, a.upgrades);
   expect(b.shopLevels, a.shopLevels);
+  expect(b.goalsClaimed, a.goalsClaimed);
+  expect(b.dailyDay, a.dailyDay);
+  expect(b.dailyStreak, a.dailyStreak);
+  expect(b.tutorialDone, a.tutorialDone);
+  expect(b.settings.numberFormat, a.settings.numberFormat);
+  expect(b.settings.fontScale, a.settings.fontScale);
+  expect(b.settings.sound, a.settings.sound);
+  expect(b.settings.vibration, a.settings.vibration);
   for (var i = 0; i < a.businesses.length; i++) {
     expect(b.businesses[i].owned, a.businesses[i].owned, reason: '$i');
     expect(b.businesses[i].hasManager, a.businesses[i].hasManager);
@@ -115,6 +130,50 @@ void main() {
       final s = codec.decode(v1).state;
       expect(s.hilvanes, BigNum.fromInt(9));
       expect(s.shopLevels, isEmpty);
+    });
+
+    test('migra una v2 (sin metas ni ajustes) a v3: sin tutorial para quien ya jugaba', () {
+      final d = jsonEncode({
+        'money': '1e3',
+        'lifetime': '1e5',
+        'businesses': [
+          {'owned': 3},
+        ],
+        'shop': {'detergente': 1},
+      });
+      final v2 = jsonEncode({
+        'v': 2,
+        't': 0,
+        'h': SaveCodec.checksum(d),
+        'd': d,
+      });
+      final s = codec.decode(v2).state;
+      expect(s.tutorialDone, isTrue);
+      expect(s.goalsClaimed, isEmpty);
+      expect(s.dailyDay, isNull);
+      expect(s.settings.numberFormat, 'shortSuffix');
+      expect(s.settings.fontScale, 1.0);
+      expect(s.shopLevels, {'detergente': 1});
+    });
+
+    test('ajustes inválidos se sanean', () {
+      final d = jsonEncode({
+        'businesses': [
+          {'owned': 1},
+        ],
+        'settings': {'numberFormat': 'raro', 'fontScale': 99},
+        'dailyStreak': -5,
+      });
+      final env = jsonEncode({
+        'v': kSaveVersion,
+        't': 0,
+        'h': SaveCodec.checksum(d),
+        'd': d,
+      });
+      final s = codec.decode(env).state;
+      expect(s.settings.numberFormat, 'shortSuffix');
+      expect(s.settings.fontScale, 1.6);
+      expect(s.dailyStreak, 0);
     });
 
     test('rechaza guardados de una versión más nueva', () {

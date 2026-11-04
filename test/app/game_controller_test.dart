@@ -6,11 +6,13 @@ import 'package:calcetinopolis/services/services.dart';
 import 'package:calcetinopolis/core/big_num.dart';
 import 'package:calcetinopolis/core/config/economy_config.dart';
 import 'package:calcetinopolis/core/economy/engine.dart';
+import 'package:calcetinopolis/core/number_format.dart';
 import 'package:calcetinopolis/core/state/game_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   persistenceTests();
+  f5Tests();
   final config = EconomyConfig.fromJsonString(
     File('config/economy.json').readAsStringSync(),
   );
@@ -275,4 +277,159 @@ class _BrokenStore implements SaveService {
   @override
   Future<void> write(int slot, String data) async =>
       throw const FileSystemException('disco lleno');
+}
+
+// ---------------------------------------------------------------- F5
+void f5Tests() {
+  final config = EconomyConfig.fromJsonString(
+    File('config/economy.json').readAsStringSync(),
+  );
+  final t0 = DateTime(2026, 11, 3, 12);
+
+  late MemorySaveService store;
+  late SaveManager manager;
+  late FakeTimeService time;
+  late MemoryAnalyticsService analytics;
+  late GameController c;
+
+  setUp(() {
+    store = MemorySaveService();
+    manager = SaveManager(store, SaveCodec(config.businesses.length));
+    time = FakeTimeService(t0);
+    analytics = MemoryAnalyticsService();
+    c = GameController(
+      Economy(config),
+      saveManager: manager,
+      time: time,
+      analytics: analytics,
+    );
+  });
+
+  group('tutorial', () {
+    test('avanza en 3 pasos y termina solo', () {
+      c.advance(0); // el reloj del juego registra el paso 0
+      expect(c.tutorialStep, 0);
+      c.tap(0);
+      c.advance(1);
+      expect(c.tutorialStep, 1);
+      c.state.money = BigNum.fromInt(100);
+      c.buy(0);
+      c.advance(0);
+      expect(c.tutorialStep, 2);
+      c.state.money = BigNum.fromInt(5000);
+      c.buyManager(0);
+      c.advance(0.1);
+      expect(c.tutorialStep, isNull);
+      expect(c.state.tutorialDone, isTrue);
+      final steps = analytics.events
+          .where((e) => e.$1 == 'tutorial_step')
+          .map((e) => e.$2['step']);
+      expect(steps, containsAllInOrder([0, 1, 2, 'done']));
+    });
+
+    test('se puede saltar en cualquier momento', () {
+      c.skipTutorial();
+      expect(c.tutorialStep, isNull);
+      expect(c.state.tutorialDone, isTrue);
+      expect(analytics.events.last.$2['step'], 'skipped');
+    });
+
+    test('quien ya tiene todo no ve el tutorial', () {
+      final g = c.economy.newGame()
+        ..lifetimeEarnings = BigNum.fromInt(10)
+        ..businesses[0].owned = 5
+        ..businesses[0].hasManager = true;
+      final c2 = GameController(Economy(config), initial: g, time: time);
+      expect(c2.tutorialStep, isNull);
+    });
+  });
+
+  group('metas y regalo', () {
+    test('reclamar meta guarda y registra analítica', () async {
+      c.state.businesses[0].owned = 10;
+      expect(c.hasGoalNotice, isTrue);
+      c.claimGoal('own10');
+      await Future<void>.delayed(Duration.zero);
+      expect(c.state.goalsClaimed, contains('own10'));
+      expect(store.data[0], isNotNull);
+      expect(analytics.events.any((e) => e.$1 == 'goal_claim'), isTrue);
+    });
+
+    test('regalo diario: una vez al día y el aviso desaparece', () {
+      expect(c.canClaimDaily, isTrue);
+      expect(c.claimDaily(), isNotNull);
+      expect(c.canClaimDaily, isFalse);
+      expect(c.claimDaily(), isNull);
+      expect(c.hasGoalNotice, isFalse);
+      time.advance(const Duration(days: 1));
+      expect(c.canClaimDaily, isTrue);
+    });
+  });
+
+  group('ajustes', () {
+    test('formato de números cambia el formatter y se guarda', () async {
+      expect(c.formatter.mode, NumberFormatMode.shortSuffix);
+      c.setNumberFormat(NumberFormatMode.scientific);
+      expect(c.formatter.mode, NumberFormatMode.scientific);
+      await Future<void>.delayed(Duration.zero);
+      final saved = (await manager.load()).data!.state;
+      expect(saved.settings.numberFormat, 'scientific');
+    });
+
+    test('tamaño de letra se acota', () {
+      c.setFontScale(5);
+      expect(c.state.settings.fontScale, 1.6);
+      c.setFontScale(0.1);
+      expect(c.state.settings.fontScale, 0.85);
+    });
+
+    test('sonido y vibración', () {
+      c.setSound(false);
+      c.setVibration(false);
+      expect(c.state.settings.sound, isFalse);
+      expect(c.state.settings.vibration, isFalse);
+    });
+
+    test('exportar e importar reemplaza la partida', () async {
+      c.state.money = BigNum.parse('9e9');
+      c.state.pairsClaimed = BigNum.fromInt(77);
+      final text = c.exportSave()!;
+      final other = GameController(
+        Economy(config),
+        saveManager: manager,
+        time: time,
+      );
+      await other.importSave(text);
+      expect(other.state.money, BigNum.parse('9e9'));
+      expect(other.state.pairsClaimed, BigNum.fromInt(77));
+    });
+
+    test('importar texto inválido no cambia nada', () async {
+      c.state.money = BigNum.fromInt(5);
+      await expectLater(
+        c.importSave('esto no sirve'),
+        throwsA(isA<SaveFormatException>()),
+      );
+      expect(c.state.money, BigNum.fromInt(5));
+    });
+
+    test('reiniciar borra la partida pero conserva ajustes', () async {
+      c.setNumberFormat(NumberFormatMode.names);
+      c.setFontScale(1.3);
+      c.state.money = BigNum.parse('1e30');
+      c.state.pairsClaimed = BigNum.fromInt(500);
+      c.state.goalsClaimed.add('own10');
+      c.state.tutorialDone = true;
+      await c.resetGame();
+      expect(c.state.money, BigNum.zero);
+      expect(c.state.pairsClaimed, BigNum.zero);
+      expect(c.state.goalsClaimed, isEmpty);
+      expect(c.state.businesses[0].owned, 1);
+      expect(c.state.settings.numberFormat, 'names');
+      expect(c.state.settings.fontScale, 1.3);
+      expect(c.tutorialStep, 0, reason: 'partida nueva, tutorial otra vez');
+      final saved = (await manager.load()).data!.state;
+      expect(saved.pairsClaimed, BigNum.zero);
+    });
+  });
 }

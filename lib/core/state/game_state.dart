@@ -39,6 +39,50 @@ class BusinessState {
   );
 }
 
+/// Ajustes del jugador. Se guardan con la partida y sobreviven al reinicio.
+class PlayerSettings {
+  PlayerSettings({
+    this.numberFormat = 'shortSuffix',
+    this.fontScale = 1.0,
+    this.sound = true,
+    this.vibration = true,
+  });
+
+  /// Nombre de `NumberFormatMode`: shortSuffix, names o scientific.
+  String numberFormat;
+  double fontScale;
+  bool sound;
+  bool vibration;
+
+  Map<String, Object?> toJson() => {
+    'numberFormat': numberFormat,
+    'fontScale': fontScale,
+    'sound': sound,
+    'vibration': vibration,
+  };
+
+  factory PlayerSettings.fromJson(Map<String, dynamic>? j) {
+    if (j == null) return PlayerSettings();
+    final scale = (j['fontScale'] as num?)?.toDouble() ?? 1.0;
+    final fmt = j['numberFormat'] as String? ?? 'shortSuffix';
+    return PlayerSettings(
+      numberFormat: const {'shortSuffix', 'names', 'scientific'}.contains(fmt)
+          ? fmt
+          : 'shortSuffix',
+      fontScale: scale.isNaN ? 1.0 : scale.clamp(0.85, 1.6),
+      sound: j['sound'] as bool? ?? true,
+      vibration: j['vibration'] as bool? ?? true,
+    );
+  }
+
+  PlayerSettings copy() => PlayerSettings(
+    numberFormat: numberFormat,
+    fontScale: fontScale,
+    sound: sound,
+    vibration: vibration,
+  );
+}
+
 class GameState {
   GameState({
     required this.businesses,
@@ -48,13 +92,20 @@ class GameState {
     BigNum? pairsClaimed,
     BigNum? hilvanes,
     Map<String, int>? shopLevels,
+    Set<String>? goalsClaimed,
+    this.dailyDay,
+    this.dailyStreak = 0,
+    this.tutorialDone = false,
+    PlayerSettings? settings,
     this.boostSeconds = 0,
   }) : money = money ?? BigNum.zero,
        lifetimeEarnings = lifetimeEarnings ?? BigNum.zero,
        upgrades = upgrades ?? <String>{},
        pairsClaimed = pairsClaimed ?? BigNum.zero,
        hilvanes = hilvanes ?? BigNum.zero,
-       shopLevels = shopLevels ?? <String, int>{};
+       shopLevels = shopLevels ?? <String, int>{},
+       goalsClaimed = goalsClaimed ?? <String>{},
+       settings = settings ?? PlayerSettings();
 
   /// Partida nueva: el primer negocio viene gratis (spec 9.2).
   factory GameState.initial(int businessCount) => GameState(
@@ -80,6 +131,17 @@ class GameState {
   /// Nivel comprado de cada mejora de la tienda de Hilvanes (permanente).
   final Map<String, int> shopLevels;
 
+  /// Metas ya cobradas (permanente).
+  final Set<String> goalsClaimed;
+
+  /// Último día en que se cobró el regalo diario ("2026-11-03"), hora local.
+  String? dailyDay;
+
+  /// Regalos cobrados en total. No se reinicia si faltas un día: se pausa.
+  int dailyStreak;
+  bool tutorialDone;
+  final PlayerSettings settings;
+
   /// Segundos restantes de boost por anuncio.
   double boostSeconds;
 
@@ -91,6 +153,11 @@ class GameState {
     'pairs': pairsClaimed.toJson(),
     'hilvanes': hilvanes.toJson(),
     'shop': shopLevels,
+    'goals': goalsClaimed.toList()..sort(),
+    'dailyDay': dailyDay,
+    'dailyStreak': dailyStreak,
+    'tutorialDone': tutorialDone,
+    'settings': settings.toJson(),
     'boostSeconds': boostSeconds,
   };
 
@@ -124,6 +191,13 @@ class GameState {
         for (final e in ((j['shop'] as Map?) ?? const {}).entries)
           if ((e.value as num) > 0) e.key as String: (e.value as num).toInt(),
       },
+      goalsClaimed: ((j['goals'] as List?) ?? const [])
+          .map((e) => e as String)
+          .toSet(),
+      dailyDay: j['dailyDay'] as String?,
+      dailyStreak: ((j['dailyStreak'] as num?)?.toInt() ?? 0).clamp(0, 1 << 30),
+      tutorialDone: j['tutorialDone'] as bool? ?? false,
+      settings: PlayerSettings.fromJson(j['settings'] as Map<String, dynamic>?),
       boostSeconds: boost.isNaN || boost < 0 ? 0 : boost,
     );
   }
@@ -136,6 +210,11 @@ class GameState {
     pairsClaimed: pairsClaimed,
     hilvanes: hilvanes,
     shopLevels: {...shopLevels},
+    goalsClaimed: {...goalsClaimed},
+    dailyDay: dailyDay,
+    dailyStreak: dailyStreak,
+    tutorialDone: tutorialDone,
+    settings: settings.copy(),
     boostSeconds: boostSeconds,
   );
 }

@@ -4,6 +4,7 @@ import 'package:calcetinopolis/app/game_controller.dart';
 import 'package:calcetinopolis/core/big_num.dart';
 import 'package:calcetinopolis/core/config/economy_config.dart';
 import 'package:calcetinopolis/core/economy/engine.dart';
+import 'package:calcetinopolis/app/save_manager.dart';
 import 'package:calcetinopolis/services/services.dart';
 import 'package:calcetinopolis/ui/home_shell.dart';
 import 'package:calcetinopolis/ui/theme.dart';
@@ -120,12 +121,17 @@ void main() {
 
   testWidgets('pestaña Mejoras: punto de aviso y compras', (t) async {
     await pumpApp(t);
-    expect(find.byType(Badge), findsOneWidget);
-    expect(t.widget<Badge>(find.byType(Badge)).isLabelVisible, isFalse);
+    Badge badge() => t.widget<Badge>(
+      find.ancestor(
+        of: find.byIcon(Icons.arrow_circle_up),
+        matching: find.byType(Badge),
+      ),
+    );
+    expect(badge().isLabelVisible, isFalse);
     c.state.money = BigNum.parse('1e6');
     c.advance(0); // notifica a la UI
     await t.pump();
-    expect(t.widget<Badge>(find.byType(Badge)).isLabelVisible, isTrue);
+    expect(badge().isLabelVisible, isTrue);
 
     await t.tap(find.text('Mejoras'));
     await t.pumpAndSettle();
@@ -147,9 +153,9 @@ void main() {
 
   testWidgets('pestañas futuras muestran marcador', (t) async {
     await pumpApp(t);
-    await t.tap(find.text('Metas'));
+    await t.tap(find.text('Tienda'));
     await t.pump();
-    expect(find.text('Llega en F5.'), findsOneWidget);
+    expect(find.text('Llega en F7.'), findsOneWidget);
   });
 
   testWidgets('Atrás vuelve a Negocios', (t) async {
@@ -356,6 +362,196 @@ void main() {
         contains('x1.25'),
       );
       expect(c.state.pairsClaimed, BigNum.zero);
+    });
+  });
+
+  group('Metas', () {
+    Future<void> openTab(WidgetTester t) async {
+      await pumpApp(t);
+      await t.tap(find.text('Metas'));
+      await t.pumpAndSettle();
+    }
+
+    testWidgets('lista las metas y reclama una cumplida', (t) async {
+      await openTab(t);
+      expect(find.text('Regalo diario'), findsOneWidget);
+      expect(find.text('Primeros 10 Tendederos'), findsOneWidget);
+      expect(
+        t.widget<FilledButton>(find.byKey(const Key('claim-own10'))).onPressed,
+        isNull,
+      );
+      c.state.businesses[0].owned = 10;
+      c.advance(0);
+      await t.pump();
+      final money = c.state.money;
+      await t.tap(find.byKey(const Key('claim-own10')));
+      await t.pump();
+      expect(c.state.money > money, isTrue);
+      expect(find.text('Cobrada'), findsOneWidget);
+    });
+
+    testWidgets('regalo diario: recoger y volver mañana', (t) async {
+      await openTab(t);
+      await t.tap(find.byKey(const Key('daily-claim')));
+      await t.pump();
+      expect(c.state.dailyStreak, 1);
+      expect(find.text('Vuelve mañana'), findsOneWidget);
+      expect(
+        t.widget<FilledButton>(find.byKey(const Key('daily-claim'))).onPressed,
+        isNull,
+      );
+    });
+
+    testWidgets('punto de aviso en la pestaña Metas', (t) async {
+      await pumpApp(t);
+      Badge badge() => t.widget<Badge>(
+        find.ancestor(
+          of: find.byIcon(Icons.flag),
+          matching: find.byType(Badge),
+        ),
+      );
+      expect(
+        badge().isLabelVisible,
+        isTrue,
+        reason: 'regalo diario disponible',
+      );
+      c.claimDaily();
+      await t.pump();
+      expect(badge().isLabelVisible, isFalse);
+    });
+  });
+
+  group('Tutorial', () {
+    testWidgets('se ve al inicio y se salta', (t) async {
+      await pumpApp(t);
+      expect(find.byKey(const Key('tutorial')), findsOneWidget);
+      expect(find.textContaining('Paso 1 de 3'), findsOneWidget);
+      await t.tap(find.byKey(const Key('tutorial-skip')));
+      await t.pump();
+      expect(find.byKey(const Key('tutorial')), findsNothing);
+    });
+
+    testWidgets('el texto cambia con el progreso', (t) async {
+      await pumpApp(t);
+      c.tap(0);
+      c.advance(1);
+      await t.pump();
+      expect(find.textContaining('Paso 2 de 3'), findsOneWidget);
+    });
+  });
+
+  group('Ajustes', () {
+    late MemorySaveService store;
+
+    Future<void> openSettings(WidgetTester t) async {
+      store = MemorySaveService();
+      c = GameController(
+        Economy(config),
+        saveManager: SaveManager(store, SaveCodec(config.businesses.length)),
+      );
+      await t.binding.setSurfaceSize(const Size(400, 1200));
+      addTearDown(() => t.binding.setSurfaceSize(null));
+      await t.pumpWidget(
+        MaterialApp(
+          theme: buildTheme(),
+          home: HomeShell(controller: c),
+        ),
+      );
+      await t.tap(find.byKey(const Key('settings')));
+      await t.pumpAndSettle();
+    }
+
+    testWidgets('cambiar el formato de números actualiza la pantalla', (
+      t,
+    ) async {
+      await openSettings(t);
+      expect(
+        t.widget<Text>(find.byKey(const Key('fmt-sample'))).data,
+        contains('1.5T'),
+      );
+      await t.tap(find.byKey(const Key('fmt-scientific')));
+      await t.pump();
+      expect(
+        t.widget<Text>(find.byKey(const Key('fmt-sample'))).data,
+        contains('1.5e12'),
+      );
+      await t.tap(find.byKey(const Key('fmt-names')));
+      await t.pump();
+      expect(
+        t.widget<Text>(find.byKey(const Key('fmt-sample'))).data,
+        contains('billón'),
+      );
+      expect(c.state.settings.numberFormat, 'names');
+    });
+
+    testWidgets('interruptores de sonido y vibración', (t) async {
+      await openSettings(t);
+      await t.tap(find.byKey(const Key('sound')));
+      await t.tap(find.byKey(const Key('vibration')));
+      await t.pump();
+      expect(c.state.settings.sound, isFalse);
+      expect(c.state.settings.vibration, isFalse);
+    });
+
+    testWidgets('exportar muestra el texto de la partida', (t) async {
+      await openSettings(t);
+      await t.tap(find.byKey(const Key('export')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('export-text')), findsOneWidget);
+    });
+
+    testWidgets('importar un texto inválido avisa y no cambia nada', (t) async {
+      await openSettings(t);
+      c.state.money = BigNum.fromInt(42);
+      await t.tap(find.byKey(const Key('import')));
+      await t.pumpAndSettle();
+      await t.enterText(
+        find.byKey(const Key('import-field')),
+        'no es una partida',
+      );
+      await t.tap(find.byKey(const Key('import-confirm')));
+      await t.pumpAndSettle();
+      expect(find.textContaining('no es una partida válida'), findsOneWidget);
+      expect(c.state.money, BigNum.fromInt(42));
+    });
+
+    testWidgets('reiniciar exige escribir REINICIAR', (t) async {
+      await openSettings(t);
+      c.state.money = BigNum.fromInt(42);
+      await t.tap(find.byKey(const Key('reset')));
+      await t.pumpAndSettle();
+      expect(
+        t.widget<TextButton>(find.byKey(const Key('reset-confirm'))).onPressed,
+        isNull,
+      );
+      await t.enterText(find.byKey(const Key('reset-field')), 'reiniciar');
+      await t.pump();
+      expect(
+        t.widget<TextButton>(find.byKey(const Key('reset-confirm'))).onPressed,
+        isNotNull,
+        reason: 'acepta minúsculas',
+      );
+      await t.enterText(find.byKey(const Key('reset-field')), 'REINICIA');
+      await t.pump();
+      expect(
+        t.widget<TextButton>(find.byKey(const Key('reset-confirm'))).onPressed,
+        isNull,
+      );
+      await t.enterText(find.byKey(const Key('reset-field')), 'REINICIAR');
+      await t.pump();
+      await t.tap(find.byKey(const Key('reset-confirm')));
+      await t.pumpAndSettle();
+      expect(c.state.money, BigNum.zero);
+    });
+
+    testWidgets('cancelar el reinicio no borra nada', (t) async {
+      await openSettings(t);
+      c.state.money = BigNum.fromInt(42);
+      await t.tap(find.byKey(const Key('reset')));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('reset-cancel')));
+      await t.pumpAndSettle();
+      expect(c.state.money, BigNum.fromInt(42));
     });
   });
 }

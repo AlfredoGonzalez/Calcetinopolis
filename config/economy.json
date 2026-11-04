@@ -510,5 +510,186 @@
         }
       ]
     }
-  ]
+  ],
+  "goals": [
+    {
+      "id": "own10",
+      "name": "Primeros 10 Tendederos",
+      "type": "own",
+      "target": "10",
+      "reward_money": "50",
+      "reward_hilvanes": "0",
+      "business": "tendedero"
+    },
+    {
+      "id": "first_manager",
+      "name": "Tu primer manager",
+      "type": "managers",
+      "target": "1",
+      "reward_money": "200",
+      "reward_hilvanes": "0"
+    },
+    {
+      "id": "own25",
+      "name": "25 Tendederos: ¡el doble de rápido!",
+      "type": "own",
+      "target": "25",
+      "reward_money": "500",
+      "reward_hilvanes": "0",
+      "business": "tendedero"
+    },
+    {
+      "id": "cesto1",
+      "name": "Abre el Cesto de ropa sucia",
+      "type": "own",
+      "target": "1",
+      "reward_money": "1000",
+      "reward_hilvanes": "0",
+      "business": "cesto"
+    },
+    {
+      "id": "own50",
+      "name": "50 Tendederos",
+      "type": "own",
+      "target": "50",
+      "reward_money": "10000",
+      "reward_hilvanes": "0",
+      "business": "tendedero"
+    },
+    {
+      "id": "biz3",
+      "name": "Tres negocios abiertos",
+      "type": "businesses",
+      "target": "3",
+      "reward_money": "50000",
+      "reward_hilvanes": "0"
+    },
+    {
+      "id": "life1m",
+      "name": "Gana 1M de Pelusitas en total",
+      "type": "lifetime",
+      "target": "1e6",
+      "reward_money": "100000",
+      "reward_hilvanes": "0"
+    },
+    {
+      "id": "mgr3",
+      "name": "Tres managers contratados",
+      "type": "managers",
+      "target": "3",
+      "reward_money": "500000",
+      "reward_hilvanes": "0"
+    },
+    {
+      "id": "biz5",
+      "name": "Cinco negocios abiertos",
+      "type": "businesses",
+      "target": "5",
+      "reward_money": "5000000",
+      "reward_hilvanes": "0"
+    },
+    {
+      "id": "life1b",
+      "name": "Gana 1B de Pelusitas en total",
+      "type": "lifetime",
+      "target": "1e9",
+      "reward_money": "50000000",
+      "reward_hilvanes": "0"
+    },
+    {
+      "id": "biz10",
+      "name": "Abre el Portal de la lavadora",
+      "type": "businesses",
+      "target": "10",
+      "reward_money": "0",
+      "reward_hilvanes": "5"
+    },
+    {
+      "id": "first_pair",
+      "name": "Tu primer Centrifugado",
+      "type": "pairs",
+      "target": "1",
+      "reward_money": "0",
+      "reward_hilvanes": "10"
+    },
+    {
+      "id": "all25",
+      "name": "Todos los negocios en 25",
+      "type": "all_owned",
+      "target": "25",
+      "reward_money": "0",
+      "reward_hilvanes": "15"
+    },
+    {
+      "id": "life1t",
+      "name": "Gana 1T de Pelusitas en total",
+      "type": "lifetime",
+      "target": "1e12",
+      "reward_money": "0",
+      "reward_hilvanes": "20"
+    },
+    {
+      "id": "upg10",
+      "name": "Compra 10 upgrades en una corrida",
+      "type": "upgrades",
+      "target": "10",
+      "reward_money": "0",
+      "reward_hilvanes": "10"
+    },
+    {
+      "id": "pairs100",
+      "name": "100 Parejas Reunidas",
+      "type": "pairs",
+      "target": "100",
+      "reward_money": "0",
+      "reward_hilvanes": "25"
+    },
+    {
+      "id": "all100",
+      "name": "Todos los negocios en 100",
+      "type": "all_owned",
+      "target": "100",
+      "reward_money": "0",
+      "reward_hilvanes": "50"
+    },
+    {
+      "id": "pairs500",
+      "name": "500 Parejas Reunidas",
+      "type": "pairs",
+      "target": "500",
+      "reward_money": "0",
+      "reward_hilvanes": "75"
+    },
+    {
+      "id": "all200",
+      "name": "Todos los negocios en 200",
+      "type": "all_owned",
+      "target": "200",
+      "reward_money": "0",
+      "reward_hilvanes": "100"
+    },
+    {
+      "id": "pairs1000",
+      "name": "1,000 Parejas Reunidas",
+      "type": "pairs",
+      "target": "1000",
+      "reward_money": "0",
+      "reward_hilvanes": "150"
+    },
+    {
+      "id": "all400",
+      "name": "Todos los negocios en 400",
+      "type": "all_owned",
+      "target": "400",
+      "reward_money": "0",
+      "reward_hilvanes": "250"
+    }
+  ],
+  "daily": {
+    "base_money": "200",
+    "minutes": 10,
+    "bonus_minutes_per_day": 5,
+    "hilvanes_every": 7,
+    "hilvanes": 5
+  }
 }

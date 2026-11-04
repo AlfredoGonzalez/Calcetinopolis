@@ -5,7 +5,7 @@ import '../services/services.dart';
 
 /// Versión actual del esquema de guardado. Sube al cambiar el formato y
 /// agrega una migración en [SaveCodec._migrations].
-const int kSaveVersion = 2;
+const int kSaveVersion = 3;
 
 class SaveData {
   SaveData(this.state, this.savedAt);
@@ -37,6 +37,9 @@ class SaveCodec {
     },
     // v1 -> v2: tienda de Hilvanes.
     1: (d) => {...d, 'shop': d['shop'] ?? <String, dynamic>{}},
+    // v2 -> v3: metas, regalo diario, tutorial y ajustes. Quien ya jugaba en
+    // v2 no necesita el tutorial.
+    2: (d) => {...d, 'tutorialDone': d['tutorialDone'] ?? true},
   };
 
   static int checksum(String s) {

@@ -48,3 +48,7 @@ Corrida 5 → 6: mismo punto 1.92× más rápido
 Mejoras permanentes en `prestige_shop` de `config/economy.json` (propuesta mía, ajustable): Detergente concentrado (x1.25 a x3 a todo), Calcetín de la suerte (Pelusitas al empezar), Primeras ayudas (managers gratis en los primeros negocios) y Cesto más grande (tope offline 8/12/24 h).
 
 Con costos bajos la tienda aceleraba las corridas hasta 4.4× (y 3× en vueltas posteriores); los costos finales son 20× la primera propuesta. Aun así, al comprar un nivel grande hay picos de ~2.2×; los tests aceptan hasta 2.5× desde la tercera corrida.
+
+## Metas y regalo diario (F5)
+
+21 metas en `goals` de `config/economy.json` (propuesta mía, ajustable) y el regalo diario en `daily`. El simulador **no** cobra metas ni regalos, así que sus números no los incluyen. Las metas dan Pelusitas al inicio y Hilvanes después (unas 710 en total); las Pelusitas de metas y del regalo no cuentan para E_vida, así que no inflan el prestigio. Conviene revisar con jugadores reales si las Hilvanes de metas aceleran demasiado.

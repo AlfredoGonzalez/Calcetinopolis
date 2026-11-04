@@ -336,4 +336,111 @@ class Economy {
     _applyRunStart(s);
     return pending;
   }
+
+  // ------------------------------------------------------------------ metas
+
+  GoalConfig goal(String id) => config.goals.firstWhere((g) => g.id == id);
+
+  /// Valor actual de la meta, en las mismas unidades que su objetivo.
+  BigNum goalCurrent(GameState s, GoalConfig g) {
+    switch (g.type) {
+      case GoalType.own:
+        return BigNum.fromInt(
+          s.businesses[config.businessIndex(g.business!)].owned,
+        );
+      case GoalType.managers:
+        return BigNum.fromInt(s.businesses.where((b) => b.hasManager).length);
+      case GoalType.businesses:
+        return BigNum.fromInt(s.businesses.where((b) => b.owned > 0).length);
+      case GoalType.allOwned:
+        return BigNum.fromInt(
+          s.businesses.map((b) => b.owned).reduce(math.min),
+        );
+      case GoalType.lifetime:
+        return s.lifetimeEarnings;
+      case GoalType.pairs:
+        return s.pairsClaimed;
+      case GoalType.upgrades:
+        return BigNum.fromInt(s.upgrades.length);
+    }
+    return BigNum.zero;
+  }
+
+  bool goalMet(GameState s, GoalConfig g) => goalCurrent(s, g) >= g.target;
+
+  /// Avance 0..1 para la barra de la meta.
+  double goalProgress(GameState s, GoalConfig g) {
+    if (goalMet(s, g)) return 1;
+    return (goalCurrent(s, g) / g.target).toDouble().clamp(0.0, 1.0);
+  }
+
+  bool isGoalClaimed(GameState s, String id) => s.goalsClaimed.contains(id);
+
+  bool canClaimGoal(GameState s, String id) =>
+      !isGoalClaimed(s, id) && goalMet(s, goal(id));
+
+  bool get _hasGoals => config.goals.isNotEmpty;
+
+  bool hasClaimableGoal(GameState s) =>
+      _hasGoals && config.goals.any((g) => canClaimGoal(s, g.id));
+
+  /// Cobra la recompensa. Las Pelusitas no cuentan para E_vida (no inflan el prestigio).
+  bool claimGoal(GameState s, String id) {
+    if (!canClaimGoal(s, id)) return false;
+    final g = goal(id);
+    s.money += g.rewardMoney;
+    s.hilvanes += g.rewardHilvanes;
+    s.goalsClaimed.add(id);
+    return true;
+  }
+
+  // ------------------------------------------------------------ regalo diario
+
+  /// Clave de día en hora local: "2026-11-03".
+  static String dayKey(DateTime d) {
+    final l = d.toLocal();
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${l.year.toString().padLeft(4, '0')}-${two(l.month)}-${two(l.day)}';
+  }
+
+  /// Un regalo por día. Si el reloj está atrasado respecto al último cobro, no hay regalo.
+  bool canClaimDaily(GameState s, DateTime now) {
+    if (config.daily == null) return false;
+    final last = s.dailyDay;
+    return last == null || dayKey(now).compareTo(last) > 0;
+  }
+
+  /// Recompensa del siguiente regalo (la racha se pausa si faltas, no se reinicia).
+  DailyReward dailyPreview(GameState s) {
+    final d = config.daily!;
+    final streak = s.dailyStreak + 1;
+    final minutes = d.minutes + d.bonusMinutesPerDay * ((streak - 1) % 7);
+    var money = managedIncomePerSecond(s).mulDouble(60 * minutes);
+    if (money < d.baseMoney) money = d.baseMoney;
+    final bonus = d.hilvanesEvery > 0 && streak % d.hilvanesEvery == 0
+        ? d.hilvanes
+        : BigNum.zero;
+    return DailyReward(money: money, hilvanes: bonus, streak: streak);
+  }
+
+  DailyReward? claimDaily(GameState s, DateTime now) {
+    if (!canClaimDaily(s, now)) return null;
+    final r = dailyPreview(s);
+    s.money += r.money;
+    s.hilvanes += r.hilvanes;
+    s.dailyStreak = r.streak;
+    s.dailyDay = dayKey(now);
+    return r;
+  }
+}
+
+class DailyReward {
+  const DailyReward({
+    required this.money,
+    required this.hilvanes,
+    required this.streak,
+  });
+  final BigNum money;
+  final BigNum hilvanes;
+  final int streak;
 }

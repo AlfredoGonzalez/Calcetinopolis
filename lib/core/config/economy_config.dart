@@ -120,6 +120,68 @@ class ShopItem {
   final List<ShopLevel> levels;
 }
 
+class GoalType {
+  static const own = 'own';
+  static const managers = 'managers';
+  static const businesses = 'businesses';
+  static const allOwned = 'all_owned';
+  static const lifetime = 'lifetime';
+  static const pairs = 'pairs';
+  static const upgrades = 'upgrades';
+  static const all = {
+    own,
+    managers,
+    businesses,
+    allOwned,
+    lifetime,
+    pairs,
+    upgrades,
+  };
+}
+
+/// Meta guiada (spec 9.8 / 9.12): una recompensa gratis al cumplirla.
+class GoalConfig {
+  const GoalConfig({
+    required this.id,
+    required this.name,
+    required this.type,
+    required this.target,
+    required this.rewardMoney,
+    required this.rewardHilvanes,
+    this.business,
+  });
+  final String id;
+  final String name;
+  final String type;
+  final BigNum target;
+  final BigNum rewardMoney;
+  final BigNum rewardHilvanes;
+
+  /// id del negocio, solo para el tipo `own`.
+  final String? business;
+}
+
+class DailyConfig {
+  const DailyConfig({
+    required this.baseMoney,
+    required this.minutes,
+    required this.bonusMinutesPerDay,
+    required this.hilvanesEvery,
+    required this.hilvanes,
+  });
+
+  /// Mínimo de Pelusitas del regalo (para el inicio, cuando aún no hay ingreso).
+  final BigNum baseMoney;
+
+  /// Minutos de producción que vale el regalo del día 1; sube cada día de la racha.
+  final double minutes;
+  final double bonusMinutesPerDay;
+
+  /// Cada cuántos días de racha se suman Hilvanes.
+  final int hilvanesEvery;
+  final BigNum hilvanes;
+}
+
 class EconomyConfig {
   const EconomyConfig({
     required this.businesses,
@@ -132,6 +194,8 @@ class EconomyConfig {
     required this.offline,
     required this.boost,
     this.shop = const [],
+    this.goals = const [],
+    this.daily,
   });
 
   final List<BusinessConfig> businesses;
@@ -146,6 +210,8 @@ class EconomyConfig {
   final OfflineConfig offline;
   final BoostConfig boost;
   final List<ShopItem> shop;
+  final List<GoalConfig> goals;
+  final DailyConfig? daily;
 
   factory EconomyConfig.fromJsonString(String source) =>
       EconomyConfig.fromJson(jsonDecode(source) as Map<String, dynamic>);
@@ -223,6 +289,30 @@ class EconomyConfig {
           }).toList(),
         );
       }).toList(),
+      goals: ((j['goals'] as List?) ?? const []).map((raw) {
+        final m = raw as Map<String, dynamic>;
+        return GoalConfig(
+          id: m['id'] as String,
+          name: m['name'] as String,
+          type: m['type'] as String,
+          target: big(m['target']),
+          rewardMoney: big(m['reward_money'] ?? 0),
+          rewardHilvanes: big(m['reward_hilvanes'] ?? 0),
+          business: m['business'] as String?,
+        );
+      }).toList(),
+      daily: j['daily'] == null
+          ? null
+          : DailyConfig(
+              baseMoney: big((j['daily'] as Map)['base_money']),
+              minutes: ((j['daily'] as Map)['minutes'] as num).toDouble(),
+              bonusMinutesPerDay:
+                  ((j['daily'] as Map)['bonus_minutes_per_day'] as num)
+                      .toDouble(),
+              hilvanesEvery: ((j['daily'] as Map)['hilvanes_every'] as num)
+                  .toInt(),
+              hilvanes: big((j['daily'] as Map)['hilvanes']),
+            ),
       boost: BoostConfig(
         multiplier: (bo['multiplier'] as num).toDouble(),
         hoursPerView: (bo['hours_per_view'] as num).toDouble(),
@@ -273,6 +363,22 @@ class EconomyConfig {
       }
       if (it.levels.isEmpty) {
         throw FormatException('Mejora sin niveles: ${it.id}');
+      }
+    }
+    final goalIds = <String>{};
+    for (final g in goals) {
+      if (!goalIds.add(g.id)) {
+        throw FormatException('Meta duplicada: ${g.id}');
+      }
+      if (!GoalType.all.contains(g.type)) {
+        throw FormatException('Tipo de meta desconocido: ${g.type}');
+      }
+      if (g.type == GoalType.own &&
+          (g.business == null || !ids.contains(g.business))) {
+        throw FormatException('Meta ${g.id} apunta a un negocio inexistente');
+      }
+      if (g.target <= BigNum.zero) {
+        throw FormatException('Meta ${g.id} con objetivo <= 0');
       }
     }
     if (prestige.scale <= BigNum.zero) {
