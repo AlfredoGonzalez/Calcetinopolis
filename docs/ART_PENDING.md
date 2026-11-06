@@ -13,27 +13,51 @@ Estado del arte frente a `docs/ART_STYLE.md`. Los originales van en `assets/art/
 
 Ícono de la app, 10 negocios (`biz_*`), 10 managers (`mgr_*`), Pelusitas, Hilvanes, Pareja Reunida, Botones Dorados, fondos (cuarto de lavado, Tienda, pelusas flotando), todos los íconos de interfaz (pestañas, ajustes, regalo, boost, reloj, anuncio, comprar, manager, notificación), los productos de la Tienda (`shop_*`), las 4 mejoras de Hilvanes (`icon_mejora_*`) y la flecha de hilo del tutorial.
 
-Entregados pero todavía sin usar en pantalla: `icon_ui_comprar`, `icon_ui_manager`, `icon_ui_notificacion` y `bg_pelusas_flotando`.
+## Pendiente: imágenes
 
-## Pendiente
+Son las que ya tienen una pantalla esperándolas. Sin ellas el juego funciona; solo se ve más simple.
 
-| Archivo | Qué es | Dónde se usa |
-| --- | --- | --- |
-| `mascota_reposo`, `mascota_salto`, `mascota_celebra` | El calcetín protagonista en 3 poses | Tutorial, Centrifugado, Tienda |
-| `anim_centrifugado_lavadora` | Lavadora de frente con espiral lavanda | Animación de Centrifugado (hoy es un ícono con emoji) |
-| `anim_centrifugado_calcetin_izq`, `anim_centrifugado_calcetin_der` | Los dos calcetines que se reencuentran | Animación de Centrifugado |
-| `anim_centrifugado_corazon` | Corazón lavanda | Animación de Centrifugado |
+| Archivo | Qué es | Dónde se usa | Qué hay hoy en su lugar |
+| --- | --- | --- | --- |
+| `anim_centrifugado_lavadora` | Lavadora de frente con espiral lavanda | Animación de Centrifugado (ver abajo) | Un ícono de lavadora de Material girando |
+| `anim_centrifugado_calcetin_izq` y `_der` | Los dos calcetines que se reencuentran | Animación de Centrifugado | Dos emojis 🧦 |
+| `anim_centrifugado_corazon` | Corazón lavanda | Animación de Centrifugado | Un emoji 💜 |
+| `mascota_reposo`, `mascota_salto`, `mascota_celebra` | El calcetín protagonista en 3 poses | Tutorial, Metas, Centrifugado, Tienda y bienvenida offline (ver abajo) | Nada: hoy el personaje solo aparece dentro de los negocios |
+
+## Animaciones: dónde se usan y por qué
+
+La mayoría **se animan en código a partir de imágenes estáticas**, con estiramiento y encogimiento, giros, rebotes y fundidos. La hoja de estilo ya lo recomienda porque el calcetín no tiene extremidades. Solo hace falta arte nuevo donde el dibujo tiene que cambiar (una pose distinta, ojos cerrados).
+
+| Animación | Dónde se ve | Por qué importa | Qué necesita | Prioridad |
+| --- | --- | --- | --- | --- |
+| **Centrifugado** | Al confirmar el reinicio, un diálogo de 3.5 s (se salta tocando): la lavadora gira, los dos calcetines entran desde los lados, se juntan, aparece el corazón y sube el multiplicador | Es **el momento emotivo del juego** (etapa 6 del recorrido): cada reinicio cuenta la historia de dos calcetines que se encuentran. Además es lo que hace que reiniciar no se sienta como perder progreso | Las 4 piezas `anim_centrifugado_*`. Yo las animo en código, sin cuadros | Alta |
+| **Mascota** | Tutorial (guía los 3 pasos y salta al comprar); Metas (celebra al reclamar); resultado del Centrifugado; Tienda tras una compra; ventana de bienvenida offline | Da personalidad y una cara a la recompensa ("sorpresa agradable"). Hoy las pantallas son solo tarjetas | Las 3 poses `mascota_*`. Las transiciones (reposo → salto → celebra) las hago en código | Alta |
+| **Negocios "trabajando"** | Tarjetas de la pantalla Negocios, mientras el ciclo corre o el negocio tiene manager | Es la pantalla donde se pasa más tiempo; ver movimiento comunica "mi negocio está produciendo". Hoy solo se mueve la barra | **Nada nuevo para empezar**: un rebote o respiración suave del ícono actual. Cuadros propios (4 a 8 por negocio) solo si quieres movimiento real, como el calcetín asomándose | Media |
+| **Managers (parpadeo y saludo)** | Mejoras → Managers (el retrato de cada uno) y un saludo al contratarlo | Personalidad de los 10 managers, que son parte del humor del juego. Contratar un manager es una compra grande y merece su momento | Un saludo o rebote al contratar sale **del retrato actual**. Parpadear requiere una segunda imagen por manager con los ojos cerrados (10 más), o hacerlo con Rive | Baja |
+| **Cruzar un umbral** | Tarjeta de negocio al llegar a 25, 50, 100... unidades | Los umbrales son lo que más compras genera (spec 4.4); el jugador debe sentir el premio ("el doble de rápido") | **Nada**: destello y rebote de la tarjeta en código, con los destellos que ya tienen tus íconos | Media |
+| **Pelusas flotando** | Fondo de Negocios, con efecto de profundidad suave | Da vida a la pantalla sin distraer. `bg_pelusas_flotando` ya está entregado | **Nada**: capa que sube lentamente en código | Baja |
+| **Brillo en monedas** | Pelusitas y Botones Dorados de la barra superior y la Tienda al ganar | Refuerza "gané algo" cuando suben los números | **Nada**: destello en código | Baja |
+| **Cosméticos** (v1.1) | Estampados, gorritos y lentes en los calcetines; animaciones de Centrifugado distintas | Es lo que mejor vende en un juego tierno y no afecta el balance | Arte nuevo grande, después | Después |
+
+**Orden que propongo:** (1) Centrifugado y mascota, que son las dos que necesitan tus imágenes; (2) mientras tanto, lo que no necesita arte (umbrales, pelusas, brillos, rebote de negocios); (3) cuadros propios o Rive solo si después del paso 2 quieres más movimiento. Si prefieres Rive o Spine para los managers y la mascota, dímelo antes de generar cuadros, porque cambia el formato.
+
+## Entregado pero todavía sin usar en pantalla
+
+| Archivo | Dónde lo pondría |
+| --- | --- |
+| `icon_ui_comprar` | Botón de compra de las tarjetas de negocio |
+| `icon_ui_manager` | Botón "Manager" de las tarjetas |
+| `icon_ui_notificacion` | Ajustes y la petición de permiso de notificaciones (F8) |
+| `bg_pelusas_flotando` | Capa animada de fondo (ver arriba) |
 
 ## Observaciones sobre lo entregado
 
 - `store_feature_1024x500` llegó en **1024×765**. Google Play exige exactamente 1024×500: hay que recortarlo (se puede quitar arriba y abajo sin tocar a los personajes) o regenerarlo en formato panorámico. Se queda en `assets/art/source/` y no entra a la app.
-- Las 14 imágenes de esta tanda llegaron con **fondo blanco** y una **sombra de suelo beige**, no magenta. El script las recorta bien y quita la sombra, salvo en `shop_starter` y `shop_botones_4` (sombra café oscura) donde queda un resto. Si quieres que salgan limpias, repite esas dos con "sin sombra de suelo, fondo magenta plano".
+- Las 14 imágenes de la última tanda llegaron con **fondo blanco** y una **sombra de suelo beige**, no magenta. El script las recorta bien y quita la sombra, salvo en `shop_starter` y `shop_botones_4` (sombra café oscura) donde queda un resto. Si quieres que salgan limpias, repite esas dos con "sin sombra de suelo, fondo magenta plano".
 - El centro de la flecha de hilo era blanco; el script lo vuelve transparente.
-
-## Animaciones (después)
-
-- Negocios "trabajando" (4 a 8 cuadros cada uno, o Rive), managers parpadeando y saludando, mascota (reposo, salto, celebración). Si prefieres Rive o Spine, dime y preparo el formato.
-- Cosméticos (estampados, gorritos, lentes, fondos de cuarto), eventos de temporada y segundo mundo (v1.1).
+- `icon_ui_negocios` vino en 1024×559. Funciona recortado, pero conviene regenerarlo cuadrado.
+- `biz_10_portal` trae una placa gris de esquinas redondeadas que los demás negocios no tienen. Si quieres coherencia, regénéralo sin placa.
+- `mgr_10_gran_centrifugadora`: el brillo de la corona se pierde un poco al quitar el fondo.
 
 ## Prompts
 
@@ -198,16 +222,8 @@ Ilustración 2D plana, estilo tierno tipo cuento infantil con textura sutil de t
 - Ícono adaptativo de Android (calcetín sobre transparente + fondo menta), recortando el `app_icon`.
 - Pantalla de carga (con el ícono sobre el color menta).
 
-## Después (v1.1 y animación)
+## Después (v1.1)
 
-- Animaciones: negocios "trabajando" (4 a 8 cuadros cada uno, o Rive), managers parpadeando y saludando, mascota (reposo, salto, celebración). Si prefieres Rive o Spine, dime y preparo el formato.
-- Cosméticos: estampados, gorritos, lentes, fondos de cuarto, animaciones de Centrifugado.
+- Cosméticos: estampados, gorritos, lentes, fondos de cuarto y animaciones de Centrifugado alternativas.
 - Eventos de temporada: Calcetín Fantasma (Halloween), Calcetines Navideños, Día del Calcetín Desparejado.
 - Segundo mundo: fondo y 10 negocios nuevos (Lavandería pública).
-
-## Notas de calidad de lo ya entregado
-
-- `icon_ui_negocios` vino en 1024×559; funciona, pero conviene regenerarlo cuadrado.
-- `biz_10_portal` trae una placa gris de esquinas redondeadas que los demás negocios no tienen; si quieres coherencia, regénéralo sin placa.
-- `mgr_10_gran_centrifugadora`: el brillo de la corona se pierde un poco al quitar el fondo.
-- Varios negocios y managers venían con un mosaico redondeado y esquinas blancas; con la receta de arriba salen sin trabajo extra.
