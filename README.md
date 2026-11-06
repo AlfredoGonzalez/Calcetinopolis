@@ -29,6 +29,10 @@ python3 tool/process_art.py assets/art/source assets/art
 
 Nombres: `biz_NN_*` (negocios), `mgr_NN_*` (managers), `icon_*` (monedas e íconos de interfaz), `bg_*` (fondos), `app_icon`. La config (`config/economy.json`) enlaza cada negocio y manager con su arte.
 
+## Probar en el navegador
+
+La versión web se publica con GitHub Pages (`.github/workflows/pages.yml`). Una sola vez: **Settings → Pages → Source: GitHub Actions**. Después cada push a `main` o a la rama de trabajo la publica en <https://alfredogonzalez.github.io/Calcetinopolis/>. En web la partida se guarda en el navegador (localStorage).
+
 ## Desarrollo
 
 ```bash
