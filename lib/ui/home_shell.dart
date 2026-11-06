@@ -7,6 +7,7 @@ import 'goals_page.dart';
 import 'settings_page.dart';
 import 'offline_dialog.dart';
 import 'prestige_page.dart';
+import 'shop_page.dart';
 import 'theme.dart';
 import 'upgrades_page.dart';
 
@@ -78,7 +79,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
           UpgradesPage(controller: c, formatter: widget.controller.formatter),
           PrestigePage(controller: c, formatter: widget.controller.formatter),
           GoalsPage(controller: c, formatter: c.formatter),
-          const _Soon(title: 'Tienda', text: 'Llega en F7.'),
+          ShopPage(controller: c, formatter: c.formatter),
         ];
         return PopScope(
           canPop: _tab == 0,
@@ -93,22 +94,68 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
                 children: [
                   const Art('icon_pelusitas', size: 30),
                   const SizedBox(width: 8),
-                  Text(
-                    key: const Key('money'),
-                    widget.controller.formatter.format(c.state.money),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Palette.outline,
+                  // El dinero cede espacio antes de que algo se desborde.
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        key: const Key('money'),
+                        widget.controller.formatter.format(c.state.money),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Palette.outline,
+                        ),
+                      ),
                     ),
                   ),
-                  const Spacer(),
-                  const Art('icon_pareja_reunida', size: 26),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Parejas ${widget.controller.formatter.format(c.state.pairsClaimed)}',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Palette.outline,
+                  const SizedBox(width: 8),
+                  Flexible(
+                    flex: 2,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (c.state.boostSeconds > 0) ...[
+                            Chip(
+                              key: const Key('boost-chip'),
+                              visualDensity: VisualDensity.compact,
+                              backgroundColor: Palette.orange,
+                              label: Text(
+                                'x2 ${formatDuration(c.state.boostSeconds)}',
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          if (c.state.goldButtons.isPositive) ...[
+                            const Art('icon_botones_dorados', size: 24),
+                            const SizedBox(width: 2),
+                            Text(
+                              c.formatter.format(c.state.goldButtons),
+                              key: const Key('gold-top'),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Palette.outline,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                          ],
+                          const Art('icon_pareja_reunida', size: 26),
+                          const SizedBox(width: 4),
+                          Text(
+                            widget.controller.formatter.format(
+                              c.state.pairsClaimed,
+                            ),
+                            key: const Key('pairs-top'),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Palette.outline,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -133,7 +180,10 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
             body: SafeArea(child: pages[_tab]),
             bottomNavigationBar: NavigationBar(
               selectedIndex: _tab,
-              onDestinationSelected: (i) => setState(() => _tab = i),
+              onDestinationSelected: (i) {
+                setState(() => _tab = i);
+                if (i == 4) c.logIapView();
+              },
               destinations: [
                 const NavigationDestination(
                   icon: Art(
@@ -194,22 +244,4 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       },
     );
   }
-}
-
-class _Soon extends StatelessWidget {
-  const _Soon({required this.title, required this.text});
-  final String title;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(title, style: Theme.of(context).textTheme.headlineSmall),
-        const SizedBox(height: 8),
-        Text(text),
-      ],
-    ),
-  );
 }

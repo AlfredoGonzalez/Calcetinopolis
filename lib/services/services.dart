@@ -13,9 +13,20 @@ abstract class AdService {
   Future<bool> showRewarded(String placement);
 }
 
+/// Compras dentro de la app. El precio visible lo da la tienda (spec 10.2).
 abstract class IapService {
+  /// Consulta los productos a la tienda. Debe llamarse antes de [priceOf].
+  Future<void> load(Set<String> productIds);
+
+  /// Precio con formato de la tienda (por ejemplo "$149.00 MXN"), o null si
+  /// la tienda no lo conoce.
+  String? priceOf(String productId);
+
+  /// true si la compra se completó y ya se cobró.
   Future<bool> purchase(String productId);
-  Future<void> restore();
+
+  /// Productos permanentes que el jugador ya compró en la tienda.
+  Future<Set<String>> restore();
 }
 
 abstract class AnalyticsService {
@@ -47,11 +58,34 @@ class MockAdService implements AdService {
 }
 
 class MockIapService implements IapService {
-  final purchased = <String>{};
+  MockIapService({Map<String, String>? prices, this.succeeds = true})
+    : _prices = prices ?? {};
+
+  final Map<String, String> _prices;
+  final bool succeeds;
+
+  /// Compras realizadas (consumibles incluidos, en orden).
+  final purchases = <String>[];
+
+  /// Lo que la tienda devolvería al restaurar (productos permanentes).
+  final owned = <String>{};
+  var loaded = <String>{};
+
   @override
-  Future<bool> purchase(String productId) async => purchased.add(productId);
+  Future<void> load(Set<String> productIds) async => loaded = productIds;
+
   @override
-  Future<void> restore() async {}
+  String? priceOf(String productId) => _prices[productId];
+
+  @override
+  Future<bool> purchase(String productId) async {
+    if (!succeeds) return false;
+    purchases.add(productId);
+    return true;
+  }
+
+  @override
+  Future<Set<String>> restore() async => {...owned};
 }
 
 class MemoryAnalyticsService implements AnalyticsService {

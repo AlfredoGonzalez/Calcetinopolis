@@ -146,18 +146,19 @@ void main() {
     expect(find.text('Tendedero de pelusas'), findsOneWidget);
   });
 
-  testWidgets('pestañas futuras muestran marcador', (t) async {
+  testWidgets('la pestaña Tienda muestra Botones Dorados y boosts', (t) async {
     await pumpApp(t);
     await t.tap(find.text('Tienda'));
     await t.pump();
-    expect(find.text('Llega en F7.'), findsOneWidget);
+    expect(find.byKey(const Key('gold-balance')), findsOneWidget);
+    expect(find.byKey(const Key('shop-boost')), findsOneWidget);
   });
 
   testWidgets('Atrás vuelve a Negocios', (t) async {
     await pumpApp(t);
     await t.tap(find.text('Tienda'));
     await t.pump();
-    expect(find.text('Llega en F7.'), findsOneWidget);
+    expect(find.byKey(const Key('gold-balance')), findsOneWidget);
     await t.binding.handlePopRoute();
     await t.pump();
     expect(find.text('Tendedero de pelusas'), findsOneWidget);

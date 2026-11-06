@@ -19,6 +19,14 @@ GameState sample() {
     ..dailyDay = '2026-11-03'
     ..dailyStreak = 4
     ..tutorialDone = true
+    ..goldButtons = BigNum.fromInt(77)
+    ..vip = true
+    ..starterBought = true
+    ..multLevel = 2
+    ..warpDay = '2026-11-03'
+    ..warpCount = 2
+    ..dailyAdDay = '2026-11-03'
+    ..firstReturnDone = true
     ..settings.numberFormat = 'scientific'
     ..settings.fontScale = 1.3
     ..settings.sound = false
@@ -47,6 +55,14 @@ void expectSame(GameState a, GameState b) {
   expect(b.dailyDay, a.dailyDay);
   expect(b.dailyStreak, a.dailyStreak);
   expect(b.tutorialDone, a.tutorialDone);
+  expect(b.goldButtons, a.goldButtons);
+  expect(b.vip, a.vip);
+  expect(b.starterBought, a.starterBought);
+  expect(b.multLevel, a.multLevel);
+  expect(b.warpDay, a.warpDay);
+  expect(b.warpCount, a.warpCount);
+  expect(b.dailyAdDay, a.dailyAdDay);
+  expect(b.firstReturnDone, a.firstReturnDone);
   expect(b.settings.numberFormat, a.settings.numberFormat);
   expect(b.settings.fontScale, a.settings.fontScale);
   expect(b.settings.sound, a.settings.sound);
@@ -130,6 +146,67 @@ void main() {
       final s = codec.decode(v1).state;
       expect(s.hilvanes, BigNum.fromInt(9));
       expect(s.shopLevels, isEmpty);
+    });
+
+    test(
+      'migra una v3 (sin monetización) a v4: ya vivió su primer regreso',
+      () {
+        final d = jsonEncode({
+          'money': '1e3',
+          'businesses': [
+            {'owned': 3},
+          ],
+          'tutorialDone': true,
+        });
+        final v3 = jsonEncode({
+          'v': 3,
+          't': 0,
+          'h': SaveCodec.checksum(d),
+          'd': d,
+        });
+        final s = codec.decode(v3).state;
+        expect(s.firstReturnDone, isTrue);
+        expect(s.vip, isFalse);
+        expect(s.multLevel, 0);
+        expect(s.goldButtons, BigNum.zero);
+      },
+    );
+
+    test('v0 llega hasta la versión actual encadenando migraciones', () {
+      final d = jsonEncode({
+        'money': '5',
+        'businesses': [
+          {'owned': 1},
+        ],
+      });
+      final v0 = jsonEncode({
+        'v': 0,
+        't': 0,
+        'h': SaveCodec.checksum(d),
+        'd': d,
+      });
+      final s = codec.decode(v0).state;
+      expect(s.firstReturnDone, isTrue);
+      expect(s.tutorialDone, isTrue);
+    });
+
+    test('un multiplicador de compra inválido se acota', () {
+      final d = jsonEncode({
+        'businesses': [
+          {'owned': 1},
+        ],
+        'multLevel': -4,
+        'warpCount': -1,
+      });
+      final env = jsonEncode({
+        'v': kSaveVersion,
+        't': 0,
+        'h': SaveCodec.checksum(d),
+        'd': d,
+      });
+      final s = codec.decode(env).state;
+      expect(s.multLevel, 0);
+      expect(s.warpCount, 0);
     });
 
     test('migra una v2 (sin metas ni ajustes) a v3: sin tutorial para quien ya jugaba', () {

@@ -97,6 +97,14 @@ class GameState {
     this.dailyStreak = 0,
     this.tutorialDone = false,
     PlayerSettings? settings,
+    BigNum? goldButtons,
+    this.vip = false,
+    this.starterBought = false,
+    this.multLevel = 0,
+    this.warpDay,
+    this.warpCount = 0,
+    this.dailyAdDay,
+    this.firstReturnDone = false,
     this.boostSeconds = 0,
   }) : money = money ?? BigNum.zero,
        lifetimeEarnings = lifetimeEarnings ?? BigNum.zero,
@@ -105,7 +113,8 @@ class GameState {
        hilvanes = hilvanes ?? BigNum.zero,
        shopLevels = shopLevels ?? <String, int>{},
        goalsClaimed = goalsClaimed ?? <String>{},
-       settings = settings ?? PlayerSettings();
+       settings = settings ?? PlayerSettings(),
+       goldButtons = goldButtons ?? BigNum.zero;
 
   /// Partida nueva: el primer negocio viene gratis (spec 9.2).
   factory GameState.initial(int businessCount) => GameState(
@@ -140,6 +149,26 @@ class GameState {
   /// Regalos cobrados en total. No se reinicia si faltas un día: se pausa.
   int dailyStreak;
   bool tutorialDone;
+
+  /// Botones Dorados: moneda premium (no se pierde al centrifugar).
+  BigNum goldButtons;
+
+  /// Pase VIP: las recompensas de anuncios se dan sin verlos.
+  bool vip;
+  bool starterBought;
+
+  /// Nivel comprado del multiplicador permanente (0 a 3).
+  int multLevel;
+
+  /// Anuncios de "saltar espera" vistos hoy.
+  String? warpDay;
+  int warpCount;
+
+  /// Día en que se cobró el bono de Botones Dorados del regalo diario.
+  String? dailyAdDay;
+
+  /// Ya vivió su primer regreso (los anuncios no aparecen antes; spec 9.10).
+  bool firstReturnDone;
   final PlayerSettings settings;
 
   /// Segundos restantes de boost por anuncio.
@@ -157,6 +186,14 @@ class GameState {
     'dailyDay': dailyDay,
     'dailyStreak': dailyStreak,
     'tutorialDone': tutorialDone,
+    'gold': goldButtons.toJson(),
+    'vip': vip,
+    'starterBought': starterBought,
+    'multLevel': multLevel,
+    'warpDay': warpDay,
+    'warpCount': warpCount,
+    'dailyAdDay': dailyAdDay,
+    'firstReturnDone': firstReturnDone,
     'settings': settings.toJson(),
     'boostSeconds': boostSeconds,
   };
@@ -197,6 +234,14 @@ class GameState {
       dailyDay: j['dailyDay'] as String?,
       dailyStreak: ((j['dailyStreak'] as num?)?.toInt() ?? 0).clamp(0, 1 << 30),
       tutorialDone: j['tutorialDone'] as bool? ?? false,
+      goldButtons: big(j['gold']),
+      vip: j['vip'] as bool? ?? false,
+      starterBought: j['starterBought'] as bool? ?? false,
+      multLevel: ((j['multLevel'] as num?)?.toInt() ?? 0).clamp(0, 99),
+      warpDay: j['warpDay'] as String?,
+      warpCount: ((j['warpCount'] as num?)?.toInt() ?? 0).clamp(0, 1 << 20),
+      dailyAdDay: j['dailyAdDay'] as String?,
+      firstReturnDone: j['firstReturnDone'] as bool? ?? false,
       settings: PlayerSettings.fromJson(j['settings'] as Map<String, dynamic>?),
       boostSeconds: boost.isNaN || boost < 0 ? 0 : boost,
     );
@@ -214,6 +259,14 @@ class GameState {
     dailyDay: dailyDay,
     dailyStreak: dailyStreak,
     tutorialDone: tutorialDone,
+    goldButtons: goldButtons,
+    vip: vip,
+    starterBought: starterBought,
+    multLevel: multLevel,
+    warpDay: warpDay,
+    warpCount: warpCount,
+    dailyAdDay: dailyAdDay,
+    firstReturnDone: firstReturnDone,
     settings: settings.copy(),
     boostSeconds: boostSeconds,
   );

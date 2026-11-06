@@ -133,6 +133,29 @@ void main() {
       expect(File('assets/art/$f.png').existsSync(), isTrue, reason: f);
     }
     expect(File('assets/art/bg_cuarto_lavado.jpg').existsSync(), isTrue);
+    for (final it in c.shop) {
+      expect(it.art, isNotNull, reason: it.id);
+      expect(
+        File('assets/art/${it.art}.png').existsSync(),
+        isTrue,
+        reason: it.art,
+      );
+    }
+    for (final f in [
+      'icon_hilvanes',
+      'icon_ui_anuncio',
+      'ui_hilo_flecha',
+      'shop_vip',
+      'shop_starter',
+      'shop_mult',
+      'shop_botones_1',
+      'shop_botones_2',
+      'shop_botones_3',
+      'shop_botones_4',
+    ]) {
+      expect(File('assets/art/$f.png').existsSync(), isTrue, reason: f);
+    }
+    expect(File('assets/art/bg_tienda.jpg').existsSync(), isTrue);
   });
 
   test(

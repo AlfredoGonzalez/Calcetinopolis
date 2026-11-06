@@ -9,8 +9,13 @@ Reglas por nombre de archivo:
   biz_*, mgr_*        -> PNG 384x384 transparente, recortado al contenido
   icon_*              -> PNG 256x256 transparente, recortado al contenido
   app_icon.jpg        -> PNG 512x512 opaco (esquinas rellenas)
-  bg_cuarto_lavado    -> JPG sin cambios de contenido
-  bg_pelusas_flotando -> PNG transparente (overlay)
+  shop_*              -> PNG 384x384 transparente, recortado al contenido
+  mascota_*, anim_*   -> PNG 512x512 transparente, SIN recorte (las poses y los cuadros
+                         deben conservar el mismo encuadre y escala entre sí)
+  ui_*                -> PNG 256x256 transparente, recortado al contenido
+  bg_*                -> si las esquinas son magenta, PNG transparente (overlay);
+                         si no, JPG opaco (fondos de pantalla)
+  store_*             -> se omite (gráficos de Google Play: no van dentro de la app)
 Las sombras de suelo (magenta oscuro) se eliminan; si se quieren, se dibujan en el juego.
 """
 import sys
@@ -27,11 +32,13 @@ M_FULL_FG = 45
 WHITE_MIN = 238          # "casi blanco" para las esquinas blancas de algunos archivos
 MIN_COMPONENT_PX = 60    # motas más pequeñas se descartan
 RING_SPAN = 0.75         # marcos/anillos que ocupan casi toda la imagen se descartan
+SHADOW_MIN_AVG = 105     # sombras de suelo grisáceas/beige: ni tan oscuras como el contorno (café)
+SHADOW_MAX_AVG = 215     # ni tan claras como la lana crema
 MIN_THICKNESS = 4        # líneas finas sueltas (bordes JPEG, arcos del mosaico) se descartan
 EDGE_PX = 4              # componentes pegados al borde de la imagen se descartan (restos del fondo)
 
 
-def key_image(rgb: np.ndarray, drop_edge=True):
+def key_image(rgb: np.ndarray, drop_edge=True, holes=False):
     """Devuelve (alfa 0..1, color sin contaminación) para una imagen RGB float 0..255."""
     r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
     m = np.minimum(r, b) - g
@@ -44,6 +51,33 @@ def key_image(rgb: np.ndarray, drop_edge=True):
         edge = np.unique(np.concatenate([lab[0, :], lab[-1, :], lab[:, 0], lab[:, -1]]))
         edge = edge[edge != 0]
         raw[np.isin(lab, edge)] = 0
+
+    # Huecos blancos encerrados (por ejemplo, el centro de una flecha en espiral):
+    # se vuelven transparentes. Solo para piezas que lo piden (prefijo ui_).
+    if holes:
+        lab_w, n_w = ndimage.label(white)
+        for i, sl in enumerate(ndimage.find_objects(lab_w), start=1):
+            comp = lab_w[sl] == i
+            if comp.sum() >= 400 and raw[sl][comp].mean() > 0.5:
+                raw[sl][comp] = 0
+
+    # Sombras de suelo desaturadas (gris/beige) pegadas al fondo ya quitado: se
+    # propagan desde el fondo y se detienen en el contorno café del dibujo.
+    r_, g_, b_ = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    avg = (r_ + g_ + b_) / 3
+    shadowish = (
+        (np.abs(r_ - g_) < 45)
+        & (np.abs(g_ - b_) < 35)
+        & (avg > SHADOW_MIN_AVG)
+        & (avg < SHADOW_MAX_AVG)
+        & (raw > 0.02)
+    )
+    if shadowish.any():
+        grow = shadowish | (raw <= 0.02)
+        lab_s, _ = ndimage.label(grow)
+        touching = np.unique(lab_s[(raw <= 0.02) & grow])
+        touching = touching[touching != 0]
+        raw[np.isin(lab_s, touching) & shadowish] = 0
 
     # Componentes: quitar motas, marcos y restos pegados al borde. Se evalúa con un
     # umbral bajo para que también caiga el halo tenue del borde del mosaico.
@@ -120,6 +154,16 @@ def write_launcher_icons(icon: Image.Image, res_dir: Path):
             icon.resize((px, px), Image.LANCZOS).save(d / 'ic_launcher.png', optimize=True)
 
 
+def is_magenta_corner(im: Image.Image) -> bool:
+    """¿Las cuatro esquinas son magenta (fondo para recortar)?"""
+    w, h = im.size
+    for x, y in [(2, 2), (w - 3, 2), (2, h - 3), (w - 3, h - 3)]:
+        r, g, b = im.getpixel((x, y))
+        if min(r, b) - g < M_FULL_BG:
+            return False
+    return True
+
+
 def main():
     src = Path(sys.argv[1] if len(sys.argv) > 1 else 'assets/art/source')
     out = Path(sys.argv[2] if len(sys.argv) > 2 else 'assets/art')
@@ -131,17 +175,27 @@ def main():
             icon = fill_corners(im).resize((512, 512), Image.LANCZOS)
             icon.save(out / f'{name}.png', optimize=True)
             write_launcher_icons(icon, Path('android/app/src/main/res'))
-        elif name == 'bg_cuarto_lavado':
-            im.save(out / f'{name}.jpg', quality=88, optimize=True)
-        elif name.startswith(('biz_', 'mgr_')):
+        elif name.startswith('store_'):
+            print('omitido (gráfico de tienda):', f.name)
+            continue
+        elif name.startswith(('mascota_', 'anim_')):
+            a, c = key_image(np.asarray(im).astype(np.float32))
+            to_rgba(a, c).resize((512, 512), Image.LANCZOS).save(out / f'{name}.png', optimize=True)
+        elif name.startswith('ui_'):
+            a, c = key_image(np.asarray(im).astype(np.float32), holes=True)
+            crop_square(to_rgba(a, c)).resize((256, 256), Image.LANCZOS).save(out / f'{name}.png', optimize=True)
+        elif name.startswith(('biz_', 'mgr_', 'shop_')):
             a, c = key_image(np.asarray(im).astype(np.float32))
             crop_square(to_rgba(a, c), pad=0.04).resize((384, 384), Image.LANCZOS).save(out / f'{name}.png', optimize=True)
         elif name.startswith('icon_'):
             a, c = key_image(np.asarray(im).astype(np.float32))
             crop_square(to_rgba(a, c)).resize((256, 256), Image.LANCZOS).save(out / f'{name}.png', optimize=True)
         elif name.startswith('bg_'):
-            a, c = key_image(np.asarray(im).astype(np.float32), drop_edge=False)
-            to_rgba(a, c).save(out / f'{name}.png', optimize=True)
+            if is_magenta_corner(im):
+                a, c = key_image(np.asarray(im).astype(np.float32), drop_edge=False)
+                to_rgba(a, c).save(out / f'{name}.png', optimize=True)
+            else:
+                im.save(out / f'{name}.jpg', quality=88, optimize=True)
         else:
             print('omitido:', f.name)
             continue

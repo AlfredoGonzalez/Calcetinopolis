@@ -120,10 +120,14 @@ class ShopItem {
     required this.description,
     required this.type,
     required this.levels,
+    this.art,
   });
   final String id;
   final String name;
   final String description;
+
+  /// Archivo en assets/art, sin extensión.
+  final String? art;
   final String type;
   final List<ShopLevel> levels;
 }
@@ -190,6 +194,71 @@ class DailyConfig {
   final BigNum hilvanes;
 }
 
+class ProductKind {
+  static const vip = 'vip';
+  static const starter = 'starter';
+  static const gold = 'gold';
+  static const multiplier = 'multiplier';
+  static const all = {vip, starter, gold, multiplier};
+}
+
+/// Producto de compra dentro de la app. El precio real viene de la tienda;
+/// [priceMxn] es de referencia (spec 10.2).
+class ProductConfig {
+  const ProductConfig({
+    required this.id,
+    required this.kind,
+    required this.name,
+    required this.priceMxn,
+    required this.description,
+    this.gold = 0,
+    this.factor = 1,
+    this.level = 0,
+  });
+  final String id;
+  final String kind;
+  final String name;
+  final double priceMxn;
+  final String description;
+
+  /// Botones Dorados que da (paquetes de oro y de inicio).
+  final int gold;
+
+  /// Multiplicador de ganancias (inicio: 1.25; permanente: 2 por nivel).
+  final double factor;
+  final int level;
+
+  /// Se compra una sola vez y la tienda la puede restaurar.
+  bool get isDurable => kind != ProductKind.gold;
+}
+
+class WarpOption {
+  const WarpOption({required this.id, required this.hours, required this.gold});
+  final String id;
+  final double hours;
+  final int gold;
+}
+
+class MonetizationConfig {
+  const MonetizationConfig({
+    required this.warpMinutes,
+    required this.warpPerDay,
+    required this.dailyGiftGold,
+    required this.warpGold,
+    required this.products,
+  });
+
+  /// Minutos de producción que da un anuncio de "saltar espera".
+  final double warpMinutes;
+  final int warpPerDay;
+  final int dailyGiftGold;
+  final List<WarpOption> warpGold;
+  final List<ProductConfig> products;
+
+  int get maxMultiplierLevel =>
+      products.where((p) => p.kind == ProductKind.multiplier).length;
+}
+
 class EconomyConfig {
   const EconomyConfig({
     required this.businesses,
@@ -204,6 +273,7 @@ class EconomyConfig {
     this.shop = const [],
     this.goals = const [],
     this.daily,
+    this.monetization,
   });
 
   final List<BusinessConfig> businesses;
@@ -220,6 +290,7 @@ class EconomyConfig {
   final List<ShopItem> shop;
   final List<GoalConfig> goals;
   final DailyConfig? daily;
+  final MonetizationConfig? monetization;
 
   factory EconomyConfig.fromJsonString(String source) =>
       EconomyConfig.fromJson(jsonDecode(source) as Map<String, dynamic>);
@@ -290,6 +361,7 @@ class EconomyConfig {
           name: it['name'] as String,
           description: it['description'] as String,
           type: it['type'] as String,
+          art: it['art'] as String?,
           levels: (it['levels'] as List).map((l) {
             final m = l as Map<String, dynamic>;
             return ShopLevel(
@@ -323,6 +395,9 @@ class EconomyConfig {
                   .toInt(),
               hilvanes: big((j['daily'] as Map)['hilvanes']),
             ),
+      monetization: j['monetization'] == null
+          ? null
+          : _parseMonetization(j['monetization'] as Map<String, dynamic>),
       boost: BoostConfig(
         multiplier: (bo['multiplier'] as num).toDouble(),
         hoursPerView: (bo['hours_per_view'] as num).toDouble(),
@@ -331,6 +406,39 @@ class EconomyConfig {
     );
     config.validate();
     return config;
+  }
+
+  static MonetizationConfig _parseMonetization(Map<String, dynamic> m) {
+    final ads = m['ads'] as Map<String, dynamic>;
+    return MonetizationConfig(
+      warpMinutes: (ads['warp_minutes'] as num).toDouble(),
+      warpPerDay: (ads['warp_per_day'] as num).toInt(),
+      dailyGiftGold: (ads['daily_gift_gold'] as num).toInt(),
+      warpGold: ((m['warp_gold'] as List?) ?? const []).map((raw) {
+        final w = raw as Map<String, dynamic>;
+        return WarpOption(
+          id: w['id'] as String,
+          hours: (w['hours'] as num).toDouble(),
+          gold: (w['gold'] as num).toInt(),
+        );
+      }).toList(),
+      products: ((m['products'] as List?) ?? const []).map((raw) {
+        final p = raw as Map<String, dynamic>;
+        return ProductConfig(
+          id: p['id'] as String,
+          kind: p['kind'] as String,
+          name: p['name'] as String,
+          priceMxn: (p['price_mxn'] as num).toDouble(),
+          description: p['description'] as String,
+          gold: (p['gold'] as num?)?.toInt() ?? 0,
+          factor:
+              (p['factor'] as num?)?.toDouble() ??
+              (p['multiplier'] as num?)?.toDouble() ??
+              1,
+          level: (p['level'] as num?)?.toInt() ?? 0,
+        );
+      }).toList(),
+    );
   }
 
   void validate() {
@@ -389,6 +497,34 @@ class EconomyConfig {
       }
       if (g.target <= BigNum.zero) {
         throw FormatException('Meta ${g.id} con objetivo <= 0');
+      }
+    }
+    final mon = monetization;
+    if (mon != null) {
+      final productIds = <String>{};
+      for (final p in mon.products) {
+        if (!productIds.add(p.id)) {
+          throw FormatException('Producto duplicado: ${p.id}');
+        }
+        if (!ProductKind.all.contains(p.kind)) {
+          throw FormatException('Tipo de producto desconocido: ${p.kind}');
+        }
+        if (p.priceMxn <= 0) {
+          throw FormatException('Producto ${p.id} sin precio');
+        }
+      }
+      final levels =
+          mon.products
+              .where((p) => p.kind == ProductKind.multiplier)
+              .map((p) => p.level)
+              .toList()
+            ..sort();
+      for (var i = 0; i < levels.length; i++) {
+        if (levels[i] != i + 1) {
+          throw const FormatException(
+            'Niveles de multiplicador deben ser 1, 2, 3...',
+          );
+        }
       }
     }
     if (prestige.scale <= BigNum.zero) {

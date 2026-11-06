@@ -11,6 +11,7 @@ import 'services/file_save_service.dart';
 import 'services/prefs_save_service.dart';
 import 'services/services.dart';
 import 'ui/home_shell.dart';
+import 'ui/test_services.dart';
 import 'ui/theme.dart';
 
 Future<void> main() async {
@@ -25,27 +26,48 @@ Future<void> main() async {
       : FileSaveService(await getApplicationSupportDirectory());
   final manager = SaveManager(store, SaveCodec(config.businesses.length));
   final loaded = await manager.load();
+  // F7 en modo de prueba: anuncios y compras simulados (los reales llegan en F8).
+  final navigatorKey = GlobalKey<NavigatorState>();
+  final products = config.monetization?.products ?? const <ProductConfig>[];
+  final iap = TestIapService(
+    navigatorKey,
+    {for (final p in products) p.id: p.priceMxn},
+    durable: {
+      for (final p in products)
+        if (p.isDurable) p.id,
+    },
+  );
+  await iap.load({for (final p in products) p.id});
   final controller = GameController(
     economy,
     initial: loaded.data?.state,
     saveManager: manager,
     lastSeen: loaded.data?.savedAt,
+    ads: TestAdService(navigatorKey),
+    iap: iap,
+    testMode: true,
   );
   if (loaded.data != null) controller.checkOffline(loaded.data!.savedAt);
   controller.start();
-  runApp(CalcetinopolisApp(controller: controller));
+  runApp(CalcetinopolisApp(controller: controller, navigatorKey: navigatorKey));
 }
 
 class CalcetinopolisApp extends StatelessWidget {
-  const CalcetinopolisApp({super.key, required this.controller});
+  const CalcetinopolisApp({
+    super.key,
+    required this.controller,
+    this.navigatorKey,
+  });
 
   final GameController controller;
+  final GlobalKey<NavigatorState>? navigatorKey;
 
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: controller,
       builder: (context, _) => MaterialApp(
+        navigatorKey: navigatorKey,
         title: 'Calcetinópolis',
         debugShowCheckedModeBanner: false,
         theme: buildTheme(),

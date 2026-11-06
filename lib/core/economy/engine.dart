@@ -51,6 +51,7 @@ class Economy {
     m = m * Formulas.pairsMultiplier(s.pairsClaimed, config.prestige.pairBonus);
     final shopMult = shopValue(s, ShopType.globalMult);
     if (shopMult != null) m = m.mulDouble(shopMult);
+    m = m.mulDouble(purchasedMultiplier(s));
     return m;
   }
 
@@ -431,6 +432,159 @@ class Economy {
     s.dailyStreak = r.streak;
     s.dailyDay = dayKey(now);
     return r;
+  }
+}
+
+extension MonetizationRules on Economy {
+  MonetizationConfig get _mon => config.monetization!;
+
+  ProductConfig product(String id) =>
+      _mon.products.firstWhere((p) => p.id == id);
+
+  /// Multiplicador de compras reales: niveles permanentes y paquete de inicio.
+  double purchasedMultiplier(GameState s) {
+    final mon = config.monetization;
+    if (mon == null) return 1;
+    var m = 1.0;
+    for (final p in mon.products) {
+      if (p.kind == ProductKind.multiplier && p.level <= s.multLevel) {
+        m *= p.factor;
+      }
+      if (p.kind == ProductKind.starter && s.starterBought) m *= p.factor;
+    }
+    return m;
+  }
+
+  /// Los anuncios no aparecen antes del primer regreso (spec 9.10). Quien ya
+  /// centrifugó también pasó esa etapa.
+  bool adsUnlocked(GameState s) =>
+      s.firstReturnDone || s.pairsClaimed.isPositive;
+
+  /// Paquete de inicio: una sola vez y nunca antes del primer Centrifugado.
+  bool starterAvailable(GameState s) =>
+      config.monetization != null &&
+      !s.starterBought &&
+      s.pairsClaimed.isPositive &&
+      _mon.products.any((p) => p.kind == ProductKind.starter);
+
+  /// ¿Se puede comprar este producto ahora?
+  bool canBuyProduct(GameState s, String id) {
+    final p = product(id);
+    switch (p.kind) {
+      case ProductKind.vip:
+        return !s.vip;
+      case ProductKind.starter:
+        return starterAvailable(s);
+      case ProductKind.multiplier:
+        return p.level == s.multLevel + 1;
+      default:
+        return true;
+    }
+  }
+
+  /// Aplica un producto ya cobrado por la tienda. Es idempotente para los
+  /// productos permanentes (sirve también para restaurar compras).
+  bool applyProduct(GameState s, String id) {
+    final p = product(id);
+    switch (p.kind) {
+      case ProductKind.vip:
+        if (s.vip) return false;
+        s.vip = true;
+        return true;
+      case ProductKind.starter:
+        if (s.starterBought) return false;
+        s.starterBought = true;
+        s.goldButtons += BigNum.fromInt(p.gold);
+        return true;
+      case ProductKind.multiplier:
+        if (p.level <= s.multLevel) return false;
+        s.multLevel = p.level;
+        return true;
+      default:
+        s.goldButtons += BigNum.fromInt(p.gold);
+        return true;
+    }
+  }
+
+  /// Restaura lo que la tienda dice que el jugador ya tiene. No regala el oro
+  /// del paquete de inicio de nuevo si ya estaba marcado como comprado.
+  int restoreProducts(GameState s, Set<String> ownedIds) {
+    var restored = 0;
+    final byLevel = ownedIds
+        .where((id) => product(id).kind == ProductKind.multiplier)
+        .map((id) => product(id).level);
+    final maxLevel = byLevel.isEmpty ? 0 : byLevel.reduce(math.max);
+    if (maxLevel > s.multLevel) {
+      s.multLevel = maxLevel;
+      restored++;
+    }
+    for (final id in ownedIds) {
+      final p = product(id);
+      if (p.kind == ProductKind.vip && !s.vip) {
+        s.vip = true;
+        restored++;
+      } else if (p.kind == ProductKind.starter && !s.starterBought) {
+        s.starterBought = true; // el oro no se vuelve a dar
+        restored++;
+      }
+    }
+    return restored;
+  }
+
+  // ------------------------------------------------------------------ anuncios
+
+  /// ¿Se puede sumar otra vista? Con la reserva a medias la vista suma lo que
+  /// quepa hasta el tope; solo se bloquea cuando ya está llena.
+  bool canAddBoost(GameState s) =>
+      s.boostSeconds < config.boost.maxHours * 3600 - 1;
+
+  int warpAdsLeft(GameState s, DateTime now) {
+    final used = s.warpDay == Economy.dayKey(now) ? s.warpCount : 0;
+    return math.max(0, _mon.warpPerDay - used);
+  }
+
+  void _noteWarpAd(GameState s, DateTime now) {
+    final key = Economy.dayKey(now);
+    if (s.warpDay != key) {
+      s.warpDay = key;
+      s.warpCount = 0;
+    }
+    s.warpCount++;
+  }
+
+  /// Salta [seconds] de producción de los negocios con manager.
+  BigNum timeWarp(GameState s, double seconds) {
+    final gain = managedIncomePerSecond(s).mulDouble(seconds);
+    if (gain.isPositive) addMoney(s, gain);
+    return gain;
+  }
+
+  /// Recompensa del anuncio "saltar espera" (15 min). No cobra nada si no quedan.
+  BigNum? claimWarpAd(GameState s, DateTime now) {
+    if (!adsUnlocked(s) || warpAdsLeft(s, now) <= 0) return null;
+    _noteWarpAd(s, now);
+    return timeWarp(s, _mon.warpMinutes * 60);
+  }
+
+  /// Compra un salto con Botones Dorados.
+  BigNum? buyWarpWithGold(GameState s, String id) {
+    final w = _mon.warpGold.firstWhere((w) => w.id == id);
+    final cost = BigNum.fromInt(w.gold);
+    if (cost > s.goldButtons) return null;
+    s.goldButtons -= cost;
+    return timeWarp(s, w.hours * 3600);
+  }
+
+  bool dailyGoldAdAvailable(GameState s, DateTime now) =>
+      adsUnlocked(s) && s.dailyAdDay != Economy.dayKey(now);
+
+  /// Bono de Botones Dorados del regalo diario (una vez al día).
+  int? claimDailyGoldAd(GameState s, DateTime now) {
+    if (!dailyGoldAdAvailable(s, now)) return null;
+    s.dailyAdDay = Economy.dayKey(now);
+    final g = _mon.dailyGiftGold;
+    s.goldButtons += BigNum.fromInt(g);
+    return g;
   }
 }
 
