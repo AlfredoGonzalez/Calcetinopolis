@@ -11,36 +11,29 @@ Estado del arte frente a `docs/ART_STYLE.md`. Los originales van en `assets/art/
 
 ## Ya entregado y en uso
 
-Ícono de la app, 10 negocios (`biz_*`), 10 managers (`mgr_*`), Pelusitas, Pareja Reunida, fondo del cuarto de lavado, íconos de pestañas (negocios, mejoras, centrifugado, metas, tienda), ajustes y regalo.
+Ícono de la app, 10 negocios (`biz_*`), 10 managers (`mgr_*`), Pelusitas, Hilvanes, Pareja Reunida, Botones Dorados, fondos (cuarto de lavado, Tienda, pelusas flotando), todos los íconos de interfaz (pestañas, ajustes, regalo, boost, reloj, anuncio, comprar, manager, notificación), los productos de la Tienda (`shop_*`), las 4 mejoras de Hilvanes (`icon_mejora_*`) y la flecha de hilo del tutorial.
 
-## Entregado pero aún sin usar (lo conecto en F7)
+Entregados pero todavía sin usar en pantalla: `icon_ui_comprar`, `icon_ui_manager`, `icon_ui_notificacion` y `bg_pelusas_flotando`.
 
-`icon_botones_dorados`, `icon_ui_boost`, `icon_ui_comprar`, `icon_ui_manager`, `icon_ui_notificacion`, `icon_ui_reloj`, `bg_pelusas_flotando`.
+## Pendiente
 
-## Pendiente: prioridad alta (lo necesita la Tienda o una pantalla ya hecha)
-
-La Tienda ya existe y, mientras no haya `shop_*`, usa arte que ya tienes como respaldo (regalo, medalla de metas, botón dorado, flecha de mejoras). En cuanto subas un archivo con el nombre de la tabla, se usa solo, sin tocar código.
-
-| Archivo sugerido | Qué es | Dónde se usa |
+| Archivo | Qué es | Dónde se usa |
 | --- | --- | --- |
-| `icon_hilvanes` | Ícono de la moneda Hilvanes (un ovillo, carrete o aguja con hilo; distinto de la Pareja y de las Pelusitas) | Barra superior, tienda de Centrifugado, metas |
-| `shop_vip` | Pase VIP (por ejemplo, una corona o un boleto dorado) | Tienda |
-| `shop_starter` | Paquete de inicio (caja o bolsa de regalo con un calcetín) | Tienda |
-| `shop_mult` | Multiplicador permanente x2 (por ejemplo, un calcetín con destellos y "x2" sin texto, o una estrella) | Tienda |
-| `shop_botones_1` a `shop_botones_4` | Botones Dorados en 4 tamaños: uno, un puñito, una bolsita, un cofre | Tienda |
-| `icon_ui_anuncio` | "Ver un anuncio" (triángulo de play en un botón o una pantallita) | Botones de anuncio |
-| `mascota_reposo`, `mascota_salto`, `mascota_celebra` | El calcetín protagonista en 3 poses (hoy no hay hoja del protagonista; solo aparece dentro de los negocios) | Tutorial, Centrifugado, Tienda |
+| `mascota_reposo`, `mascota_salto`, `mascota_celebra` | El calcetín protagonista en 3 poses | Tutorial, Centrifugado, Tienda |
+| `anim_centrifugado_lavadora` | Lavadora de frente con espiral lavanda | Animación de Centrifugado (hoy es un ícono con emoji) |
+| `anim_centrifugado_calcetin_izq`, `anim_centrifugado_calcetin_der` | Los dos calcetines que se reencuentran | Animación de Centrifugado |
+| `anim_centrifugado_corazon` | Corazón lavanda | Animación de Centrifugado |
 
-## Pendiente: prioridad media
+## Observaciones sobre lo entregado
 
-| Archivo sugerido | Qué es |
-| --- | --- |
-| `anim_centrifugado_*` | Animación de Centrifugado: lavadora (frente), dos calcetines separados (izquierdo y derecho) y un corazón. Hoy es un ícono con emoji |
-| `ui_hilo_flecha` | Flecha hecha de hilo para el tutorial |
-| `icon_mejora_detergente`, `icon_mejora_suerte`, `icon_mejora_ayudas`, `icon_mejora_cesto` | Las 4 mejoras de la tienda de Hilvanes |
-| `bg_tienda` (opcional) | Fondo de la Tienda |
-| `store_feature_1024x500` | Gráfico de función de Google Play (1024×500). Esta sí puede llevar texto, armada en una herramienta de diseño |
-| Capturas de pantalla | Para la ficha de Google Play (se arman en una herramienta de diseño, no en el generador) |
+- `store_feature_1024x500` llegó en **1024×765**. Google Play exige exactamente 1024×500: hay que recortarlo (se puede quitar arriba y abajo sin tocar a los personajes) o regenerarlo en formato panorámico. Se queda en `assets/art/source/` y no entra a la app.
+- Las 14 imágenes de esta tanda llegaron con **fondo blanco** y una **sombra de suelo beige**, no magenta. El script las recorta bien y quita la sombra, salvo en `shop_starter` y `shop_botones_4` (sombra café oscura) donde queda un resto. Si quieres que salgan limpias, repite esas dos con "sin sombra de suelo, fondo magenta plano".
+- El centro de la flecha de hilo era blanco; el script lo vuelve transparente.
+
+## Animaciones (después)
+
+- Negocios "trabajando" (4 a 8 cuadros cada uno, o Rive), managers parpadeando y saludando, mascota (reposo, salto, celebración). Si prefieres Rive o Spine, dime y preparo el formato.
+- Cosméticos (estampados, gorritos, lentes, fondos de cuarto), eventos de temporada y segundo mundo (v1.1).
 
 ## Prompts
 

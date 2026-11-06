@@ -28,6 +28,7 @@ class Art extends StatelessWidget {
   final String? fallbackName;
 
   static const bgRoom = 'assets/art/bg_cuarto_lavado.jpg';
+  static const bgShop = 'assets/art/bg_tienda.jpg';
 
   @override
   Widget build(BuildContext context) {

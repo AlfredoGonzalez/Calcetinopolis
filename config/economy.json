@@ -460,7 +460,8 @@
           "cost": 24000,
           "value": 3
         }
-      ]
+      ],
+      "art": "icon_mejora_detergente"
     },
     {
       "id": "suerte",
@@ -484,7 +485,8 @@
           "cost": 30000,
           "value": 1000000000000.0
         }
-      ]
+      ],
+      "art": "icon_mejora_suerte"
     },
     {
       "id": "ayudantes",
@@ -508,7 +510,8 @@
           "cost": 14000,
           "value": 5
         }
-      ]
+      ],
+      "art": "icon_mejora_ayudas"
     },
     {
       "id": "cesto_grande",
@@ -528,7 +531,8 @@
           "cost": 12000,
           "value": 24
         }
-      ]
+      ],
+      "art": "icon_mejora_cesto"
     }
   ],
   "goals": [

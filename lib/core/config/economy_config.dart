@@ -120,10 +120,14 @@ class ShopItem {
     required this.description,
     required this.type,
     required this.levels,
+    this.art,
   });
   final String id;
   final String name;
   final String description;
+
+  /// Archivo en assets/art, sin extensión.
+  final String? art;
   final String type;
   final List<ShopLevel> levels;
 }
@@ -357,6 +361,7 @@ class EconomyConfig {
           name: it['name'] as String,
           description: it['description'] as String,
           type: it['type'] as String,
+          art: it['art'] as String?,
           levels: (it['levels'] as List).map((l) {
             final m = l as Map<String, dynamic>;
             return ShopLevel(

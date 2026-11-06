@@ -32,11 +32,13 @@ M_FULL_FG = 45
 WHITE_MIN = 238          # "casi blanco" para las esquinas blancas de algunos archivos
 MIN_COMPONENT_PX = 60    # motas más pequeñas se descartan
 RING_SPAN = 0.75         # marcos/anillos que ocupan casi toda la imagen se descartan
+SHADOW_MIN_AVG = 105     # sombras de suelo grisáceas/beige: ni tan oscuras como el contorno (café)
+SHADOW_MAX_AVG = 215     # ni tan claras como la lana crema
 MIN_THICKNESS = 4        # líneas finas sueltas (bordes JPEG, arcos del mosaico) se descartan
 EDGE_PX = 4              # componentes pegados al borde de la imagen se descartan (restos del fondo)
 
 
-def key_image(rgb: np.ndarray, drop_edge=True):
+def key_image(rgb: np.ndarray, drop_edge=True, holes=False):
     """Devuelve (alfa 0..1, color sin contaminación) para una imagen RGB float 0..255."""
     r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
     m = np.minimum(r, b) - g
@@ -49,6 +51,33 @@ def key_image(rgb: np.ndarray, drop_edge=True):
         edge = np.unique(np.concatenate([lab[0, :], lab[-1, :], lab[:, 0], lab[:, -1]]))
         edge = edge[edge != 0]
         raw[np.isin(lab, edge)] = 0
+
+    # Huecos blancos encerrados (por ejemplo, el centro de una flecha en espiral):
+    # se vuelven transparentes. Solo para piezas que lo piden (prefijo ui_).
+    if holes:
+        lab_w, n_w = ndimage.label(white)
+        for i, sl in enumerate(ndimage.find_objects(lab_w), start=1):
+            comp = lab_w[sl] == i
+            if comp.sum() >= 400 and raw[sl][comp].mean() > 0.5:
+                raw[sl][comp] = 0
+
+    # Sombras de suelo desaturadas (gris/beige) pegadas al fondo ya quitado: se
+    # propagan desde el fondo y se detienen en el contorno café del dibujo.
+    r_, g_, b_ = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    avg = (r_ + g_ + b_) / 3
+    shadowish = (
+        (np.abs(r_ - g_) < 45)
+        & (np.abs(g_ - b_) < 35)
+        & (avg > SHADOW_MIN_AVG)
+        & (avg < SHADOW_MAX_AVG)
+        & (raw > 0.02)
+    )
+    if shadowish.any():
+        grow = shadowish | (raw <= 0.02)
+        lab_s, _ = ndimage.label(grow)
+        touching = np.unique(lab_s[(raw <= 0.02) & grow])
+        touching = touching[touching != 0]
+        raw[np.isin(lab_s, touching) & shadowish] = 0
 
     # Componentes: quitar motas, marcos y restos pegados al borde. Se evalúa con un
     # umbral bajo para que también caiga el halo tenue del borde del mosaico.
@@ -153,7 +182,7 @@ def main():
             a, c = key_image(np.asarray(im).astype(np.float32))
             to_rgba(a, c).resize((512, 512), Image.LANCZOS).save(out / f'{name}.png', optimize=True)
         elif name.startswith('ui_'):
-            a, c = key_image(np.asarray(im).astype(np.float32))
+            a, c = key_image(np.asarray(im).astype(np.float32), holes=True)
             crop_square(to_rgba(a, c)).resize((256, 256), Image.LANCZOS).save(out / f'{name}.png', optimize=True)
         elif name.startswith(('biz_', 'mgr_', 'shop_')):
             a, c = key_image(np.asarray(im).astype(np.float32))

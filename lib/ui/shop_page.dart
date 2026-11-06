@@ -29,6 +29,30 @@ class ShopPage extends StatelessWidget {
     if (mon == null) return const Center(child: Text('Tienda no disponible'));
     final products = mon.products;
 
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Opacity(
+            opacity: 0.2,
+            child: Image.asset(
+              Art.bgShop,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => const SizedBox.shrink(),
+            ),
+          ),
+        ),
+        _content(context, c, eco, mon, products),
+      ],
+    );
+  }
+
+  Widget _content(
+    BuildContext context,
+    GameController c,
+    Economy eco,
+    MonetizationConfig mon,
+    List<ProductConfig> products,
+  ) {
     return ListView(
       padding: const EdgeInsets.all(12),
       children: [
@@ -126,6 +150,25 @@ class ShopPage extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Texto de un botón de anuncio, con el ícono de "reproducir" cuando hay anuncio.
+class _AdLabel extends StatelessWidget {
+  const _AdLabel(this.text, {required this.showIcon});
+  final String text;
+  final bool showIcon;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      if (showIcon) ...[
+        const Art('icon_ui_anuncio', size: 22, fallback: Icons.play_circle),
+        const SizedBox(width: 6),
+      ],
+      Text(text, textAlign: TextAlign.center),
+    ],
+  );
 }
 
 class _SectionTitle extends StatelessWidget {
@@ -245,9 +288,9 @@ class _BoostCard extends StatelessWidget {
                       }
                     }
                   : null,
-              child: Text(
+              child: _AdLabel(
                 full ? 'Máximo' : (vip ? 'Activar' : 'Ver anuncio'),
-                textAlign: TextAlign.center,
+                showIcon: !full && !vip,
               ),
             ),
           ],
@@ -311,7 +354,10 @@ class _WarpCard extends StatelessWidget {
                           }
                         }
                       : null,
-                  child: Text(c.state.vip ? 'Saltar' : 'Ver anuncio'),
+                  child: _AdLabel(
+                    c.state.vip ? 'Saltar' : 'Ver anuncio',
+                    showIcon: !c.state.vip,
+                  ),
                 ),
               ],
             ),

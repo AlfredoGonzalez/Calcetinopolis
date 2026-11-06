@@ -4,6 +4,7 @@ import '../app/game_controller.dart';
 import '../core/big_num.dart';
 import '../core/config/economy_config.dart';
 import '../core/number_format.dart';
+import 'art.dart';
 import 'theme.dart';
 
 /// Pantalla de Centrifugado: antes/después y tienda de Hilvanes (spec 9.12).
@@ -91,7 +92,7 @@ class PrestigePage extends StatelessWidget {
         const SizedBox(height: 12),
         Row(
           children: [
-            const Icon(Icons.linear_scale, color: Palette.outline),
+            const Art('icon_hilvanes', size: 32, fallback: Icons.linear_scale),
             const SizedBox(width: 8),
             Text(
               'Hilvanes: ${formatter.format(s.hilvanes)}',
@@ -208,6 +209,8 @@ class _ShopCard extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         child: Row(
           children: [
+            Art(item.art, size: 52, fallback: Icons.upgrade),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
