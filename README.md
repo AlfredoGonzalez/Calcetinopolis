@@ -8,6 +8,9 @@ Idle tycoon móvil de calcetines perdidos, inspirado en AdVenture Capitalist. An
 
 - [`docs/GAME_SPEC.md`](docs/GAME_SPEC.md): especificación completa. Secciones 2–7 son contexto; 8–11 son requisitos y mandan si hay conflicto.
 - [`docs/ART_STYLE.md`](docs/ART_STYLE.md): hoja de estilo para el arte con IA.
+- [`docs/ART_PENDING.md`](docs/ART_PENDING.md): arte que falta y cómo generarlo.
+- [`docs/MONETIZATION.md`](docs/MONETIZATION.md): anuncios y compras (modo de prueba) y lo pendiente para F8.
+- [`docs/BALANCE.md`](docs/BALANCE.md): reporte del simulador de balance.
 
 ## Decisiones clave
 
@@ -17,7 +20,7 @@ Flutter + Flame · Android primero · solo español · MXN · 13+ · anuncios so
 
 Una fase por sesión (sección 11.4 del spec): F0 base, F1 economía y simulador, F2 loop jugable, F3 persistencia, F4 prestigio, F5 retención, F6 arte y sonido, F7 monetización, F8 lanzamiento, F9 v1.1.
 
-**Estado:** F0 a F5 listas (base, economía, loop jugable, guardado/offline, prestigio con tienda de Hilvanes, y retención: metas, regalo diario, tutorial y ajustes). Siguiente: F6, arte y sonido.
+**Estado:** F0 a F6 listas, y F7 en modo de prueba (anuncios y compras simulados; ver `docs/MONETIZATION.md`). F8 (lanzamiento) en pausa.
 
 ## Arte
 

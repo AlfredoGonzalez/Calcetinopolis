@@ -45,14 +45,16 @@ Future<void> showOfflineDialog(
         ],
       ),
       actions: [
-        if (c.ads != null)
+        if (c.canDoubleOffline)
           OutlinedButton(
             key: const Key('offline-x2'),
             onPressed: () async {
               Navigator.pop(ctx);
               await c.claimOffline(doubled: true);
             },
-            child: const Text('Recoger x2 viendo un anuncio'),
+            child: Text(
+              c.state.vip ? 'Recoger x2 (VIP)' : 'Recoger x2 viendo un anuncio',
+            ),
           ),
         FilledButton(
           key: const Key('offline-claim'),

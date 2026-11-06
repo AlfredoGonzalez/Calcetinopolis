@@ -19,6 +19,8 @@ Estado del arte frente a `docs/ART_STYLE.md`. Los originales van en `assets/art/
 
 ## Pendiente: prioridad alta (lo necesita la Tienda o una pantalla ya hecha)
 
+La Tienda ya existe y, mientras no haya `shop_*`, usa arte que ya tienes como respaldo (regalo, medalla de metas, botón dorado, flecha de mejoras). En cuanto subas un archivo con el nombre de la tabla, se usa solo, sin tocar código.
+
 | Archivo sugerido | Qué es | Dónde se usa |
 | --- | --- | --- |
 | `icon_hilvanes` | Ícono de la moneda Hilvanes (un ovillo, carrete o aguja con hilo; distinto de la Pareja y de las Pelusitas) | Barra superior, tienda de Centrifugado, metas |

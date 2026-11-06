@@ -22,7 +22,9 @@ class GameController extends ChangeNotifier {
     this.saveManager,
     TimeService? time,
     this.ads,
+    this.iap,
     this.analytics,
+    this.testMode = false,
     this.lastSeen,
   }) : state = initial ?? economy.newGame(),
        time = time ?? DeviceTimeService();
@@ -32,8 +34,12 @@ class GameController extends ChangeNotifier {
   final SaveManager? saveManager;
   final TimeService time;
 
-  /// Si es null, el botón "x2 viendo un anuncio" no se ofrece (llega en F7).
+  /// Si es null, no se ofrecen anuncios (salvo el x2 offline para VIP).
   final AdService? ads;
+  final IapService? iap;
+
+  /// Anuncios y compras simulados (versión web de prueba): se avisa en la Tienda.
+  final bool testMode;
   final AnalyticsService? analytics;
 
   /// Última vez que se guardó o se pausó la app; base de la ganancia offline.
@@ -53,6 +59,7 @@ class GameController extends ChangeNotifier {
 
   void start({Duration every = const Duration(milliseconds: 50)}) {
     _clock.start();
+    analytics?.log('session_start');
     _timer ??= Timer.periodic(every, (_) => step());
   }
 
@@ -117,9 +124,10 @@ class GameController extends ChangeNotifier {
     final r = pendingOffline;
     if (r == null) return;
     var mult = 1.0;
-    if (doubled && ads != null && await ads!.showRewarded('offline_x2')) {
-      mult = 2;
+    if (doubled && canDoubleOffline) {
+      if (state.vip || await _showAd('offline_x2')) mult = 2;
     }
+    state.firstReturnDone = true;
     economy.addMoney(state, r.gain.mulDouble(mult));
     analytics?.log('offline_claim', {
       'seconds': r.secondsCounted,
@@ -129,6 +137,123 @@ class GameController extends ChangeNotifier {
     lastSeen = time.now();
     notifyListeners();
     await save();
+  }
+
+  // ------------------------------------------------------------ anuncios y compras
+
+  bool get adsUnlocked => economy.adsUnlocked(state);
+
+  /// El x2 offline se ofrece con anuncios disponibles o con el Pase VIP.
+  bool get canDoubleOffline => state.vip || ads != null;
+
+  /// Los anuncios solo se muestran si el jugador los pide con un botón
+  /// (spec 10.1). Con VIP la recompensa se da sin verlos.
+  Future<bool> _showAd(String placement) async {
+    final service = ads;
+    if (service == null) return false;
+    analytics?.log('ad_offer_accepted', {'placement': placement});
+    final ok = await service.showRewarded(placement);
+    if (ok) analytics?.log('ad_completed', {'placement': placement});
+    return ok;
+  }
+
+  Future<bool> _earnReward(String placement) async {
+    if (state.vip) {
+      analytics?.log('ad_skipped_vip', {'placement': placement});
+      return true;
+    }
+    return _showAd(placement);
+  }
+
+  /// Registra que se mostró la oferta de un anuncio (para medir aceptación).
+  void logAdOfferShown(String placement) =>
+      analytics?.log('ad_offer_shown', {'placement': placement});
+
+  bool get canWatchBoost =>
+      adsUnlocked && economy.canAddBoost(state) && (state.vip || ads != null);
+
+  /// +4 h de x2 (máximo 12 h acumuladas).
+  Future<bool> watchBoostAd() async {
+    if (!canWatchBoost || !await _earnReward('boost')) return false;
+    economy.addBoostView(state);
+    notifyListeners();
+    await save();
+    return true;
+  }
+
+  int get warpAdsLeft => economy.warpAdsLeft(state, time.now());
+
+  bool get canWatchWarp =>
+      adsUnlocked && warpAdsLeft > 0 && (state.vip || ads != null);
+
+  /// Devuelve lo ganado, o null si no se completó el anuncio.
+  Future<BigNum?> watchWarpAd() async {
+    if (!canWatchWarp || !await _earnReward('warp')) return null;
+    final gain = economy.claimWarpAd(state, time.now());
+    notifyListeners();
+    await save();
+    return gain;
+  }
+
+  bool get canWatchDailyGoldAd =>
+      economy.dailyGoldAdAvailable(state, time.now()) &&
+      (state.vip || ads != null);
+
+  Future<int?> watchDailyGoldAd() async {
+    if (!canWatchDailyGoldAd || !await _earnReward('daily_gold')) return null;
+    final gold = economy.claimDailyGoldAd(state, time.now());
+    notifyListeners();
+    await save();
+    return gold;
+  }
+
+  bool canBuyWarpWithGold(String id) {
+    final w = economy.config.monetization!.warpGold.firstWhere(
+      (w) => w.id == id,
+    );
+    return state.goldButtons >= BigNum.fromInt(w.gold);
+  }
+
+  BigNum? buyWarpWithGold(String id) {
+    final gain = economy.buyWarpWithGold(state, id);
+    if (gain != null) {
+      analytics?.log('warp_gold', {'id': id});
+      notifyListeners();
+      save();
+    }
+    return gain;
+  }
+
+  /// Precio mostrado: el de la tienda; si no lo tiene, el de referencia.
+  String priceOf(String productId) =>
+      iap?.priceOf(productId) ??
+      '\$${economy.product(productId).priceMxn.toStringAsFixed(0)} MXN';
+
+  void logIapView() => analytics?.log('iap_view');
+
+  /// Compra un producto. La tienda cobra primero; el juego solo lo aplica
+  /// si el cobro se completó y la regla de compra lo permite.
+  Future<bool> purchase(String productId) async {
+    final store = iap;
+    if (store == null || !economy.canBuyProduct(state, productId)) return false;
+    if (!await store.purchase(productId)) return false;
+    economy.applyProduct(state, productId);
+    analytics?.log('iap_purchase', {'id': productId});
+    notifyListeners();
+    await save();
+    return true;
+  }
+
+  /// Restaura las compras permanentes. Devuelve cuántas se recuperaron.
+  Future<int> restorePurchases() async {
+    final store = iap;
+    if (store == null) return 0;
+    final restored = economy.restoreProducts(state, await store.restore());
+    if (restored > 0) {
+      notifyListeners();
+      await save();
+    }
+    return restored;
   }
 
   void setAmount(BuyAmount a) {

@@ -89,6 +89,29 @@ class _DailyCard extends StatelessWidget {
               'Si faltas un día, tu racha se pausa; no vuelve a cero.',
               style: TextStyle(fontSize: 12),
             ),
+            if (c.canWatchDailyGoldAd || c.state.dailyAdDay != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: OutlinedButton.icon(
+                  key: const Key('daily-gold-ad'),
+                  onPressed: c.canWatchDailyGoldAd
+                      ? () async {
+                          final g = await c.watchDailyGoldAd();
+                          if (g != null && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('+$g Botones Dorados')),
+                            );
+                          }
+                        }
+                      : null,
+                  icon: const Art('icon_botones_dorados', size: 22),
+                  label: Text(
+                    c.canWatchDailyGoldAd
+                        ? '+${c.economy.config.monetization!.dailyGiftGold} Botones Dorados ${c.state.vip ? '(VIP)' : 'viendo un anuncio'}'
+                        : 'Bono de hoy recogido',
+                  ),
+                ),
+              ),
             const SizedBox(height: 8),
             SizedBox(
               width: double.infinity,

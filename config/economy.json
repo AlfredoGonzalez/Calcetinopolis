@@ -711,5 +711,106 @@
     "bonus_minutes_per_day": 5,
     "hilvanes_every": 7,
     "hilvanes": 5
+  },
+  "monetization": {
+    "ads": {
+      "warp_minutes": 15,
+      "warp_per_day": 3,
+      "daily_gift_gold": 5
+    },
+    "warp_gold": [
+      {
+        "id": "warp_1h",
+        "hours": 1,
+        "gold": 10
+      },
+      {
+        "id": "warp_4h",
+        "hours": 4,
+        "gold": 35
+      },
+      {
+        "id": "warp_12h",
+        "hours": 12,
+        "gold": 90
+      }
+    ],
+    "products": [
+      {
+        "id": "vip",
+        "kind": "vip",
+        "name": "Pase VIP",
+        "price_mxn": 149,
+        "description": "Las recompensas de anuncios se activan sin verlos, para siempre. Un solo pago, sin suscripción."
+      },
+      {
+        "id": "starter",
+        "kind": "starter",
+        "name": "Paquete de inicio",
+        "price_mxn": 49,
+        "gold": 50,
+        "multiplier": 1.25,
+        "description": "50 Botones Dorados y +25% a todas las ganancias, para siempre. Se ofrece una sola vez."
+      },
+      {
+        "id": "gold_1",
+        "kind": "gold",
+        "name": "Puñito de Botones Dorados",
+        "price_mxn": 29,
+        "gold": 30,
+        "description": "30 Botones Dorados."
+      },
+      {
+        "id": "gold_2",
+        "kind": "gold",
+        "name": "Bolsita de Botones Dorados",
+        "price_mxn": 79,
+        "gold": 90,
+        "description": "90 Botones Dorados."
+      },
+      {
+        "id": "gold_3",
+        "kind": "gold",
+        "name": "Frasco de Botones Dorados",
+        "price_mxn": 149,
+        "gold": 200,
+        "description": "200 Botones Dorados."
+      },
+      {
+        "id": "gold_4",
+        "kind": "gold",
+        "name": "Cofre de Botones Dorados",
+        "price_mxn": 299,
+        "gold": 450,
+        "description": "450 Botones Dorados."
+      },
+      {
+        "id": "mult_1",
+        "kind": "multiplier",
+        "name": "Multiplicador permanente, nivel 1",
+        "price_mxn": 99,
+        "level": 1,
+        "factor": 2,
+        "description": "x2 a todas las ganancias, para siempre."
+      },
+      {
+        "id": "mult_2",
+        "kind": "multiplier",
+        "name": "Multiplicador permanente, nivel 2",
+        "price_mxn": 199,
+        "level": 2,
+        "factor": 2,
+        "description": "Otro x2 a todas las ganancias, para siempre."
+      },
+      {
+        "id": "mult_3",
+        "kind": "multiplier",
+        "name": "Multiplicador permanente, nivel 3",
+        "price_mxn": 349,
+        "level": 3,
+        "factor": 2,
+        "description": "Otro x2 a todas las ganancias, para siempre. Es el último nivel."
+      }
+    ]
   }
 }

@@ -12,9 +12,14 @@ void main() {
     expect(await ads.showRewarded('boost'), isFalse);
     expect(ads.shown, ['boost']);
 
-    final iap = MockIapService();
+    final iap = MockIapService(prices: {'vip': '\$149.00 MXN'});
+    await iap.load({'vip'});
+    expect(iap.priceOf('vip'), '\$149.00 MXN');
+    expect(iap.priceOf('otro'), isNull);
     expect(await iap.purchase('vip'), isTrue);
-    expect(await iap.purchase('vip'), isFalse);
+    expect(iap.purchases, ['vip']);
+    expect(await MockIapService(succeeds: false).purchase('vip'), isFalse);
+    expect(await (MockIapService()..owned.add('vip')).restore(), {'vip'});
 
     final analytics = MemoryAnalyticsService()..log('prestige', {'n': 1});
     expect(analytics.events.single.$1, 'prestige');
