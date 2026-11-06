@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../app/game_controller.dart';
 import '../core/number_format.dart';
+import 'art.dart';
 import 'theme.dart';
 
 /// Mejoras: Managers, Upgrades y Umbrales (spec 9.12).
@@ -67,7 +68,11 @@ class _Managers extends StatelessWidget {
               return Card(
                 color: has ? Palette.lint : Colors.white,
                 child: ListTile(
-                  leading: const Icon(Icons.checkroom),
+                  leading: Art(
+                    cfg.manager.portrait,
+                    size: 48,
+                    fallback: Icons.checkroom,
+                  ),
                   title: Text(cfg.manager.name),
                   subtitle: Text(
                     '${cfg.manager.pattern} · automatiza ${cfg.name}',

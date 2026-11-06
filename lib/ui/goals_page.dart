@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../app/game_controller.dart';
 import '../core/number_format.dart';
+import 'art.dart';
 import 'theme.dart';
 
 /// Metas guiadas y regalo diario (spec 9.12).
@@ -59,7 +60,11 @@ class _DailyCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.card_giftcard),
+                const Art(
+                  'icon_ui_regalo',
+                  size: 40,
+                  fallback: Icons.card_giftcard,
+                ),
                 const SizedBox(width: 8),
                 const Expanded(
                   child: Text(

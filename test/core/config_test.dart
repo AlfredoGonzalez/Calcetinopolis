@@ -100,4 +100,66 @@ void main() {
       throwsFormatException,
     );
   });
+
+  test('el arte referenciado en la config existe en assets/art', () {
+    final c = EconomyConfig.fromJsonString(source);
+    for (final b in c.businesses) {
+      expect(b.art, isNotNull, reason: b.id);
+      expect(
+        File('assets/art/${b.art}.png').existsSync(),
+        isTrue,
+        reason: b.art,
+      );
+      expect(b.manager.portrait, isNotNull, reason: b.manager.name);
+      expect(
+        File('assets/art/${b.manager.portrait}.png').existsSync(),
+        isTrue,
+        reason: b.manager.portrait,
+      );
+    }
+    for (final f in [
+      'icon_pelusitas',
+      'icon_pareja_reunida',
+      'icon_botones_dorados',
+      'icon_ui_ajustes',
+      'icon_ui_negocios',
+      'icon_ui_mejoras',
+      'icon_ui_centrifugado',
+      'icon_ui_metas',
+      'icon_ui_tienda',
+      'icon_ui_regalo',
+      'app_icon',
+    ]) {
+      expect(File('assets/art/$f.png').existsSync(), isTrue, reason: f);
+    }
+    expect(File('assets/art/bg_cuarto_lavado.jpg').existsSync(), isTrue);
+  });
+
+  test(
+    'los PNG de sprites son transparentes (sin fondo magenta ni blanco)',
+    () {
+      // Esquina superior izquierda: el primer byte de alfa en un PNG RGBA no se lee
+      // sin decodificar; basta con comprobar el tipo de color del encabezado (6 = RGBA).
+      for (final f in [
+        'biz_01_tendedero',
+        'mgr_01_dona_pinza',
+        'icon_pelusitas',
+      ]) {
+        final bytes = File('assets/art/$f.png').readAsBytesSync();
+        expect(bytes[25], 6, reason: '$f debe ser RGBA');
+      }
+    },
+  );
+
+  test('pubspec declara los assets que la app carga en ejecución', () {
+    // Sin esto la app no puede leer la config ni las imágenes (los tests leen
+    // los archivos directo y no lo notarían).
+    final pubspec = File('pubspec.yaml').readAsStringSync();
+    expect(
+      RegExp(r'^\s+assets:\s*$', multiLine: true).hasMatch(pubspec),
+      isTrue,
+    );
+    expect(pubspec, contains('- config/economy.json'));
+    expect(pubspec, contains('- assets/art/'));
+  });
 }

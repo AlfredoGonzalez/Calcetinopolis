@@ -19,6 +19,16 @@ Una fase por sesión (sección 11.4 del spec): F0 base, F1 economía y simulador
 
 **Estado:** F0 a F5 listas (base, economía, loop jugable, guardado/offline, prestigio con tienda de Hilvanes, y retención: metas, regalo diario, tutorial y ajustes). Siguiente: F6, arte y sonido.
 
+## Arte
+
+Los originales (JPG con fondo magenta o blanco) van en `assets/art/source/`. El script `tool/process_art.py` quita el fondo, recorta y deja los PNG transparentes en `assets/art/`; también genera los íconos de lanzador de Android. Requiere Pillow, numpy y scipy:
+
+```bash
+python3 tool/process_art.py assets/art/source assets/art
+```
+
+Nombres: `biz_NN_*` (negocios), `mgr_NN_*` (managers), `icon_*` (monedas e íconos de interfaz), `bg_*` (fondos), `app_icon`. La config (`config/economy.json`) enlaza cada negocio y manager con su arte.
+
 ## Desarrollo
 
 ```bash

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app/game_controller.dart';
+import 'art.dart';
 import 'businesses_page.dart';
 import 'goals_page.dart';
 import 'settings_page.dart';
@@ -90,7 +91,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
               titleSpacing: 16,
               title: Row(
                 children: [
-                  const Icon(Icons.bubble_chart, color: Palette.cream),
+                  const Art('icon_pelusitas', size: 30),
                   const SizedBox(width: 8),
                   Text(
                     key: const Key('money'),
@@ -101,6 +102,8 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
                     ),
                   ),
                   const Spacer(),
+                  const Art('icon_pareja_reunida', size: 26),
+                  const SizedBox(width: 4),
                   Text(
                     'Parejas ${widget.controller.formatter.format(c.state.pairsClaimed)}',
                     style: const TextStyle(
@@ -119,7 +122,11 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
                       builder: (_) => SettingsPage(controller: c),
                     ),
                   ),
-                  icon: const Icon(Icons.settings, color: Palette.outline),
+                  icon: const Art(
+                    'icon_ui_ajustes',
+                    size: 30,
+                    fallback: Icons.settings,
+                  ),
                 ),
               ],
             ),
@@ -129,33 +136,55 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
               onDestinationSelected: (i) => setState(() => _tab = i),
               destinations: [
                 const NavigationDestination(
-                  icon: Icon(Icons.storefront),
+                  icon: Art(
+                    'icon_ui_negocios',
+                    size: 30,
+                    fallback: Icons.storefront,
+                  ),
                   label: 'Negocios',
                 ),
                 NavigationDestination(
                   icon: Badge(
+                    key: const Key('badge-mejoras'),
                     isLabelVisible: c.hasAffordableUpgrade,
                     smallSize: 8,
                     backgroundColor: Palette.tomato,
-                    child: const Icon(Icons.arrow_circle_up),
+                    child: const Art(
+                      'icon_ui_mejoras',
+                      size: 30,
+                      fallback: Icons.arrow_circle_up,
+                    ),
                   ),
                   label: 'Mejoras',
                 ),
                 const NavigationDestination(
-                  icon: Icon(Icons.local_laundry_service),
+                  icon: Art(
+                    'icon_ui_centrifugado',
+                    size: 30,
+                    fallback: Icons.local_laundry_service,
+                  ),
                   label: 'Centrifugado',
                 ),
                 NavigationDestination(
                   icon: Badge(
+                    key: const Key('badge-metas'),
                     isLabelVisible: c.hasGoalNotice,
                     smallSize: 8,
                     backgroundColor: Palette.tomato,
-                    child: const Icon(Icons.flag),
+                    child: const Art(
+                      'icon_ui_metas',
+                      size: 30,
+                      fallback: Icons.flag,
+                    ),
                   ),
                   label: 'Metas',
                 ),
                 const NavigationDestination(
-                  icon: Icon(Icons.shopping_bag),
+                  icon: Art(
+                    'icon_ui_tienda',
+                    size: 30,
+                    fallback: Icons.shopping_bag,
+                  ),
                   label: 'Tienda',
                 ),
               ],

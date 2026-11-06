@@ -121,12 +121,7 @@ void main() {
 
   testWidgets('pestaña Mejoras: punto de aviso y compras', (t) async {
     await pumpApp(t);
-    Badge badge() => t.widget<Badge>(
-      find.ancestor(
-        of: find.byIcon(Icons.arrow_circle_up),
-        matching: find.byType(Badge),
-      ),
-    );
+    Badge badge() => t.widget<Badge>(find.byKey(const Key('badge-mejoras')));
     expect(badge().isLabelVisible, isFalse);
     c.state.money = BigNum.parse('1e6');
     c.advance(0); // notifica a la UI
@@ -404,12 +399,7 @@ void main() {
 
     testWidgets('punto de aviso en la pestaña Metas', (t) async {
       await pumpApp(t);
-      Badge badge() => t.widget<Badge>(
-        find.ancestor(
-          of: find.byIcon(Icons.flag),
-          matching: find.byType(Badge),
-        ),
-      );
+      Badge badge() => t.widget<Badge>(find.byKey(const Key('badge-metas')));
       expect(
         badge().isLabelVisible,
         isTrue,

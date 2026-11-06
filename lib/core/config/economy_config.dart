@@ -7,10 +7,14 @@ class ManagerConfig {
     required this.name,
     required this.pattern,
     required this.cost,
+    this.portrait,
   });
   final String name;
   final String pattern;
   final BigNum cost;
+
+  /// Archivo en assets/art, sin extensión (ej. "mgr_01_dona_pinza").
+  final String? portrait;
 }
 
 class BusinessConfig {
@@ -23,10 +27,14 @@ class BusinessConfig {
     required this.baseIncome,
     required this.manager,
     required this.maxOwned,
+    this.art,
   });
 
   final String id;
   final String name;
+
+  /// Archivo en assets/art, sin extensión (ej. "biz_01_tendedero").
+  final String? art;
   final BigNum baseCost;
   final double coefficient;
   final double baseCycleSeconds;
@@ -233,8 +241,10 @@ class EconomyConfig {
           name: m['name'] as String,
           pattern: m['pattern'] as String,
           cost: big(m['cost']),
+          portrait: m['portrait'] as String?,
         ),
         maxOwned: (b['max_owned'] as num?)?.toInt() ?? 2000,
+        art: b['art'] as String?,
       );
     }).toList();
 

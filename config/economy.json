@@ -11,8 +11,10 @@
       "manager": {
         "name": "Doña Pinza",
         "pattern": "rayas",
-        "cost": "1e3"
-      }
+        "cost": "1e3",
+        "portrait": "mgr_01_dona_pinza"
+      },
+      "art": "biz_01_tendedero"
     },
     {
       "id": "cesto",
@@ -25,8 +27,10 @@
       "manager": {
         "name": "Sir Zurcido",
         "pattern": "parches",
-        "cost": "1.5e4"
-      }
+        "cost": "1.5e4",
+        "portrait": "mgr_02_sir_zurcido"
+      },
+      "art": "biz_02_cesto"
     },
     {
       "id": "rincon",
@@ -39,8 +43,10 @@
       "manager": {
         "name": "Madame Pelusa",
         "pattern": "lunares",
-        "cost": "1e5"
-      }
+        "cost": "1e5",
+        "portrait": "mgr_03_madame_pelusa"
+      },
+      "art": "biz_03_sofa"
     },
     {
       "id": "lavanderia",
@@ -53,8 +59,10 @@
       "manager": {
         "name": "Capitán Espuma",
         "pattern": "ondas azules",
-        "cost": "5e5"
-      }
+        "cost": "5e5",
+        "portrait": "mgr_04_capitan_espuma"
+      },
+      "art": "biz_04_burbujas"
     },
     {
       "id": "secadora",
@@ -67,8 +75,10 @@
       "manager": {
         "name": "Remolina Mareada",
         "pattern": "espirales",
-        "cost": "1.2e6"
-      }
+        "cost": "1.2e6",
+        "portrait": "mgr_05_remolina"
+      },
+      "art": "biz_05_secadora"
     },
     {
       "id": "cajon",
@@ -81,8 +91,10 @@
       "manager": {
         "name": "Marita Orden",
         "pattern": "cuadros",
-        "cost": "1.4e7"
-      }
+        "cost": "1.4e7",
+        "portrait": "mgr_06_marita_orden"
+      },
+      "art": "biz_06_cajon"
     },
     {
       "id": "taller",
@@ -95,8 +107,10 @@
       "manager": {
         "name": "Aguja Pérez",
         "pattern": "rombos",
-        "cost": "1.3e8"
-      }
+        "cost": "1.3e8",
+        "portrait": "mgr_07_aguja_perez"
+      },
+      "art": "biz_07_taller"
     },
     {
       "id": "fabrica",
@@ -109,8 +123,10 @@
       "manager": {
         "name": "Estambrina Lanas",
         "pattern": "tejido navideño",
-        "cost": "1.8e9"
-      }
+        "cost": "1.8e9",
+        "portrait": "mgr_08_estambrina"
+      },
+      "art": "biz_08_fabrica"
     },
     {
       "id": "tren",
@@ -123,8 +139,10 @@
       "manager": {
         "name": "Maquinista Hilario",
         "pattern": "tartán",
-        "cost": "2e10"
-      }
+        "cost": "2e10",
+        "portrait": "mgr_09_hilario"
+      },
+      "art": "biz_09_tren"
     },
     {
       "id": "portal",
@@ -137,8 +155,10 @@
       "manager": {
         "name": "La Gran Centrifugadora",
         "pattern": "arcoíris",
-        "cost": "3e11"
-      }
+        "cost": "3e11",
+        "portrait": "mgr_10_gran_centrifugadora"
+      },
+      "art": "biz_10_portal"
     }
   ],
   "unlocks": {

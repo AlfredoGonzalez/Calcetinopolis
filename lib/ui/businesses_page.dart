@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../app/game_controller.dart';
 import '../core/number_format.dart';
+import 'art.dart';
 import 'theme.dart';
 
 const _amountLabels = {
@@ -28,6 +29,25 @@ class BusinessesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = controller;
     final count = c.state.businesses.length;
+    return Stack(
+      children: [
+        // Fondo del cuarto de lavado, atenuado para que las tarjetas se lean.
+        Positioned.fill(
+          child: Opacity(
+            opacity: 0.22,
+            child: Image.asset(
+              Art.bgRoom,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => const SizedBox.shrink(),
+            ),
+          ),
+        ),
+        _content(c, count),
+      ],
+    );
+  }
+
+  Widget _content(GameController c, int count) {
     return Column(
       children: [
         _TutorialBanner(controller: c),
@@ -136,13 +156,7 @@ class BusinessCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  CircleAvatar(
-                    backgroundColor: Palette.mint,
-                    child: Text(
-                      '${index + 1}',
-                      style: const TextStyle(color: Palette.outline),
-                    ),
-                  ),
+                  Art(cfg.art, size: 64, fallback: Icons.store),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
