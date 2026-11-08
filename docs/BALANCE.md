@@ -52,3 +52,26 @@ Con costos bajos la tienda aceleraba las corridas hasta 4.4× (y 3× en vueltas 
 ## Metas y regalo diario (F5)
 
 21 metas en `goals` de `config/economy.json` (propuesta mía, ajustable) y el regalo diario en `daily`. El simulador **no** cobra metas ni regalos, así que sus números no los incluyen. Las metas dan Pelusitas al inicio y Hilvanes después (unas 710 en total); las Pelusitas de metas y del regalo no cuentan para E_vida, así que no inflan el prestigio. Conviene revisar con jugadores reales si las Hilvanes de metas aceleran demasiado.
+
+## Lavadora que se toca
+
+Un bono temporal de velocidad que da el jugador activo; no cambia la economía de quien no la toca.
+
+- **Mecánica:** cada toque suma `tap_bonus` (+1%) hasta `max_bonus` (+100%, es decir x2). El bono baja `decay_per_second` (3% por segundo) desde el momento en que se deja de tocar. No se guarda ni cuenta en las ganancias offline.
+- **Se suma al boost de anuncios**, no se multiplica: boost x2 (+100%) con la lavadora al máximo (+100%) da x3, no x4.
+- **Mejoras con Hilvanes** (`config/economy.json`, `prestige_shop`): *Toque potente* (`tap_power`: 1.5%, 2%, 3%, 5% por toque) y *Tanque de energía* (`washer_max`: +150%, +200%, +300%, +400%).
+- **Parámetros** en `config/economy.json` → `washer`. Para afinarlos sin tocar código: `decay_per_second` es el más sensible.
+
+### Calibración con el simulador
+
+El bot base no toca la lavadora, así que la calibración anterior no cambió: primer Centrifugado en **55.0 / 20.9 / 14.9 min** en las corridas 1, 2 y 3. Con `washerTapsPerSecond` el bot toca sin parar durante toda la corrida (el mejor caso posible):
+
+| Toques por segundo | Primer Centrifugado (corridas 1 / 2 / 3, min) |
+| --- | --- |
+| 0 | 55.0 / 20.9 / 14.9 |
+| 2 | 54.5 / 20.6 / 14.8 |
+| 4 | 28.5 / 10.6 / 7.8 |
+| 6 | 28.3 / 10.6 / 7.8 |
+| 8 | 28.3 / 10.6 / 7.8 |
+
+Lectura: con un descenso de 3%/s hace falta tocar **más de 3 veces por segundo** para mantener el bono; por debajo se consume más rápido de lo que se llena y casi no ayuda, y por encima se queda cerca del máximo y casi duplica la velocidad. Es un caso extremo (tocar sin parar durante una hora). Si resulta demasiado, subir `decay_per_second` o bajar `max_bonus`; si resulta difícil mantenerlo, bajar `decay_per_second`.

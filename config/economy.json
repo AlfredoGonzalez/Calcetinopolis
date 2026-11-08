@@ -437,6 +437,11 @@
     "hours_per_view": 4,
     "max_hours": 12
   },
+  "washer": {
+    "tap_bonus": 0.01,
+    "max_bonus": 1.0,
+    "decay_per_second": 0.03
+  },
   "prestige_shop": [
     {
       "id": "detergente",
@@ -533,6 +538,56 @@
         }
       ],
       "art": "icon_mejora_cesto"
+    },
+    {
+      "id": "pulso",
+      "name": "Toque potente",
+      "description": "Cada toque a la lavadora suma más velocidad.",
+      "type": "tap_power",
+      "levels": [
+        {
+          "cost": 300,
+          "value": 0.015
+        },
+        {
+          "cost": 900,
+          "value": 0.02
+        },
+        {
+          "cost": 2700,
+          "value": 0.03
+        },
+        {
+          "cost": 8000,
+          "value": 0.05
+        }
+      ],
+      "art": "anim_centrifugado_lavadora"
+    },
+    {
+      "id": "tanque",
+      "name": "Tanque de energía",
+      "description": "La lavadora aguanta más velocidad acumulada.",
+      "type": "washer_max",
+      "levels": [
+        {
+          "cost": 500,
+          "value": 1.5
+        },
+        {
+          "cost": 1500,
+          "value": 2.0
+        },
+        {
+          "cost": 5000,
+          "value": 3.0
+        },
+        {
+          "cost": 16000,
+          "value": 4.0
+        }
+      ],
+      "art": "anim_centrifugado_lavadora"
     }
   ],
   "goals": [

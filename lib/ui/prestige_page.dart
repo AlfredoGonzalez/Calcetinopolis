@@ -402,6 +402,10 @@ class _ShopCard extends StatelessWidget {
         return 'Managers gratis en los primeros ${v.toInt()} negocios';
       case ShopType.offlineCapHours:
         return 'Tope offline de ${v.toInt()} h';
+      case ShopType.tapPower:
+        return '+${(v * 100).toStringAsFixed(v * 100 % 1 == 0 ? 0 : 1)}% por toque a la lavadora';
+      case ShopType.washerMax:
+        return 'Lavadora hasta +${(v * 100).round()}% de velocidad';
     }
     return '$v';
   }

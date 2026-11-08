@@ -96,6 +96,25 @@ class BoostConfig {
   final double maxHours;
 }
 
+/// La lavadora que se toca: cada toque suma un bono temporal de velocidad que
+/// se consume solo, hasta un máximo. El bono se suma al del boost de anuncios.
+class WasherConfig {
+  const WasherConfig({
+    this.tapBonus = 0.01,
+    this.maxBonus = 1.0,
+    this.decayPerSecond = 0.03,
+  });
+
+  /// Bono que suma cada toque (0.01 = +1%).
+  final double tapBonus;
+
+  /// Bono máximo acumulable (1.0 = +100%, es decir x2).
+  final double maxBonus;
+
+  /// Cuánto baja el bono por segundo en cuanto se deja de tocar.
+  final double decayPerSecond;
+}
+
 class ShopLevel {
   const ShopLevel({required this.cost, required this.value});
 
@@ -110,7 +129,20 @@ class ShopType {
   static const startMoney = 'start_money';
   static const freeManagers = 'free_managers';
   static const offlineCapHours = 'offline_cap_hours';
-  static const all = {globalMult, startMoney, freeManagers, offlineCapHours};
+
+  /// Cuánto suma cada toque a la lavadora (reemplaza el valor base).
+  static const tapPower = 'tap_power';
+
+  /// Bono máximo de la lavadora (reemplaza el valor base).
+  static const washerMax = 'washer_max';
+  static const all = {
+    globalMult,
+    startMoney,
+    freeManagers,
+    offlineCapHours,
+    tapPower,
+    washerMax,
+  };
 }
 
 class ShopItem {
@@ -270,6 +302,7 @@ class EconomyConfig {
     required this.prestige,
     required this.offline,
     required this.boost,
+    this.washer = const WasherConfig(),
     this.shop = const [],
     this.goals = const [],
     this.daily,
@@ -287,6 +320,7 @@ class EconomyConfig {
   final PrestigeConfig prestige;
   final OfflineConfig offline;
   final BoostConfig boost;
+  final WasherConfig washer;
   final List<ShopItem> shop;
   final List<GoalConfig> goals;
   final DailyConfig? daily;
@@ -398,6 +432,14 @@ class EconomyConfig {
       monetization: j['monetization'] == null
           ? null
           : _parseMonetization(j['monetization'] as Map<String, dynamic>),
+      washer: j['washer'] == null
+          ? const WasherConfig()
+          : WasherConfig(
+              tapBonus: ((j['washer'] as Map)['tap_bonus'] as num).toDouble(),
+              maxBonus: ((j['washer'] as Map)['max_bonus'] as num).toDouble(),
+              decayPerSecond: ((j['washer'] as Map)['decay_per_second'] as num)
+                  .toDouble(),
+            ),
       boost: BoostConfig(
         multiplier: (bo['multiplier'] as num).toDouble(),
         hoursPerView: (bo['hours_per_view'] as num).toDouble(),
@@ -482,6 +524,12 @@ class EconomyConfig {
       if (it.levels.isEmpty) {
         throw FormatException('Mejora sin niveles: ${it.id}');
       }
+    }
+    if (washer.tapBonus <= 0 ||
+        washer.maxBonus <= 0 ||
+        washer.decayPerSecond < 0 ||
+        washer.tapBonus > washer.maxBonus) {
+      throw const FormatException('Lavadora con valores inválidos');
     }
     final goalIds = <String>{};
     for (final g in goals) {

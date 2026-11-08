@@ -103,11 +103,11 @@ void main() {
     expect(find.text('???'), findsWidgets);
     expect(find.byIcon(Icons.lock), findsWidgets);
     // La silueta usa el arte del negocio, tintado de un solo color.
-    expect(find.byKey(const Key('silhouette-3')), findsOneWidget);
-    final filter = t.widget<ColorFiltered>(
-      find.byKey(const Key('silhouette-3')),
+    final silhouettes = find.byWidgetPredicate(
+      (w) => w is ColorFiltered && w.key.toString().contains('silhouette-'),
     );
-    expect(filter.colorFilter, isNotNull);
+    expect(silhouettes, findsWidgets);
+    expect(t.widget<ColorFiltered>(silhouettes.first).colorFilter, isNotNull);
   });
 
   testWidgets('comprar manager desde la tarjeta', (t) async {

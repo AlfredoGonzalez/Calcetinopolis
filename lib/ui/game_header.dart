@@ -98,6 +98,21 @@ class GameHeader extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    if (c.washerBonus >= 0.005) ...[
+                      _Pill(
+                        key: const Key('washer-chip'),
+                        color: Ui.teal,
+                        child: Text(
+                          '+${(c.washerBonus * 100).round()}%',
+                          style: const TextStyle(
+                            color: Ui.ink,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                    ],
                     if (c.state.boostSeconds > 0) ...[
                       _Pill(
                         key: const Key('boost-chip'),
