@@ -6,6 +6,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
 import 'sock_pile.dart';
+import 'washer_zoom.dart';
 import 'theme.dart';
 
 /// Textos de estado de la pantalla de carga, del primero al último.
@@ -49,10 +50,16 @@ class LoadingScreen extends StatefulWidget {
 }
 
 class _LoadingScreenState extends State<LoadingScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _progress = AnimationController(
     vsync: this,
     duration: widget.duration,
+  );
+
+  /// Giro del tambor, una vuelta cada 22 s.
+  late final AnimationController _spin = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 22),
   );
   bool _continued = false;
 
@@ -60,11 +67,13 @@ class _LoadingScreenState extends State<LoadingScreen>
   void initState() {
     super.initState();
     _progress.forward();
+    _spin.repeat();
   }
 
   @override
   void dispose() {
     _progress.dispose();
+    _spin.dispose();
     super.dispose();
   }
 
@@ -85,6 +94,7 @@ class _LoadingScreenState extends State<LoadingScreen>
           : _Body(
               key: const ValueKey('loading'),
               progress: _progress,
+              spin: _spin,
               characters: widget.characters,
               tilt: widget.tilt,
               useSensors: widget.useSensors,
@@ -98,6 +108,7 @@ class _Body extends StatelessWidget {
   const _Body({
     super.key,
     required this.progress,
+    required this.spin,
     required this.characters,
     required this.tilt,
     required this.useSensors,
@@ -105,6 +116,7 @@ class _Body extends StatelessWidget {
   });
 
   final Animation<double> progress;
+  final Animation<double> spin;
   final List<String> characters;
   final Stream<Offset>? tilt;
   final bool useSensors;
@@ -122,144 +134,153 @@ class _Body extends StatelessWidget {
             colors: [Ui.navy1, Ui.navy2],
           ),
         ),
-        child: SafeArea(
-          child: AnimatedBuilder(
-            animation: progress,
-            builder: (context, _) {
-              final t = progress.value;
-              final done = t >= 1;
-              final pct = (t * 100).floor();
-              final msg =
-                  loadingMessages[math.min(
-                    loadingMessages.length - 1,
-                    (t * (loadingMessages.length - 1)).floor(),
-                  )];
-              return Column(
-                children: [
-                  const SizedBox(height: 8),
-                  Image.asset(
-                    'assets/art/logo_carga.png',
-                    key: const Key('loading-logo'),
-                    height: math.min(
-                      310,
-                      MediaQuery.sizeOf(context).height * 0.34,
-                    ),
-                    errorBuilder: (_, _, _) => const Text(
-                      'Calcetinópolis',
-                      style: TextStyle(
-                        fontSize: 40,
-                        fontWeight: FontWeight.w700,
-                        color: Ui.headerText,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            WasherZoomBackdrop(progress: progress, spin: spin),
+            SafeArea(
+              child: AnimatedBuilder(
+                animation: progress,
+                builder: (context, _) {
+                  final t = progress.value;
+                  final done = t >= 1;
+                  final pct = (t * 100).floor();
+                  final msg =
+                      loadingMessages[math.min(
+                        loadingMessages.length - 1,
+                        (t * (loadingMessages.length - 1)).floor(),
+                      )];
+                  return Column(
+                    children: [
+                      const SizedBox(height: 8),
+                      Image.asset(
+                        'assets/art/logo_carga.png',
+                        key: const Key('loading-logo'),
+                        height: math.min(
+                          310,
+                          MediaQuery.sizeOf(context).height * 0.34,
+                        ),
+                        errorBuilder: (_, _, _) => const Text(
+                          'Calcetinópolis',
+                          style: TextStyle(
+                            fontSize: 40,
+                            fontWeight: FontWeight.w700,
+                            color: Ui.headerText,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  const Text(
-                    'Inclina tu cel o arrastra los calcetines',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Ui.headerSub,
-                    ),
-                  ),
-                  Expanded(
-                    child: _PileArea(
-                      characters: characters,
-                      tilt: tilt,
-                      useSensors: useSensors,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(28, 4, 28, 8),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Semantics(
-                          label: 'Progreso de carga',
-                          value: '$pct%',
-                          child: Container(
-                            height: 24,
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: const Color(0x8C140632),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: FractionallySizedBox(
-                                widthFactor: t.clamp(0.0, 1.0),
-                                heightFactor: 1,
-                                child: DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(8),
-                                    gradient: const LinearGradient(
-                                      colors: [Ui.orange, Ui.yellow],
+                      const Text(
+                        'Inclina tu cel o arrastra los calcetines',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Ui.headerSub,
+                        ),
+                      ),
+                      Expanded(
+                        child: _PileArea(
+                          characters: characters,
+                          tilt: tilt,
+                          useSensors: useSensors,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(28, 4, 28, 8),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Semantics(
+                              label: 'Progreso de carga',
+                              value: '$pct%',
+                              child: Container(
+                                height: 24,
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: const Color(0x8C140632),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: FractionallySizedBox(
+                                    widthFactor: t.clamp(0.0, 1.0),
+                                    heightFactor: 1,
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(8),
+                                        gradient: const LinearGradient(
+                                          colors: [Ui.orange, Ui.yellow],
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                msg,
-                                key: const Key('loading-status'),
-                                style: const TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w600,
-                                  color: Ui.headerText,
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    msg,
+                                    key: const Key('loading-status'),
+                                    style: const TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w600,
+                                      color: Ui.headerText,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                Text(
+                                  '$pct%',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                    color: Ui.yellow,
+                                  ),
+                                ),
+                              ],
                             ),
-                            Text(
-                              '$pct%',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: Ui.yellow,
+                            const SizedBox(height: 6),
+                            const Text(
+                              'Consejo: los calcetines solitarios también sienten.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Ui.headerSub,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 6),
-                        const Text(
-                          'Consejo: los calcetines solitarios también sienten.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 13, color: Ui.headerSub),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(
-                    height: 52,
-                    child: done
-                        ? TextButton(
-                            key: const Key('loading-continue'),
-                            onPressed: onContinue,
-                            style: TextButton.styleFrom(
-                              foregroundColor: Ui.headerText,
-                              minimumSize: const Size.fromHeight(52),
-                            ),
-                            child: const _Blink(
-                              child: Text(
-                                'TOCA PARA CONTINUAR',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 2.2,
+                      ),
+                      SizedBox(
+                        height: 52,
+                        child: done
+                            ? TextButton(
+                                key: const Key('loading-continue'),
+                                onPressed: onContinue,
+                                style: TextButton.styleFrom(
+                                  foregroundColor: Ui.headerText,
+                                  minimumSize: const Size.fromHeight(52),
                                 ),
-                              ),
-                            ),
-                          )
-                        : null,
-                  ),
-                ],
-              );
-            },
-          ),
+                                child: const _Blink(
+                                  child: Text(
+                                    'TOCA PARA CONTINUAR',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 2.2,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : null,
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
