@@ -69,7 +69,9 @@ Flat 2D illustration, cute children's storybook style with a subtle knitted wool
 
 ## Lo que hago yo sin arte nuevo
 
-Siluetas de negocios bloqueados, sombras de suelo, ícono adaptativo de Android, pantalla de carga, destello al cruzar un umbral, pelusas flotando y brillo en monedas. No tienes que generar nada de eso.
+Ya hechos: destello al cruzar un umbral, pelusas flotando, brillo en monedas y respiración de los negocios mientras producen. Quedan:
+
+Siluetas de negocios bloqueados, sombras de suelo, ícono adaptativo de Android y pantalla de carga. No tienes que generar nada de eso.
 
 ## Después (v1.1)
 

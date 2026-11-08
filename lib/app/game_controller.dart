@@ -76,9 +76,13 @@ class GameController extends ChangeNotifier {
     advance(dt);
   }
 
+  /// Segundos de juego transcurridos en esta sesión; mueve los efectos de fondo.
+  double fxTime = 0;
+
   /// Avanza [dt] segundos (separado de [step] para poder probarlo).
   void advance(double dt) {
     final step = dt.clamp(0.0, 1.0);
+    fxTime += step;
     economy.tick(state, step);
     _trackTutorial();
     _sinceSave += step;

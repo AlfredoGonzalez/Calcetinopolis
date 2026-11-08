@@ -9,6 +9,7 @@ import 'offline_dialog.dart';
 import 'prestige_page.dart';
 import 'shop_page.dart';
 import 'cutscene_player.dart';
+import 'effects.dart';
 import 'mascot_burst.dart';
 import 'theme.dart';
 import 'upgrades_page.dart';
@@ -136,7 +137,11 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
               titleSpacing: 16,
               title: Row(
                 children: [
-                  const Art('icon_pelusitas', size: 30),
+                  GainPulse(
+                    value: c.state.money,
+                    minRatio: 1.5,
+                    child: const Art('icon_pelusitas', size: 30),
+                  ),
                   const SizedBox(width: 8),
                   // El dinero cede espacio antes de que algo se desborde.
                   Flexible(
@@ -174,7 +179,13 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
                             const SizedBox(width: 8),
                           ],
                           if (c.state.goldButtons.isPositive) ...[
-                            const Art('icon_botones_dorados', size: 24),
+                            GainPulse(
+                              value: c.state.goldButtons,
+                              child: const Art(
+                                'icon_botones_dorados',
+                                size: 24,
+                              ),
+                            ),
                             const SizedBox(width: 2),
                             Text(
                               c.formatter.format(c.state.goldButtons),
@@ -186,7 +197,10 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
                             ),
                             const SizedBox(width: 10),
                           ],
-                          const Art('icon_pareja_reunida', size: 26),
+                          GainPulse(
+                            value: c.state.pairsClaimed,
+                            child: const Art('icon_pareja_reunida', size: 26),
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             widget.controller.formatter.format(

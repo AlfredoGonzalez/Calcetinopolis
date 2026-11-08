@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../app/game_controller.dart';
 import '../core/number_format.dart';
 import 'art.dart';
+import 'effects.dart';
 import 'sprite_sheet.dart';
 import 'theme.dart';
 
@@ -43,6 +44,7 @@ class BusinessesPage extends StatelessWidget {
             ),
           ),
         ),
+        Positioned.fill(child: FloatingLint(time: c.fxTime)),
         _content(c, count),
       ],
     );
@@ -143,103 +145,113 @@ class BusinessCard extends StatelessWidget {
 
     final income = owned ? eco.incomePerCycle(c.state, index) : cfg.baseIncome;
 
-    return Card(
-      color: Colors.white,
-      margin: const EdgeInsets.only(bottom: 10),
-      child: InkWell(
-        key: Key('card-$index'),
-        borderRadius: BorderRadius.circular(12),
-        onTap: owned ? () => c.tap(index) : null,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Art(cfg.art, size: 64, fallback: Icons.store),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      cfg.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
+    final level = eco.config.thresholds.where((t) => b.owned >= t).length;
+
+    return ThresholdFx(
+      level: level,
+      child: Card(
+        color: Colors.white,
+        margin: const EdgeInsets.only(bottom: 10),
+        child: InkWell(
+          key: Key('card-$index'),
+          borderRadius: BorderRadius.circular(12),
+          onTap: owned ? () => c.tap(index) : null,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    WorkingBob(
+                      active: owned && !fast && (b.running || b.hasManager),
+                      progress: b.progress,
+                      child: Art(cfg.art, size: 64, fallback: Icons.store),
                     ),
-                  ),
-                  Text(
-                    'x${b.owned}',
-                    key: Key('owned-$index'),
-                    style: const TextStyle(fontSize: 18),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: LinearProgressIndicator(
-                  minHeight: 16,
-                  value: fast ? 1 : (owned ? b.progress : 0),
-                  color: Palette.blue,
-                  backgroundColor: Palette.lint,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    fast
-                        ? '${formatter.format(eco.incomePerSecond(c.state, index))}/s'
-                        : '${formatter.format(income)} por ciclo',
-                    key: Key('income-$index'),
-                  ),
-                  if (!fast && owned) Text('${remaining.toStringAsFixed(1)} s'),
-                ],
-              ),
-              if (toNext != null && owned)
-                Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Text(
-                    'Faltan $toNext para el doble de velocidad',
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: _BuyButton(
-                      key: Key('buy-$index'),
-                      enabled: canBuy,
-                      label: 'Comprar ${c.unitsFor(index)}',
-                      detail: canBuy
-                          ? formatter.format(c.costFor(index))
-                          : 'Faltan ${formatter.format(c.missing(index))}',
-                      onTap: () => c.buy(index),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  if (owned && !b.hasManager)
-                    OutlinedButton(
-                      key: Key('manager-$index'),
-                      onPressed: cfg.manager.cost <= c.state.money
-                          ? () => c.buyManager(index)
-                          : null,
+                    const SizedBox(width: 10),
+                    Expanded(
                       child: Text(
-                        'Manager\n${formatter.format(cfg.manager.cost)}',
-                        textAlign: TextAlign.center,
+                        cfg.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
-                    )
-                  else if (b.hasManager)
-                    const Chip(
-                      label: Text('Manager ✓'),
-                      backgroundColor: Palette.mint,
                     ),
-                ],
-              ),
-            ],
+                    Text(
+                      'x${b.owned}',
+                      key: Key('owned-$index'),
+                      style: const TextStyle(fontSize: 18),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: LinearProgressIndicator(
+                    minHeight: 16,
+                    value: fast ? 1 : (owned ? b.progress : 0),
+                    color: Palette.blue,
+                    backgroundColor: Palette.lint,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      fast
+                          ? '${formatter.format(eco.incomePerSecond(c.state, index))}/s'
+                          : '${formatter.format(income)} por ciclo',
+                      key: Key('income-$index'),
+                    ),
+                    if (!fast && owned)
+                      Text('${remaining.toStringAsFixed(1)} s'),
+                  ],
+                ),
+                if (toNext != null && owned)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      'Faltan $toNext para el doble de velocidad',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _BuyButton(
+                        key: Key('buy-$index'),
+                        enabled: canBuy,
+                        label: 'Comprar ${c.unitsFor(index)}',
+                        detail: canBuy
+                            ? formatter.format(c.costFor(index))
+                            : 'Faltan ${formatter.format(c.missing(index))}',
+                        onTap: () => c.buy(index),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    if (owned && !b.hasManager)
+                      OutlinedButton(
+                        key: Key('manager-$index'),
+                        onPressed: cfg.manager.cost <= c.state.money
+                            ? () => c.buyManager(index)
+                            : null,
+                        child: Text(
+                          'Manager\n${formatter.format(cfg.manager.cost)}',
+                          textAlign: TextAlign.center,
+                        ),
+                      )
+                    else if (b.hasManager)
+                      const Chip(
+                        label: Text('Manager ✓'),
+                        backgroundColor: Palette.mint,
+                      ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
