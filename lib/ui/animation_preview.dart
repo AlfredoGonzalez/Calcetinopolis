@@ -27,6 +27,7 @@ class _MascotPreviewState extends State<_MascotPreview>
   static const _labels = ['Reposo', 'Salto', 'Celebra'];
 
   int _replay = 0;
+  int _replayJump = 0;
 
   late final AnimationController _anim = AnimationController(
     vsync: this,
@@ -79,6 +80,24 @@ class _MascotPreviewState extends State<_MascotPreview>
                   frames: 21,
                   fps: 10,
                   scale: 0.5,
+                  loop: false,
+                ),
+              ),
+              const Divider(height: 24),
+              const Text('Salto (sprites, toca para repetir)'),
+              const SizedBox(height: 4),
+              GestureDetector(
+                key: const Key('replay-jump'),
+                onTap: () => setState(() => _replayJump++),
+                child: SpriteSheet(
+                  key: ValueKey('jump$_replayJump'),
+                  asset: 'assets/art/spr_mascota_salto_5x5.png',
+                  frameSize: const Size(196, 661),
+                  columns: 5,
+                  rows: 5,
+                  frames: 23,
+                  fps: 12,
+                  scale: 0.4,
                   loop: false,
                 ),
               ),
