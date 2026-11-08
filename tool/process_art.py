@@ -14,6 +14,7 @@ Reglas por nombre de archivo:
   mascota_*, anim_*   -> PNG 512x512 transparente, SIN recorte (las poses y los cuadros
                          deben conservar el mismo encuadre y escala entre sí)
   ui_*                -> PNG 256x256 transparente, recortado al contenido
+  logo_*.png          -> PNG transparente recortado al contenido, máx. 768 px
   bg_*                -> si las esquinas son magenta, PNG transparente (overlay);
                          si no, JPG opaco (fondos de pantalla)
   store_*             -> se omite (gráficos de Google Play: no van dentro de la app)
@@ -252,6 +253,17 @@ def main():
     src = Path(sys.argv[1] if len(sys.argv) > 1 else 'assets/art/source')
     out = Path(sys.argv[2] if len(sys.argv) > 2 else 'assets/art')
     out.mkdir(parents=True, exist_ok=True)
+    # Logos ya transparentes (logo_*.png): se recortan al contenido y se reducen.
+    for f in sorted(src.glob('*.png')):
+        if not f.stem.lower().startswith('logo_'):
+            continue
+        im = Image.open(f).convert('RGBA')
+        bbox = im.getchannel('A').point(lambda v: 255 if v > 8 else 0).getbbox()
+        if bbox:
+            im = im.crop(bbox)
+        im.thumbnail((768, 768), Image.LANCZOS)
+        im.save(out / f'{f.stem.lower()}.png', optimize=True)
+        print('ok:', f.name)
     for f in sorted([*src.glob('*.jpg'), *src.glob('*.webp')]):
         name = f.stem
         im = Image.open(f).convert('RGB')
