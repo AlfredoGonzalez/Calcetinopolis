@@ -11,6 +11,7 @@ import 'services/file_save_service.dart';
 import 'services/prefs_save_service.dart';
 import 'services/services.dart';
 import 'ui/home_shell.dart';
+import 'ui/loading_screen.dart';
 import 'ui/studio_splash.dart';
 import 'ui/test_services.dart';
 import 'ui/theme.dart';
@@ -54,6 +55,15 @@ Future<void> main() async {
   runApp(CalcetinopolisApp(controller: controller, navigatorKey: navigatorKey));
 }
 
+/// Los personajes de la pila de la pantalla de carga: los managers y la mascota.
+List<String> _pileCharacters(GameController c) => [
+  for (final b in c.economy.config.businesses)
+    if (b.manager.portrait != null) b.manager.portrait!,
+  'mascota_reposo',
+  'mascota_salto',
+  'mascota_celebra',
+];
+
 class CalcetinopolisApp extends StatelessWidget {
   const CalcetinopolisApp({
     super.key,
@@ -84,7 +94,12 @@ class CalcetinopolisApp extends StatelessWidget {
           child: child!,
         ),
         home: showSplash
-            ? StudioSplash(child: HomeShell(controller: controller))
+            ? StudioSplash(
+                child: LoadingScreen(
+                  characters: _pileCharacters(controller),
+                  child: HomeShell(controller: controller),
+                ),
+              )
             : HomeShell(controller: controller),
       ),
     );
