@@ -9,6 +9,7 @@ import 'package:calcetinopolis/services/services.dart';
 import 'package:calcetinopolis/ui/home_shell.dart';
 import 'package:calcetinopolis/ui/mascot_burst.dart';
 import 'package:calcetinopolis/ui/theme.dart';
+import 'package:calcetinopolis/ui/ui_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -384,7 +385,7 @@ void main() {
       expect(find.text('Regalo diario'), findsOneWidget);
       expect(find.text('Primeros 10 Tendederos'), findsOneWidget);
       expect(
-        t.widget<FilledButton>(find.byKey(const Key('claim-own10'))).onPressed,
+        t.widget<ChunkyButton>(find.byKey(const Key('claim-own10'))).onPressed,
         isNull,
       );
       c.state.businesses[0].owned = 10;
