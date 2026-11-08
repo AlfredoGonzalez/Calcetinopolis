@@ -179,6 +179,10 @@ class GameState {
   /// Segundos restantes de boost por anuncio.
   double boostSeconds;
 
+  /// Bono temporal de la lavadora (0.25 = +25% de velocidad). Se consume solo
+  /// y no se guarda: al abrir la app empieza en cero.
+  double washerBonus = 0;
+
   Map<String, Object?> toJson() => {
     'money': money.toJson(),
     'lifetime': lifetimeEarnings.toJson(),
@@ -279,5 +283,5 @@ class GameState {
     cutscenesSeen: {...cutscenesSeen},
     settings: settings.copy(),
     boostSeconds: boostSeconds,
-  );
+  )..washerBonus = washerBonus;
 }

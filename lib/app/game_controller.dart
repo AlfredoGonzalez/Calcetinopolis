@@ -369,6 +369,24 @@ class GameController extends ChangeNotifier {
   /// Punto de aviso en la pestaña Metas.
   bool get hasGoalNotice => economy.hasClaimableGoal(state) || canClaimDaily;
 
+  // ------------------------------------------------------------ lavadora
+
+  /// Bono temporal de velocidad de la lavadora (0.25 = +25%).
+  double get washerBonus => state.washerBonus;
+
+  /// Bono máximo que aguanta la lavadora.
+  double get washerMax => economy.washerMaxBonus(state);
+
+  /// Qué tan llena está la energía de la lavadora, de 0 a 1.
+  double get washerFill =>
+      washerMax <= 0 ? 0 : (state.washerBonus / washerMax).clamp(0.0, 1.0);
+
+  /// Un toque a la lavadora.
+  void tapWasher() {
+    economy.tapWasher(state);
+    notifyListeners();
+  }
+
   // ------------------------------------------------------------ cutscenes
 
   bool hasSeenCutscene(String id) => state.cutscenesSeen.contains(id);

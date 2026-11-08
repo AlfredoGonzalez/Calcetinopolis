@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import '../big_num.dart';
+import '../config/economy_config.dart';
 import '../economy/engine.dart';
 import '../number_format.dart';
 import '../state/game_state.dart';
@@ -43,7 +44,13 @@ class Simulator {
     this.dt = 1.0,
     this.tapDelay = 2.0,
     this.useShop = true,
+    this.washerTapsPerSecond = 0,
   });
+
+  /// Toques por segundo a la lavadora de un jugador que la usa todo el tiempo
+  /// (0 = el bot no la toca, como en la calibración base).
+  final double washerTapsPerSecond;
+  double _tapAcc = 0;
 
   /// El bot gasta Hilvanes en la tienda de prestigio (la mejora más barata primero).
   final bool useShop;
@@ -138,6 +145,13 @@ class Simulator {
         for (var i = 0; i < s.businesses.length; i++) {
           economy.tap(s, i);
         }
+        if (washerTapsPerSecond > 0) {
+          _tapAcc += washerTapsPerSecond * dt;
+          while (_tapAcc >= 1) {
+            economy.tapWasher(s);
+            _tapAcc -= 1;
+          }
+        }
         economy.tick(s, dt);
         t += dt;
 
@@ -183,6 +197,11 @@ class Simulator {
       String? pick;
       BigNum? best;
       for (final it in economy.config.shop) {
+        // Sin tocar la lavadora, sus mejoras no sirven.
+        if (washerTapsPerSecond <= 0 &&
+            (it.type == ShopType.tapPower || it.type == ShopType.washerMax)) {
+          continue;
+        }
         final next = economy.nextShopLevel(s, it.id);
         if (next == null || next.cost > s.hilvanes) continue;
         if (best == null || next.cost < best) {

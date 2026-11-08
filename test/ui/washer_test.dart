@@ -1,0 +1,108 @@
+import 'dart:io';
+
+import 'package:calcetinopolis/app/game_controller.dart';
+import 'package:calcetinopolis/core/config/economy_config.dart';
+import 'package:calcetinopolis/core/economy/engine.dart';
+import 'package:calcetinopolis/ui/home_shell.dart';
+import 'package:calcetinopolis/ui/theme.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  final config = EconomyConfig.fromJsonString(
+    File('config/economy.json').readAsStringSync(),
+  );
+
+  Future<GameController> open(WidgetTester t, {bool reduce = false}) async {
+    final c = GameController(Economy(config))..state.tutorialDone = true;
+    await t.binding.setSurfaceSize(const Size(400, 900));
+    addTearDown(() => t.binding.setSurfaceSize(null));
+    await t.pumpWidget(
+      MaterialApp(
+        theme: buildTheme(),
+        builder: reduce
+            ? (context, child) => MediaQuery(
+                data: MediaQuery.of(context).copyWith(disableAnimations: true),
+                child: child!,
+              )
+            : null,
+        home: HomeShell(controller: c),
+      ),
+    );
+    return c;
+  }
+
+  String bonusText(WidgetTester t) =>
+      t.widget<Text>(find.byKey(const Key('washer-bonus'))).data!;
+
+  testWidgets('la lavadora arranca en +0% con una invitación a tocar', (
+    t,
+  ) async {
+    await open(t);
+    expect(find.byKey(const Key('washer')), findsOneWidget);
+    expect(bonusText(t), '+0%');
+    expect(
+      t.widget<Text>(find.byKey(const Key('washer-hint'))).data,
+      contains('¡Toca para lavar!'),
+    );
+    expect(find.byKey(const Key('washer-chip')), findsNothing);
+  });
+
+  testWidgets('cada toque suma 1% y el encabezado lo muestra', (t) async {
+    final c = await open(t);
+    for (var i = 0; i < 12; i++) {
+      await t.tap(find.byKey(const Key('washer')));
+      await t.pump(const Duration(milliseconds: 20));
+    }
+    expect(c.washerBonus, closeTo(0.12, 1e-9));
+    expect(bonusText(t), '+12%');
+    expect(find.byKey(const Key('washer-chip')), findsOneWidget);
+    expect(
+      t.widget<Text>(find.byKey(const Key('washer-hint'))).data,
+      contains('Se consume si dejas de tocar'),
+    );
+    await t.pump(const Duration(seconds: 2));
+  });
+
+  testWidgets('el bono se consume solo cuando se deja de tocar', (t) async {
+    final c = await open(t);
+    for (var i = 0; i < 20; i++) {
+      await t.tap(find.byKey(const Key('washer')));
+      await t.pump(const Duration(milliseconds: 10));
+    }
+    final before = c.washerBonus;
+    c.advance(1);
+    await t.pump();
+    expect(c.washerBonus, lessThan(before));
+    // advance() recorta cada paso a 1 s.
+    for (var i = 0; i < 40; i++) {
+      c.advance(1);
+    }
+    await t.pump();
+    expect(c.washerBonus, 0);
+    expect(bonusText(t), '+0%');
+    expect(find.byKey(const Key('washer-chip')), findsNothing);
+    await t.pump(const Duration(seconds: 2));
+  });
+
+  testWidgets('la barra se llena y se detiene en el máximo', (t) async {
+    final c = await open(t);
+    for (var i = 0; i < 150; i++) {
+      c.tapWasher();
+    }
+    await t.pump();
+    expect(c.washerFill, 1);
+    expect(bonusText(t), '+100%');
+    final bar = t.widget<FractionallySizedBox>(
+      find.byKey(const Key('washer-bar')),
+    );
+    expect(bar.widthFactor, 1);
+  });
+
+  testWidgets('con reducir animaciones también suma, sin rebote', (t) async {
+    final c = await open(t, reduce: true);
+    await t.tap(find.byKey(const Key('washer')));
+    await t.pump();
+    expect(c.washerBonus, closeTo(0.01, 1e-9));
+  });
+}

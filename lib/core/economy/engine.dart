@@ -157,7 +157,15 @@ class Economy {
   void tick(GameState s, double dt) {
     if (dt <= 0) return;
     final boosted = math.min(dt, s.boostSeconds);
-    final boostFactor = (dt + (config.boost.multiplier - 1) * boosted) / dt;
+    // El bono de la lavadora se SUMA al del boost de anuncios (no se multiplica).
+    final washerStart = s.washerBonus;
+    final washerEnd = math.max(
+      0.0,
+      washerStart - config.washer.decayPerSecond * dt,
+    );
+    final washerAvg = (washerStart + washerEnd) / 2;
+    final boostFactor =
+        (dt + (config.boost.multiplier - 1) * boosted) / dt + washerAvg;
 
     for (var i = 0; i < s.businesses.length; i++) {
       final b = s.businesses[i];
@@ -177,6 +185,25 @@ class Economy {
       }
     }
     s.boostSeconds = math.max(0, s.boostSeconds - dt);
+    s.washerBonus = washerEnd;
+  }
+
+  // ------------------------------------------------------------ lavadora
+
+  /// Lo que suma cada toque a la lavadora (la mejora de la tienda, si la hay).
+  double washerTapBonus(GameState s) =>
+      shopValue(s, ShopType.tapPower) ?? config.washer.tapBonus;
+
+  /// Bono máximo de la lavadora (la mejora de la tienda, si la hay).
+  double washerMaxBonus(GameState s) =>
+      shopValue(s, ShopType.washerMax) ?? config.washer.maxBonus;
+
+  /// Un toque a la lavadora: suma su bono, sin pasar del máximo.
+  void tapWasher(GameState s) {
+    s.washerBonus = math.min(
+      washerMaxBonus(s),
+      s.washerBonus + washerTapBonus(s),
+    );
   }
 
   /// El jugador toca un negocio sin manager para iniciar su ciclo.

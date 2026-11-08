@@ -8,6 +8,7 @@ import 'art.dart';
 import 'effects.dart';
 import 'sprite_sheet.dart';
 import 'theme.dart';
+import 'washer_card.dart';
 
 const _amountLabels = {
   BuyAmount.one: 'x1',
@@ -54,6 +55,10 @@ class BusinessesPage extends StatelessWidget {
     return Column(
       children: [
         _TutorialBanner(controller: c),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+          child: WasherCard(controller: c),
+        ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: _AmountPicker(selected: c.amount, onPick: c.setAmount),
