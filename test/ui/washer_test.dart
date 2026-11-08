@@ -105,4 +105,25 @@ void main() {
     await t.pump();
     expect(c.washerBonus, closeTo(0.01, 1e-9));
   });
+
+  testWidgets('los botones de la derecha no se mueven cuando suben los bonos', (
+    t,
+  ) async {
+    final c = await open(t);
+    Offset at(String key) => t.getTopLeft(find.byKey(Key(key)));
+    final gold = at('gold-top');
+    final pairs = at('pairs-top');
+    final settings = at('settings');
+    for (var i = 0; i < 40; i++) {
+      c.tapWasher();
+    }
+    c.state.boostSeconds = 3600;
+    c.advance(0);
+    await t.pump();
+    expect(find.byKey(const Key('washer-chip')), findsOneWidget);
+    expect(find.byKey(const Key('boost-chip')), findsOneWidget);
+    expect(at('gold-top'), gold);
+    expect(at('pairs-top'), pairs);
+    expect(at('settings'), settings);
+  });
 }

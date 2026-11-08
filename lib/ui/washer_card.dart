@@ -6,10 +6,11 @@ import 'package:flutter/services.dart';
 import '../app/game_controller.dart';
 import 'art.dart';
 import 'theme.dart';
-import 'ui_kit.dart';
 
-/// La lavadora que se toca: cada toque suma un bono temporal de velocidad que
-/// se consume solo en cuanto se deja de tocar, como la batería de la lavadora.
+/// La lavadora que se toca, protagonista de Negocios: grande, con dos
+/// mascotas asomándose por arriba. Cada toque suma un bono temporal de
+/// velocidad que se consume solo en cuanto se deja de tocar, como la batería
+/// de la lavadora.
 class WasherCard extends StatefulWidget {
   const WasherCard({super.key, required this.controller});
 
@@ -21,7 +22,7 @@ class WasherCard extends StatefulWidget {
 
 class _WasherCardState extends State<WasherCard>
     with SingleTickerProviderStateMixin {
-  /// Rebote y burbujas de cada toque (una sola vez, sin repetirse).
+  /// Rebote, burbujas y salto de las mascotas en cada toque (una sola vez).
   late final AnimationController _pop = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 650),
@@ -48,142 +49,230 @@ class _WasherCardState extends State<WasherCard>
     final c = widget.controller;
     final fill = c.washerFill;
     final pct = (c.washerBonus * 100).round();
-    final maxPct = (c.washerMax * 100).round();
     final reduce = MediaQuery.disableAnimationsOf(context);
+    // En pantallas bajas todo se encoge un poco.
+    final k = MediaQuery.sizeOf(context).height < 720 ? 0.78 : 1.0;
+    final washer = 205 * k;
+    final mascot = 112 * k;
     return GestureDetector(
       key: const Key('washer'),
       behavior: HitTestBehavior.opaque,
       onTapDown: (_) => _tap(),
-      child: UiCard(
-        edge: Ui.tealSoft,
-        margin: EdgeInsets.zero,
-        padding: const EdgeInsets.fromLTRB(10, 8, 14, 8),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 84,
-              height: 84,
-              child: AnimatedBuilder(
-                animation: _pop,
-                builder: (context, child) {
-                  final t = _pop.value;
-                  final bounce = t == 0 || t == 1 ? 0.0 : math.sin(math.pi * t);
-                  // Tiembla más cuanto más energía tiene.
-                  final shake = reduce
-                      ? 0.0
-                      : math.sin(c.fxTime * 38) * 0.05 * fill;
-                  return Stack(
-                    clipBehavior: Clip.none,
-                    alignment: Alignment.center,
-                    children: [
-                      Transform.rotate(
-                        angle: shake,
-                        child: Transform.scale(
-                          scale: 1 - 0.1 * bounce,
-                          child: child,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedBuilder(
+            animation: _pop,
+            builder: (context, _) {
+              final t = _pop.value;
+              final bounce = t == 0 || t == 1 ? 0.0 : math.sin(math.pi * t);
+              final time = c.fxTime;
+              // Las mascotas se asoman y se mecen; con cada toque saltan.
+              double bob(double phase) => reduce
+                  ? 0
+                  : -3 * math.sin(time * 2.2 + phase).abs() - 16 * bounce;
+              // La lavadora tiembla más cuanto más energía tiene.
+              final shake = reduce ? 0.0 : math.sin(time * 38) * 0.04 * fill;
+              return SizedBox(
+                height: washer + 34 * k,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.topCenter,
+                  children: [
+                    for (final (dx, tilt, flip, phase) in const [
+                      (-38.0, -0.14, false, 0.0),
+                      (38.0, 0.14, true, 1.7),
+                    ])
+                      Positioned(
+                        top: -2 * k,
+                        left: 0,
+                        right: 0,
+                        child: Align(
+                          alignment: Alignment.topCenter,
+                          child: Transform.translate(
+                            offset: Offset(dx * k, bob(phase)),
+                            child: Transform.rotate(
+                              angle: tilt,
+                              child: Transform.flip(
+                                flipX: flip,
+                                child: Art(
+                                  'mascota_reposo',
+                                  size: mascot,
+                                  fallback: Icons.emoji_emotions,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                      if (t > 0 && t < 1)
-                        for (var i = 0; i < 3; i++)
-                          Positioned(
-                            left: 18.0 + ((_taps * 37 + i * 53) % 48),
-                            top: 36 - 54 * t - i * 6,
+                    for (final (x, y, size, phase) in const [
+                      (-110.0, 24.0, 22.0, 0.0),
+                      (112.0, 60.0, 16.0, 2.1),
+                      (-96.0, 108.0, 14.0, 4.0),
+                    ])
+                      Positioned(
+                        top: y * k,
+                        left: 0,
+                        right: 0,
+                        child: Align(
+                          alignment: Alignment.topCenter,
+                          child: Transform.translate(
+                            offset: Offset(x * k, 0),
                             child: Opacity(
-                              opacity: 1 - t,
-                              child: Container(
-                                width: 9 + (i * 3).toDouble(),
-                                height: 9 + (i * 3).toDouble(),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.white.withValues(alpha: 0.7),
-                                  border: Border.all(
-                                    color: Ui.blue,
-                                    width: 1.5,
+                              opacity: reduce
+                                  ? 0.8
+                                  : 0.35 +
+                                        0.65 *
+                                            (0.5 +
+                                                0.5 *
+                                                    math.sin(time * 3 + phase)),
+                              child: Icon(
+                                Icons.star_rounded,
+                                size: size,
+                                color: Ui.yellow,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    Positioned(
+                      top: 34 * k,
+                      left: 0,
+                      right: 0,
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        child: Transform.rotate(
+                          angle: shake,
+                          child: Transform.scale(
+                            scale: 1 - 0.08 * bounce,
+                            child: Art(
+                              'anim_centrifugado_lavadora',
+                              size: washer,
+                              fallback: Icons.local_laundry_service,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (t > 0 && t < 1)
+                      for (var i = 0; i < 3; i++)
+                        Positioned(
+                          top: (60 - 70 * t - i * 8) * k + 28 * k,
+                          left: 0,
+                          right: 0,
+                          child: Align(
+                            alignment: Alignment.topCenter,
+                            child: Transform.translate(
+                              offset: Offset(
+                                (((_taps * 37 + i * 53) % 90) - 45) * k,
+                                0,
+                              ),
+                              child: Opacity(
+                                opacity: 1 - t,
+                                child: Container(
+                                  width: 10 + (i * 4).toDouble(),
+                                  height: 10 + (i * 4).toDouble(),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.white.withValues(alpha: 0.75),
+                                    border: Border.all(
+                                      color: Ui.blue,
+                                      width: 1.5,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                    ],
-                  );
-                },
-                child: const Art(
-                  'anim_centrifugado_lavadora',
-                  size: 78,
-                  fallback: Icons.local_laundry_service,
+                        ),
+                  ],
                 ),
-              ),
+              );
+            },
+          ),
+          const SizedBox(height: 6),
+          // La barra de energía, en una píldora debajo de la lavadora.
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: Ui.ink, width: 2.5),
+              boxShadow: const [
+                BoxShadow(color: Ui.tealSoft, offset: Offset(0, 4)),
+              ],
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
                         child: Text(
-                          'Lavadora',
-                          style: TextStyle(
-                            fontSize: 16,
+                          pct > 0
+                              ? 'Se consume si dejas de tocar'
+                              : '¡Toca para lavar!',
+                          key: const Key('washer-hint'),
+                          style: const TextStyle(
+                            fontSize: 14,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
-                      Text(
-                        '+$pct%',
-                        key: const Key('washer-bonus'),
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: pct > 0 ? Ui.tealEdge : Ui.ink2,
-                        ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '+$pct%',
+                      key: const Key('washer-bonus'),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: pct > 0 ? Ui.tealEdge : Ui.ink2,
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(7),
-                    child: SizedBox(
-                      height: 14,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          const ColoredBox(color: Ui.track),
-                          FractionallySizedBox(
-                            key: const Key('washer-bar'),
-                            alignment: Alignment.centerLeft,
-                            widthFactor: fill,
-                            heightFactor: 1,
-                            child: const DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [Ui.teal, Ui.yellow, Ui.orange],
-                                ),
+                    ),
+                    const Text(
+                      ' velocidad',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: SizedBox(
+                    height: 12,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        const ColoredBox(color: Ui.track),
+                        FractionallySizedBox(
+                          key: const Key('washer-bar'),
+                          alignment: Alignment.centerLeft,
+                          widthFactor: fill,
+                          heightFactor: 1,
+                          child: const DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [Ui.teal, Ui.yellow, Ui.orange],
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    pct > 0
-                        ? 'Se consume si dejas de tocar (máx. +$maxPct%)'
-                        : '¡Toca para lavar! Hasta +$maxPct% de velocidad',
-                    key: const Key('washer-hint'),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: Ui.ink2,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

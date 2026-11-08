@@ -56,7 +56,7 @@ class BusinessesPage extends StatelessWidget {
       children: [
         _TutorialBanner(controller: c),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+          padding: const EdgeInsets.fromLTRB(24, 22, 24, 8),
           child: WasherCard(controller: c),
         ),
         Padding(
@@ -206,56 +206,47 @@ class BusinessCard extends StatelessWidget {
             BoxShadow(color: Ui.soft(accent), offset: const Offset(0, 4)),
           ],
         ),
-        child: Material(
-          color: Colors.transparent,
+        child: ClipRRect(
           borderRadius: BorderRadius.circular(22),
-          child: InkWell(
-            key: Key('card-$index'),
-            borderRadius: BorderRadius.circular(22),
-            onTap: owned ? () => c.tap(index) : null,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Stack(
-                        clipBehavior: Clip.none,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              key: Key('card-$index'),
+              onTap: owned ? () => c.tap(index) : null,
+              child: IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // El arte del negocio, a todo lo alto de la tarjeta.
+                    Container(
+                      width: 112,
+                      color: Ui.soft(accent).withValues(alpha: 0.55),
+                      child: Stack(
+                        alignment: Alignment.center,
                         children: [
-                          Container(
-                            width: 62,
-                            height: 62,
-                            decoration: BoxDecoration(
-                              color: Ui.soft(accent).withValues(alpha: 0.55),
-                              borderRadius: BorderRadius.circular(18),
-                            ),
-                            alignment: Alignment.center,
-                            child: WorkingBob(
-                              active:
-                                  owned && !fast && (b.running || b.hasManager),
-                              progress: b.progress,
-                              child: Art(
-                                cfg.art,
-                                size: 54,
-                                fallback: Icons.store,
-                              ),
+                          WorkingBob(
+                            active:
+                                owned && !fast && (b.running || b.hasManager),
+                            progress: b.progress,
+                            child: Art(
+                              cfg.art,
+                              size: 100,
+                              fallback: Icons.store,
                             ),
                           ),
                           Positioned(
-                            right: -8,
-                            top: -8,
+                            left: 8,
+                            top: 8,
                             child: Container(
-                              constraints: const BoxConstraints(minWidth: 26),
-                              height: 26,
+                              constraints: const BoxConstraints(minWidth: 28),
+                              height: 28,
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
+                                horizontal: 7,
                               ),
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
                                 color: Ui.ink,
-                                borderRadius: BorderRadius.circular(13),
+                                borderRadius: BorderRadius.circular(14),
                                 border: Border.all(
                                   color: Colors.white,
                                   width: 2,
@@ -266,7 +257,7 @@ class BusinessCard extends StatelessWidget {
                                 key: Key('owned-$index'),
                                 style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 13,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
@@ -274,49 +265,59 @@ class BusinessCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(width: 14),
-                      Expanded(
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
-                              cfg.name,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 16,
-                                height: 1.15,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(6),
-                              child: LinearProgressIndicator(
-                                minHeight: 12,
-                                value: fast ? 1 : (owned ? b.progress : 0),
-                                color: accent,
-                                backgroundColor: Ui.track,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Flexible(
-                                  child: Text(
-                                    fast
-                                        ? '${formatter.format(eco.incomePerSecond(c.state, index))}/s'
-                                        : '${formatter.format(income)} por ciclo',
-                                    key: Key('income-$index'),
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                      color: Ui.ink2,
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(top: 2),
+                                    child: Text(
+                                      cfg.name,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 16,
+                                        height: 1.15,
+                                      ),
                                     ),
                                   ),
                                 ),
-                                if (!fast && owned)
+                                const SizedBox(width: 6),
+                                _ManagerSlot(
+                                  key: Key('manager-$index'),
+                                  index: index,
+                                  controller: c,
+                                  formatter: formatter,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(6),
+                                    child: LinearProgressIndicator(
+                                      minHeight: 12,
+                                      value: fast
+                                          ? 1
+                                          : (owned ? b.progress : 0),
+                                      color: accent,
+                                      backgroundColor: Ui.track,
+                                    ),
+                                  ),
+                                ),
+                                if (!fast && owned) ...[
+                                  const SizedBox(width: 8),
                                   Text(
                                     '${remaining.toStringAsFixed(1)} s',
                                     style: const TextStyle(
@@ -325,67 +326,180 @@ class BusinessCard extends StatelessWidget {
                                       color: Ui.ink2,
                                     ),
                                   ),
+                                ],
                               ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              [
+                                fast
+                                    ? '${formatter.format(eco.incomePerSecond(c.state, index))}/s'
+                                    : '${formatter.format(income)} por ciclo',
+                                if (toNext != null && owned)
+                                  'faltan $toNext p/ x2',
+                              ].join(' · '),
+                              key: Key('income-$index'),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: Ui.ink2,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            _BuyButton(
+                              key: Key('buy-$index'),
+                              enabled: canBuy,
+                              label: 'Comprar ${c.unitsFor(index)}',
+                              detail: canBuy
+                                  ? formatter.format(c.costFor(index))
+                                  : 'Faltan ${formatter.format(c.missing(index))}',
+                              onTap: () => c.buy(index),
                             ),
                           ],
                         ),
                       ),
-                    ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// El manager del negocio: su silueta mientras no se contrata (se toca para
+/// contratarlo si alcanzan las Pelusitas) y su retrato con una palomita cuando
+/// ya trabaja.
+class _ManagerSlot extends StatelessWidget {
+  const _ManagerSlot({
+    super.key,
+    required this.index,
+    required this.controller,
+    required this.formatter,
+  });
+
+  final int index;
+  final GameController controller;
+  final NumberFormatter formatter;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = controller;
+    final cfg = c.economy.config.businesses[index];
+    final b = c.state.businesses[index];
+    final hired = b.hasManager;
+    final owned = b.owned > 0;
+    final affordable = owned && cfg.manager.cost <= c.state.money;
+    final portrait = cfg.manager.portrait;
+    final ringColor = hired ? Ui.teal : (affordable ? Ui.orange : Ui.disabled);
+
+    Widget face = portrait == null
+        ? const Icon(Icons.person, color: Ui.ink2)
+        : Art(portrait, size: 46, fallback: Icons.person);
+    if (!hired) {
+      face = ColorFiltered(
+        colorFilter: ColorFilter.mode(
+          owned ? const Color(0xFF8E8A9A) : const Color(0xFFC5C0BA),
+          BlendMode.srcATop,
+        ),
+        child: face,
+      );
+    }
+
+    return Semantics(
+      button: !hired,
+      label: hired
+          ? 'Manager contratado: ${cfg.manager.name}'
+          : 'Contratar manager: ${cfg.manager.name}',
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: hired
+            ? null
+            : () {
+                if (!owned) return;
+                if (affordable) {
+                  c.buyManager(index);
+                } else {
+                  ScaffoldMessenger.of(context)
+                    ..hideCurrentSnackBar()
+                    ..showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Para contratar a ${cfg.manager.name} necesitas '
+                          '${formatter.format(cfg.manager.cost)} Pelusitas',
+                        ),
+                      ),
+                    );
+                }
+              },
+        child: SizedBox(
+          width: 56,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    key: hired ? Key('manager-hired-$index') : null,
+                    width: 52,
+                    height: 52,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: hired ? Ui.tealSoft : const Color(0xFFF1ECE2),
+                      border: Border.all(color: ringColor, width: 3),
+                      boxShadow: affordable
+                          ? [
+                              BoxShadow(
+                                color: Ui.orange.withValues(alpha: 0.45),
+                                blurRadius: 8,
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: ClipOval(child: face),
                   ),
-                  if (toNext != null && owned)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 6),
-                      child: Text(
-                        'Faltan $toNext para el doble de velocidad',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Ui.ink2,
+                  if (hired)
+                    Positioned(
+                      right: -2,
+                      bottom: -2,
+                      child: Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: Ui.teal,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: const Icon(
+                          Icons.check,
+                          size: 12,
+                          color: Colors.white,
                         ),
                       ),
                     ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _BuyButton(
-                          key: Key('buy-$index'),
-                          enabled: canBuy,
-                          label: 'Comprar ${c.unitsFor(index)}',
-                          detail: canBuy
-                              ? formatter.format(c.costFor(index))
-                              : 'Faltan ${formatter.format(c.missing(index))}',
-                          onTap: () => c.buy(index),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      if (owned && !b.hasManager)
-                        _ManagerButton(
-                          key: Key('manager-$index'),
-                          enabled: cfg.manager.cost <= c.state.money,
-                          cost: formatter.format(cfg.manager.cost),
-                          onTap: () => c.buyManager(index),
-                        )
-                      else if (b.hasManager)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Ui.tealSoft,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: const Text(
-                            'Manager ✓',
-                            style: TextStyle(fontWeight: FontWeight.w700),
-                          ),
-                        ),
-                    ],
-                  ),
                 ],
               ),
-            ),
+              if (!hired && owned)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    formatter.format(cfg.manager.cost),
+                    key: Key('manager-cost-$index'),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: affordable ? Ui.tealEdge : Ui.ink2,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),
@@ -485,40 +599,6 @@ class _BuyButtonState extends State<_BuyButton> {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// Botón secundario para contratar al manager.
-class _ManagerButton extends StatelessWidget {
-  const _ManagerButton({
-    super.key,
-    required this.enabled,
-    required this.cost,
-    required this.onTap,
-  });
-
-  final bool enabled;
-  final String cost;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton(
-      onPressed: enabled ? onTap : null,
-      style: OutlinedButton.styleFrom(
-        foregroundColor: Ui.ink,
-        disabledForegroundColor: Ui.disabledInk,
-        side: BorderSide(color: enabled ? Ui.orange : Ui.disabled, width: 2),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        minimumSize: const Size(92, 58),
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-      ),
-      child: Text(
-        'Manager\n$cost',
-        textAlign: TextAlign.center,
-        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
       ),
     );
   }
