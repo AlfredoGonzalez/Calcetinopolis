@@ -15,6 +15,7 @@ class SpriteSheet extends StatefulWidget {
     this.frames,
     this.fps = 12,
     this.scale = 1,
+    this.loop = true,
   });
 
   final String asset;
@@ -27,6 +28,9 @@ class SpriteSheet extends StatefulWidget {
   final double fps;
   final double scale;
 
+  /// Si es falso se reproduce una vez y se queda en el último cuadro.
+  final bool loop;
+
   @override
   State<SpriteSheet> createState() => _SpriteSheetState();
 }
@@ -37,7 +41,13 @@ class _SpriteSheetState extends State<SpriteSheet>
   late final AnimationController _anim = AnimationController(
     vsync: this,
     duration: Duration(milliseconds: (_count / widget.fps * 1000).round()),
-  )..repeat();
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    widget.loop ? _anim.repeat() : _anim.forward();
+  }
 
   @override
   void dispose() {
@@ -48,12 +58,12 @@ class _SpriteSheetState extends State<SpriteSheet>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Con "reducir animaciones" activado se queda en el primer cuadro.
+    // Con "reducir animaciones" se queda quieto: el primer cuadro en bucle, el último si es de una sola vez.
     if (MediaQuery.disableAnimationsOf(context)) {
       _anim
         ..stop()
-        ..value = 0;
-    } else if (!_anim.isAnimating) {
+        ..value = widget.loop ? 0 : 1;
+    } else if (widget.loop && !_anim.isAnimating) {
       _anim.repeat();
     }
   }
