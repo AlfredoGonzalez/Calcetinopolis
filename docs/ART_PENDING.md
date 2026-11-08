@@ -64,14 +64,14 @@ Flat 2D illustration, cute children's storybook style with a subtle knitted wool
 - `biz_10_portal` trae una placa gris que los demás negocios no tienen; regenerarlo con "no plaque, no background panel".
 - `mgr_10_gran_centrifugadora`: el brillo de la corona se pierde un poco al quitar el fondo; regenerar con la corona sin halo luminoso sobre el fondo.
 
-- `anim_centrifugado_calcetin_der` mira hacia la **derecha** igual que el izquierdo (el prompt pedía que mirara a la izquierda) y no trae los rombos pedidos, solo parches cosidos. Lo volteo en código y sirve, pero si quieres los rombos, regenerarlo. También tiene un detalle en la boca que parece un aparato dental.
+- `anim_centrifugado_calcetin_der` mira hacia la **derecha** igual que el izquierdo (el prompt pedía que mirara a la izquierda) y no trae los rombos pedidos, solo parches cosidos. Lo volteo en código y sirve. Los rombos son opcionales. Los braquets de la boca son intencionales.
 - `mascota_*` y `anim_centrifugado_calcetin_*` llevan un parche amarillo en la punta: es un detalle distinto al calcetín de los negocios. Si quieres un solo diseño, hay que elegir uno.
 
 ## Lo que hago yo sin arte nuevo
 
-Ya hechos: destello al cruzar un umbral, pelusas flotando, brillo en monedas y respiración de los negocios mientras producen. Quedan:
+Ya hechos: destello al cruzar un umbral, pelusas flotando, brillo en monedas, respiración de los negocios, siluetas de negocios bloqueados, ícono adaptativo de Android y pantalla de carga. Queda:
 
-Siluetas de negocios bloqueados, sombras de suelo, ícono adaptativo de Android y pantalla de carga. No tienes que generar nada de eso.
+Sombras de suelo. No tienes que generar nada de eso.
 
 ## Después (v1.1)
 

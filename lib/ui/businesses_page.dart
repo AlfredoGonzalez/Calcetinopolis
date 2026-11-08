@@ -106,7 +106,29 @@ class _LockedCard extends StatelessWidget {
     return Card(
       color: Palette.lint,
       child: ListTile(
-        leading: const Icon(Icons.lock, color: Palette.outline),
+        leading: SizedBox(
+          width: 56,
+          height: 56,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Silueta del negocio: se ve qué viene, pero no cuál es.
+              ColorFiltered(
+                key: Key('silhouette-$index'),
+                colorFilter: const ColorFilter.mode(
+                  Color(0xFF9A8F88),
+                  BlendMode.srcATop,
+                ),
+                child: Art(cfg.art, size: 52),
+              ),
+              const Positioned(
+                right: 0,
+                bottom: 0,
+                child: Icon(Icons.lock, size: 20, color: Palette.outline),
+              ),
+            ],
+          ),
+        ),
         title: const Text('???'),
         subtitle: Text('Cuesta ${formatter.format(cfg.baseCost)}'),
       ),
