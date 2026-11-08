@@ -3,7 +3,7 @@ name: Probar en GitHub Pages
 # Una vez: Settings -> Pages -> Source: GitHub Actions.
 on:
   push:
-    branches: [main, claude/inspiring-tesla-a0o7tz]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
