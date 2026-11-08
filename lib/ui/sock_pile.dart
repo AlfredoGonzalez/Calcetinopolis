@@ -1,16 +1,19 @@
 import 'dart:math' as math;
 import 'dart:ui' show Offset;
 
-/// Un personaje de la pila.
+/// Un personaje de la pantalla de carga.
 class PileSock {
   PileSock({
     required this.id,
     required this.asset,
-    required this.x,
-    required this.y,
-    this.rot = 0,
+    required this.angle,
+    required this.ringRadius,
+    required this.releaseAngle,
+    required this.baseRot,
     this.scale = 1,
-  });
+  }) : x = 0,
+       y = 0,
+       rot = baseRot;
 
   final int id;
 
@@ -27,12 +30,24 @@ class PileSock {
 
   /// Qué tan grande se dibuja respecto al círculo de choque.
   final double scale;
+
+  /// Mientras está dentro del tambor, gira en un anillo alrededor del centro.
+  bool inDrum = true;
+  double angle;
+  final double ringRadius;
+
+  /// Ángulo (sin dar la vuelta) al que se suelta del tambor.
+  final double releaseAngle;
+  final double baseRot;
 }
 
-/// Física sencilla de círculos con gravedad, rebote, choques y arrastre.
+/// Calcetines que se lavan en un tambor y caen a una pila.
 ///
-/// Es una versión en Dart del prototipo del diseño: cada paso representa
-/// 33 ms, así que se avanza con [step] a ritmo fijo.
+/// Mientras están en el tambor giran en sentido horario (en pantalla) en varios
+/// anillos. Al llegar al borde izquierdo, cuando el tambor los lleva hacia
+/// arriba, se sueltan y caen con gravedad, rebote, choques y arrastre.
+///
+/// Cada paso representa 33 ms: se avanza con [step] a ritmo fijo.
 class SockPileModel {
   SockPileModel({
     required this.width,
@@ -40,52 +55,90 @@ class SockPileModel {
     required List<String> assets,
     this.radius = 32,
     int seed = 11,
-    List<int> rows = const [6, 6, 5, 5],
+    Offset? drumCenter,
+    this.ringRadii = const [70, 115, 160],
+    List<int> ringCounts = const [5, 8, 9],
+    this.drumSpeed = 0.035,
     Set<String> bigAssets = const {},
-  }) {
+  }) : center = drumCenter ?? Offset(width / 2, height * 0.45) {
     final rnd = math.Random(seed);
-    // Arrancan repartidos arriba y caen para formar la pila.
     var n = 0;
-    for (var ri = 0; ri < rows.length; ri++) {
-      final count = rows[ri];
-      final span = width - 2 * radius - 8;
-      for (var i = 0; i < count; i++) {
+    for (var ring = 0; ring < ringRadii.length; ring++) {
+      final count = ringCounts[ring];
+      for (var j = 0; j < count; j++) {
+        final a = 2 * math.pi * j / count + ring * 0.7;
+        final angle = a % (2 * math.pi);
         final asset = assets[n % assets.length];
         socks.add(
           PileSock(
             id: n,
             asset: asset,
-            x:
-                radius +
-                4 +
-                (count == 1 ? span / 2 : span * i / (count - 1)) +
-                (rnd.nextDouble() - 0.5) * 6,
-            y: radius + ri * radius * 2.2 + rnd.nextDouble() * 6,
-            rot: rnd.nextDouble() * 80 - 40,
+            angle: angle,
+            ringRadius: ringRadii[ring] + (rnd.nextDouble() - 0.5) * 8,
+            // Se suelta en el borde izquierdo (ángulo pi): la primera vez que
+            // lo cruza, que puede ser en esta vuelta o en la siguiente.
+            releaseAngle: angle < math.pi ? math.pi : 3 * math.pi,
+            baseRot: rnd.nextDouble() * 60 - 30,
             scale: bigAssets.contains(asset) ? 1.55 : 1,
           ),
         );
         n++;
       }
     }
+    for (final s in socks) {
+      _place(s);
+    }
   }
 
+  /// Ancho y alto del área; el alto es el piso donde cae la pila.
   final double width;
   final double height;
   final double radius;
+  final Offset center;
+  final List<double> ringRadii;
+
+  /// Radianes por paso con los que gira el tambor.
+  final double drumSpeed;
   final List<PileSock> socks = [];
 
   /// Gravedad en la pantalla: x a la derecha, y hacia abajo (de -1 a 1).
   double gx = 0;
   double gy = 1;
 
+  /// Qué tanto se ve el tambor (0 a 1); no gira hasta que empieza a verse.
+  double reveal = 0;
+
   int? dragId;
+
+  bool get drumRunning => reveal > 0.02;
+
+  void _place(PileSock s) {
+    s.x = center.dx + s.ringRadius * math.cos(s.angle);
+    s.y = center.dy + s.ringRadius * math.sin(s.angle);
+    s.rot = s.baseRot + s.angle * 180 / math.pi;
+  }
+
+  void _release(PileSock s) {
+    s.inDrum = false;
+    // Sale con la velocidad del tambor en ese punto (hacia arriba) y un poco
+    // hacia afuera.
+    s.vx = -s.ringRadius * math.sin(s.angle) * drumSpeed - 1;
+    s.vy = s.ringRadius * math.cos(s.angle) * drumSpeed;
+    s.vr = -2;
+  }
 
   /// Un paso de 33 ms.
   void step() {
     final r = radius;
     for (final s in socks) {
       if (s.id == dragId) continue;
+      if (s.inDrum) {
+        if (!drumRunning) continue;
+        s.angle += drumSpeed;
+        _place(s);
+        if (s.angle >= s.releaseAngle) _release(s);
+        continue;
+      }
       s.vx = (s.vx + gx * 0.9) * 0.985;
       s.vy = (s.vy + gy * 0.9) * 0.985;
       s.x += s.vx;
@@ -115,13 +168,16 @@ class SockPileModel {
     }
     for (var it = 0; it < 2; it++) {
       for (var i = 0; i < socks.length; i++) {
+        if (socks[i].inDrum) continue;
         for (var j = i + 1; j < socks.length; j++) {
+          if (socks[j].inDrum) continue;
           _collide(socks[i], socks[j]);
         }
       }
     }
     // Los choques pueden empujar a alguien contra la pared: se reubica.
     for (final s in socks) {
+      if (s.inDrum) continue;
       s.x = s.x.clamp(r, width - r);
       s.y = s.y.clamp(r, height - r);
     }
@@ -161,8 +217,10 @@ class SockPileModel {
     }
   }
 
-  /// Agarra el personaje más cercano al punto [p], si hay uno cerca.
+  /// Agarra el personaje más cercano al punto [p], si hay uno cerca. Si estaba
+  /// en el tambor, lo saca de ahí.
   bool grab(Offset p) {
+    if (reveal < 0.5) return false;
     PileSock? best;
     var bestD = radius * 1.4;
     for (final s in socks) {
@@ -173,6 +231,7 @@ class SockPileModel {
       }
     }
     if (best == null) return false;
+    best.inDrum = false;
     dragId = best.id;
     best.vx = 0;
     best.vy = 0;
