@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../app/game_controller.dart';
 import '../core/number_format.dart';
+import 'art.dart';
 import 'theme.dart';
 
 String formatDuration(double seconds) {
@@ -30,6 +31,14 @@ Future<void> showOfflineDialog(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const Center(
+            child: Art(
+              'mascota_celebra',
+              size: 96,
+              fallback: Icons.celebration,
+            ),
+          ),
+          const SizedBox(height: 8),
           Text('Estuviste fuera ${formatDuration(r.secondsAway)}.'),
           if (r.capped)
             Text(

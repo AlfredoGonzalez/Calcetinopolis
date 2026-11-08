@@ -355,7 +355,7 @@ class _TutorialBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Art('ui_hilo_flecha', size: 40, fallback: Icons.gesture),
+          const Art('mascota_reposo', size: 48, fallback: Icons.gesture),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
