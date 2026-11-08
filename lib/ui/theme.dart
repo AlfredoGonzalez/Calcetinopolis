@@ -94,9 +94,89 @@ ThemeData buildTheme() {
         shape: const StadiumBorder(),
       ),
     ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: Ui.ink,
+        textStyle: const TextStyle(
+          fontFamily: Ui.fontFamily,
+          fontWeight: FontWeight.w700,
+        ),
+        shape: const StadiumBorder(),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: Ui.ink,
+        side: const BorderSide(color: Ui.ink, width: 2),
+        textStyle: const TextStyle(
+          fontFamily: Ui.fontFamily,
+          fontWeight: FontWeight.w700,
+        ),
+        shape: const StadiumBorder(),
+      ),
+    ),
     dialogTheme: DialogThemeData(
       backgroundColor: Ui.bg1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      titleTextStyle: const TextStyle(
+        fontFamily: Ui.fontFamily,
+        fontSize: 22,
+        fontWeight: FontWeight.w700,
+        color: Ui.ink,
+      ),
+      contentTextStyle: const TextStyle(
+        fontFamily: Ui.fontFamily,
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
+        color: Ui.ink,
+        height: 1.35,
+      ),
+      actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: Ui.orangeSoft, width: 2),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: Ui.orangeSoft, width: 2),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: Ui.orange, width: 2),
+      ),
+    ),
+    switchTheme: SwitchThemeData(
+      thumbColor: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.selected) ? Colors.white : Ui.ink2,
+      ),
+      trackColor: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.selected) ? Ui.teal : Ui.track,
+      ),
+      trackOutlineColor: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.selected) ? Ui.tealEdge : Ui.disabled,
+      ),
+    ),
+    sliderTheme: const SliderThemeData(
+      activeTrackColor: Ui.orange,
+      inactiveTrackColor: Ui.track,
+      thumbColor: Ui.orange,
+      trackHeight: 8,
+    ),
+    snackBarTheme: SnackBarThemeData(
+      backgroundColor: Ui.ink,
+      contentTextStyle: const TextStyle(
+        fontFamily: Ui.fontFamily,
+        color: Colors.white,
+        fontWeight: FontWeight.w600,
+      ),
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
   );
 }

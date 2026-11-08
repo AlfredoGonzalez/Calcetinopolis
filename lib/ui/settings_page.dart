@@ -10,7 +10,9 @@ import 'animation_preview.dart';
 import 'cutscene_player.dart';
 import 'offline_dialog.dart';
 import 'prestige_page.dart';
+import 'art.dart';
 import 'theme.dart';
+import 'ui_kit.dart';
 
 const kAppVersion = '0.5.0';
 
@@ -30,154 +32,255 @@ class SettingsPage extends StatelessWidget {
         final f = c.formatter;
         final sample = BigNum.parse('1.5e12');
         return Scaffold(
-          appBar: AppBar(title: const Text('Ajustes')),
-          body: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              const Text(
-                'Formato de números',
-                style: TextStyle(fontWeight: FontWeight.bold),
+          appBar: const UiTopBar(title: 'Ajustes'),
+          body: DecoratedBox(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Ui.bg1, Ui.bg2],
               ),
-              const SizedBox(height: 8),
-              SegmentedButton<NumberFormatMode>(
-                showSelectedIcon: false,
-                segments: const [
-                  ButtonSegment(
-                    value: NumberFormatMode.shortSuffix,
-                    label: Text('K, M, B', key: Key('fmt-shortSuffix')),
-                  ),
-                  ButtonSegment(
-                    value: NumberFormatMode.names,
-                    label: Text('Nombres', key: Key('fmt-names')),
-                  ),
-                  ButtonSegment(
-                    value: NumberFormatMode.scientific,
-                    label: Text('Científica', key: Key('fmt-scientific')),
-                  ),
-                ],
-                selected: {f.mode},
-                onSelectionChanged: (s) => c.setNumberFormat(s.first),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Ejemplo: ${f.format(sample)}',
-                key: const Key('fmt-sample'),
-              ),
-              const Divider(height: 32),
-              Text(
-                'Tamaño de letra: ${(st.fontScale * 100).round()}%',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              Slider(
-                key: const Key('font-scale'),
-                min: 0.85,
-                max: 1.6,
-                divisions: 15,
-                value: st.fontScale,
-                onChanged: c.setFontScale,
-              ),
-              SwitchListTile(
-                key: const Key('sound'),
-                title: const Text('Música y efectos'),
-                subtitle: const Text('El audio llega en F6'),
-                value: st.sound,
-                onChanged: c.setSound,
-              ),
-              SwitchListTile(
-                key: const Key('vibration'),
-                title: const Text('Vibración'),
-                value: st.vibration,
-                onChanged: c.setVibration,
-              ),
-              const Divider(height: 32),
-              ListTile(
-                key: const Key('export'),
-                leading: const Icon(Icons.upload),
-                title: const Text('Exportar partida'),
-                subtitle: const Text('Copia tu partida como texto'),
-                onTap: () => _export(context),
-              ),
-              ListTile(
-                key: const Key('import'),
-                leading: const Icon(Icons.download),
-                title: const Text('Importar partida'),
-                subtitle: const Text(
-                  'Reemplaza tu partida con un texto exportado',
-                ),
-                onTap: () => _import(context),
-              ),
-              ListTile(
-                key: const Key('reset'),
-                leading: const Icon(
-                  Icons.delete_forever,
-                  color: Palette.tomato,
-                ),
-                title: const Text('Reiniciar partida'),
-                subtitle: const Text('Borra todo el progreso'),
-                onTap: () => _reset(context),
-              ),
-              const Divider(height: 32),
-              const Text(
-                'Escenas',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              for (final scene in Cutscene.values)
-                ListTile(
-                  key: Key('scene-${scene.id}'),
-                  leading: const Icon(Icons.movie_outlined),
-                  title: Text(scene.title),
-                  onTap: () => showCutscene(
-                    context,
-                    scene,
-                    sound: c.state.settings.sound,
+            ),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
+              children: [
+                const SectionTitle('Pantalla'),
+                UiCard(
+                  edge: Ui.orangeSoft,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Formato de números',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      PillSelector<NumberFormatMode>(
+                        options: const [
+                          (
+                            value: NumberFormatMode.shortSuffix,
+                            label: 'K, M, B',
+                            key: Key('fmt-shortSuffix'),
+                          ),
+                          (
+                            value: NumberFormatMode.names,
+                            label: 'Nombres',
+                            key: Key('fmt-names'),
+                          ),
+                          (
+                            value: NumberFormatMode.scientific,
+                            label: 'Científica',
+                            key: Key('fmt-scientific'),
+                          ),
+                        ],
+                        selected: f.mode,
+                        onPick: c.setNumberFormat,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Ejemplo: ${f.format(sample)}',
+                        key: const Key('fmt-sample'),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Ui.ink2,
+                        ),
+                      ),
+                      const Divider(height: 28),
+                      Text(
+                        'Tamaño de letra: ${(st.fontScale * 100).round()}%',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Slider(
+                        key: const Key('font-scale'),
+                        min: 0.85,
+                        max: 1.6,
+                        divisions: 15,
+                        value: st.fontScale,
+                        onChanged: c.setFontScale,
+                      ),
+                    ],
                   ),
                 ),
-              if (c.testMode) ...[
-                const Divider(height: 32),
-                const Text(
-                  'Probar animaciones',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                const SectionTitle('Sonido'),
+                UiCard(
+                  edge: Ui.tealSoft,
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Column(
+                    children: [
+                      SwitchListTile(
+                        key: const Key('sound'),
+                        title: const Text(
+                          'Música y efectos',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: const Text('El audio llega en F6'),
+                        value: st.sound,
+                        onChanged: c.setSound,
+                      ),
+                      SwitchListTile(
+                        key: const Key('vibration'),
+                        title: const Text(
+                          'Vibración',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        value: st.vibration,
+                        onChanged: c.setVibration,
+                      ),
+                    ],
+                  ),
                 ),
-                const Text(
-                  'Solo en modo de prueba. No cambian tu partida.',
-                  style: TextStyle(fontSize: 12),
+                const SectionTitle('Escenas'),
+                UiCard(
+                  edge: Ui.soft(Ui.violet),
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Column(
+                    children: [
+                      for (final scene in Cutscene.values)
+                        ListTile(
+                          key: Key('scene-${scene.id}'),
+                          leading: const Icon(
+                            Icons.movie_outlined,
+                            color: Ui.violet,
+                          ),
+                          title: Text(
+                            scene.title,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          trailing: const Icon(Icons.play_arrow_rounded),
+                          onTap: () => showCutscene(
+                            context,
+                            scene,
+                            sound: c.state.settings.sound,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-                ListTile(
-                  key: const Key('preview-centrifuge'),
-                  leading: const Icon(Icons.local_laundry_service),
-                  title: const Text('Centrifugado'),
-                  onTap: () => showCentrifugeAnimation(context, '1.2K'),
-                ),
-                ListTile(
-                  key: const Key('preview-offline'),
-                  leading: const Icon(Icons.bedtime),
-                  title: const Text('Bienvenida offline'),
-                  onTap: () => showOfflineDialog(
-                    context,
-                    c,
-                    f,
-                    preview: OfflineReport(
-                      gain: BigNum.parse('2.5e6'),
-                      secondsAway: 3 * 3600,
-                      secondsCounted: 3 * 3600,
-                      clockWentBack: false,
+                if (c.testMode) ...[
+                  const SectionTitle(
+                    'Probar animaciones',
+                    subtitle: 'Solo en modo de prueba. No cambian tu partida.',
+                  ),
+                  UiCard(
+                    edge: Ui.yellow,
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Column(
+                      children: [
+                        ListTile(
+                          key: const Key('preview-centrifuge'),
+                          leading: const Icon(Icons.local_laundry_service),
+                          title: const Text('Centrifugado'),
+                          onTap: () => showCentrifugeAnimation(context, '1.2K'),
+                        ),
+                        ListTile(
+                          key: const Key('preview-offline'),
+                          leading: const Icon(Icons.bedtime),
+                          title: const Text('Bienvenida offline'),
+                          onTap: () => showOfflineDialog(
+                            context,
+                            c,
+                            f,
+                            preview: OfflineReport(
+                              gain: BigNum.parse('2.5e6'),
+                              secondsAway: 3 * 3600,
+                              secondsCounted: 3 * 3600,
+                              clockWentBack: false,
+                            ),
+                          ),
+                        ),
+                        ListTile(
+                          key: const Key('preview-mascot'),
+                          leading: const Icon(Icons.emoji_emotions),
+                          title: const Text(
+                            'Mascota (reposo, salto y celebra)',
+                          ),
+                          onTap: () => showMascotPreview(context),
+                        ),
+                      ],
                     ),
                   ),
+                ],
+                const SectionTitle('Tu partida'),
+                UiCard(
+                  edge: Ui.orangeSoft,
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Column(
+                    children: [
+                      ListTile(
+                        key: const Key('export'),
+                        leading: const Icon(Icons.upload),
+                        title: const Text(
+                          'Exportar partida',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: const Text('Copia tu partida como texto'),
+                        onTap: () => _export(context),
+                      ),
+                      ListTile(
+                        key: const Key('import'),
+                        leading: const Icon(Icons.download),
+                        title: const Text(
+                          'Importar partida',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: const Text(
+                          'Reemplaza tu partida con un texto exportado',
+                        ),
+                        onTap: () => _import(context),
+                      ),
+                      ListTile(
+                        key: const Key('reset'),
+                        leading: const Icon(
+                          Icons.delete_forever,
+                          color: Palette.tomato,
+                        ),
+                        title: const Text(
+                          'Reiniciar partida',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: const Text('Borra todo el progreso'),
+                        onTap: () => _reset(context),
+                      ),
+                    ],
+                  ),
                 ),
-                ListTile(
-                  key: const Key('preview-mascot'),
-                  leading: const Icon(Icons.emoji_emotions),
-                  title: const Text('Mascota (reposo, salto y celebra)'),
-                  onTap: () => showMascotPreview(context),
+                const SizedBox(height: 8),
+                const Center(
+                  child: Column(
+                    children: [
+                      Art(
+                        'icon_pareja_reunida',
+                        size: 48,
+                        fallback: Icons.favorite,
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Calcetinópolis',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Text(
+                        'Versión $kAppVersion',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Ui.ink2,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
-              const Divider(height: 32),
-              const ListTile(
-                leading: Icon(Icons.info_outline),
-                title: Text('Calcetinópolis'),
-                subtitle: Text('Versión $kAppVersion'),
-              ),
-            ],
+            ),
           ),
         );
       },

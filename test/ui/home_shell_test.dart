@@ -297,8 +297,8 @@ void main() {
       await t.pump();
       await t.tap(find.byKey(const Key('centrifuge')));
       await t.pumpAndSettle();
-      expect(find.text('Se pierde:'), findsOneWidget);
-      expect(find.text('Se conserva:'), findsOneWidget);
+      expect(find.text('Se pierde'), findsOneWidget);
+      expect(find.text('Se conserva'), findsOneWidget);
       await t.tap(find.byKey(const Key('cancel-centrifuge')));
       await t.pumpAndSettle();
       expect(c.state.pairsClaimed, BigNum.zero);

@@ -156,10 +156,13 @@ class _Body extends StatelessWidget {
                       Image.asset(
                         'assets/art/logo_carga.png',
                         key: const Key('loading-logo'),
-                        height: math.min(
-                          310,
-                          MediaQuery.sizeOf(context).height * 0.34,
-                        ),
+                        // 75% del tamaño anterior.
+                        height:
+                            0.75 *
+                            math.min(
+                              310,
+                              MediaQuery.sizeOf(context).height * 0.34,
+                            ),
                         errorBuilder: (_, _, _) => const Text(
                           'Calcetinópolis',
                           style: TextStyle(
