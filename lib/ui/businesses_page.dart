@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../app/game_controller.dart';
 import '../core/number_format.dart';
 import 'art.dart';
+import 'sprite_sheet.dart';
 import 'theme.dart';
 
 const _amountLabels = {
@@ -355,7 +356,14 @@ class _TutorialBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Art('mascota_reposo', size: 48, fallback: Icons.gesture),
+          const SpriteSheet(
+            asset: 'assets/art/spr_mascota_idle.png',
+            frameSize: Size(209, 309),
+            columns: 4,
+            rows: 4,
+            fps: 8,
+            scale: 0.17,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(

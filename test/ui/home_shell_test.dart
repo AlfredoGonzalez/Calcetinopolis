@@ -186,6 +186,7 @@ void main() {
     final t0 = DateTime.utc(2026, 11, 3, 12);
     final time = FakeTimeService(t0);
     c = GameController(Economy(config), time: time, lastSeen: t0);
+    c.state.tutorialDone = true; // el banner anima en bucle
     c.state.businesses[0]
       ..owned = 10
       ..hasManager = true;
@@ -225,6 +226,7 @@ void main() {
       lastSeen: t0,
       ads: MockAdService(),
     );
+    c.state.tutorialDone = true; // el banner anima en bucle
     c.state.businesses[0]
       ..owned = 10
       ..hasManager = true;
