@@ -8,7 +8,8 @@ Requiere: Pillow, numpy, scipy.
 Reglas por nombre de archivo:
   biz_*, mgr_*        -> PNG 384x384 transparente, recortado al contenido
   icon_*              -> PNG 256x256 transparente, recortado al contenido
-  app_icon.jpg        -> PNG 512x512 opaco (esquinas rellenas)
+  app_icon.jpg        -> PNG 512x512 opaco (esquinas rellenas), íconos de Android (clásico,
+                         adaptativo y temático) y logo de la pantalla de carga
   shop_*              -> PNG 384x384 transparente, recortado al contenido
   mascota_*, anim_*   -> PNG 512x512 transparente, SIN recorte (las poses y los cuadros
                          deben conservar el mismo encuadre y escala entre sí)
@@ -154,6 +155,89 @@ def write_launcher_icons(icon: Image.Image, res_dir: Path):
             icon.resize((px, px), Image.LANCZOS).save(d / 'ic_launcher.png', optimize=True)
 
 
+ADAPTIVE_SCALE = {'mdpi': 1, 'hdpi': 1.5, 'xhdpi': 2, 'xxhdpi': 3, 'xxxhdpi': 4}
+
+
+def icon_layers(icon: Image.Image):
+    """Separa el ícono de la app en calcetín transparente y color de fondo.
+
+    El fondo es liso con una viñeta suave: se quita lo conectado al borde que
+    esté cerca del color mediano del borde. Solo se conserva el objeto más
+    grande (el calcetín), sin el destello suelto.
+    """
+    a = np.asarray(icon.convert('RGB')).astype(int)
+    border = np.concatenate([a[0], a[-1], a[:, 0], a[:, -1]])
+    bg = np.median(border, axis=0)
+    near = np.abs(a - bg).max(axis=2) <= 40
+    lab, _ = ndimage.label(near)
+    edge = set(lab[0, :]) | set(lab[-1, :]) | set(lab[:, 0]) | set(lab[:, -1])
+    edge.discard(0)
+    fg = ~np.isin(lab, list(edge))
+    fg = ndimage.binary_opening(fg, iterations=1)
+    objs, n = ndimage.label(fg)
+    sizes = ndimage.sum(fg, objs, range(1, n + 1))
+    fg = objs == (int(np.argmax(sizes)) + 1)
+    fg = ndimage.binary_fill_holes(fg)
+    alpha = ndimage.gaussian_filter(fg.astype(float), 0.7)
+    rgba = np.dstack([a.clip(0, 255), (alpha * 255).clip(0, 255)]).astype(np.uint8)
+    ys, xs = np.where(fg)
+    sock = Image.fromarray(rgba, 'RGBA').crop((xs.min(), ys.min(), xs.max() + 1, ys.max() + 1))
+    return sock, tuple(int(v) for v in bg)
+
+
+def fit_centered(sock: Image.Image, canvas: int, height_frac: float) -> Image.Image:
+    """Calcetín centrado en un lienzo transparente, ocupando height_frac del alto."""
+    h = int(canvas * height_frac)
+    w = max(1, round(sock.width * h / sock.height))
+    if w > canvas * height_frac * 1.1:  # por si fuera muy ancho
+        w = int(canvas * height_frac * 1.1)
+        h = max(1, round(sock.height * w / sock.width))
+    out = Image.new('RGBA', (canvas, canvas), (0, 0, 0, 0))
+    out.paste(sock.resize((w, h), Image.LANCZOS), ((canvas - w) // 2, (canvas - h) // 2))
+    return out
+
+
+def write_adaptive_icons(icon: Image.Image, res_dir: Path):
+    """Ícono adaptativo (Android 8+), temático (13+) y logo de la pantalla de carga.
+
+    La zona segura de un ícono adaptativo es el círculo central de 66 dp sobre 108 dp,
+    así que el calcetín ocupa ~58% del lienzo.
+    """
+    sock, bg = icon_layers(icon)
+    for density, k in ADAPTIVE_SCALE.items():
+        d = res_dir / f'mipmap-{density}'
+        if d.exists():
+            fg = fit_centered(sock, round(108 * k), 0.58)
+            fg.save(d / 'ic_launcher_foreground.png', optimize=True)
+            mono = Image.new('RGBA', fg.size, (0, 0, 0, 0))
+            mono.putalpha(fg.getchannel('A'))
+            mono.save(d / 'ic_launcher_monochrome.png', optimize=True)
+        sd = res_dir / f'drawable-{density}'
+        sd.mkdir(exist_ok=True)
+        fit_centered(sock, round(160 * k), 0.9).save(sd / 'splash_logo.png', optimize=True)
+    (res_dir / 'values').mkdir(exist_ok=True)
+    hexbg = '#%02X%02X%02X' % bg
+    (res_dir / 'values' / 'colors.xml').write_text(
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        '<resources>\n'
+        f'    <color name="ic_launcher_background">{hexbg}</color>\n'
+        f'    <color name="splash_background">{hexbg}</color>\n'
+        '</resources>\n'
+    )
+    any_dir = res_dir / 'mipmap-anydpi-v26'
+    any_dir.mkdir(exist_ok=True)
+    xml = (
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n'
+        '    <background android:drawable="@color/ic_launcher_background"/>\n'
+        '    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>\n'
+        '    <monochrome android:drawable="@mipmap/ic_launcher_monochrome"/>\n'
+        '</adaptive-icon>\n'
+    )
+    (any_dir / 'ic_launcher.xml').write_text(xml)
+    (any_dir / 'ic_launcher_round.xml').write_text(xml)
+
+
 def is_magenta_corner(im: Image.Image) -> bool:
     """¿Las cuatro esquinas son magenta (fondo para recortar)?"""
     w, h = im.size
@@ -175,6 +259,7 @@ def main():
             icon = fill_corners(im).resize((512, 512), Image.LANCZOS)
             icon.save(out / f'{name}.png', optimize=True)
             write_launcher_icons(icon, Path('android/app/src/main/res'))
+            write_adaptive_icons(icon, Path('android/app/src/main/res'))
         elif name.startswith('store_'):
             print('omitido (gráfico de tienda):', f.name)
             continue
