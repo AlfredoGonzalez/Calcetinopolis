@@ -67,6 +67,18 @@ flutter:
     - assets/art/
     - assets/video/
 
+  fonts:
+    # Fredoka (SIL OFL 1.1, ver assets/fonts/OFL.txt): tipografía redondeada del juego.
+    - family: Fredoka
+      fonts:
+        - asset: assets/fonts/Fredoka.ttf
+        - asset: assets/fonts/Fredoka.ttf
+          weight: 500
+        - asset: assets/fonts/Fredoka.ttf
+          weight: 600
+        - asset: assets/fonts/Fredoka.ttf
+          weight: 700
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

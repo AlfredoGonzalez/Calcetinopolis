@@ -51,3 +51,7 @@ Estructura: `lib/app` (controlador), `lib/ui` (pantallas), `lib/core` (lógica p
 - El núcleo de economía es lógica pura, sin UI; la UI solo lee estado y llama acciones.
 - Todo valor de balance vive en `config/economy.json`, nunca en código.
 - Cada fórmula de las secciones 3.2 y 9.4 tiene tests.
+
+## Créditos
+
+- Tipografía **Fredoka** (SIL Open Font License 1.1): `assets/fonts/Fredoka.ttf`, licencia en `assets/fonts/OFL.txt`.

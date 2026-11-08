@@ -30,10 +30,7 @@ class SettingsPage extends StatelessWidget {
         final f = c.formatter;
         final sample = BigNum.parse('1.5e12');
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Ajustes'),
-            backgroundColor: Palette.blue,
-          ),
+          appBar: AppBar(title: const Text('Ajustes')),
           body: ListView(
             padding: const EdgeInsets.all(16),
             children: [
