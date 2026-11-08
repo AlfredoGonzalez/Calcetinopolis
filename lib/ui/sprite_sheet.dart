@@ -76,6 +76,7 @@ class _SpriteSheetState extends State<SpriteSheet>
             widget.asset,
             width: fw * widget.columns,
             height: fh * widget.rows,
+            fit: BoxFit.fill,
             filterQuality: FilterQuality.medium,
             errorBuilder: (_, _, _) => const SizedBox.shrink(),
           ),
