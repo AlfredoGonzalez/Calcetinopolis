@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../services/services.dart';
+import 'art.dart';
+import 'theme.dart';
 
 /// Servicios de PRUEBA para la versión web y los builds de desarrollo: ningún
 /// anuncio ni cobro es real. Muestran un diálogo para poder sentir el flujo.
@@ -60,11 +62,31 @@ class _TestAdDialogState extends State<_TestAdDialog> {
     final done = _left <= 0;
     return AlertDialog(
       title: const Text('Anuncio de prueba'),
-      content: Text(
-        done
-            ? 'Listo: ganaste la recompensa.'
-            : 'Aquí iría un anuncio real. Termina en $_left s…',
-        key: const Key('test-ad-text'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Art('icon_ui_anuncio', size: 64, fallback: Icons.play_circle),
+          const SizedBox(height: 10),
+          Text(
+            done
+                ? 'Listo: ganaste la recompensa.'
+                : 'Aquí iría un anuncio real. Termina en $_left s…',
+            key: const Key('test-ad-text'),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              minHeight: 10,
+              value: widget.seconds <= 0
+                  ? 1
+                  : (1 - _left / widget.seconds).clamp(0.0, 1.0),
+              color: Ui.teal,
+              backgroundColor: Ui.track,
+            ),
+          ),
+        ],
       ),
       actions: [
         TextButton(
@@ -111,9 +133,21 @@ class TestIapService implements IapService {
       context: ctx,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Compra de prueba'),
-        content: Text(
-          'No se cobra nada. Precio de referencia: ${priceOf(productId) ?? '?'}.',
-          key: const Key('test-iap-text'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Art(
+              'icon_ui_comprar',
+              size: 64,
+              fallback: Icons.shopping_bag,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'No se cobra nada. Precio de referencia: ${priceOf(productId) ?? '?'}.',
+              key: const Key('test-iap-text'),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
         actions: [
           TextButton(

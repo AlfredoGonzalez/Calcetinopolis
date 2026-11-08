@@ -334,20 +334,23 @@ class PrestigePage extends StatelessWidget {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Palette.cream,
         title: const Text('¿Centrifugar?'),
         content: const Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Se pierde:', style: TextStyle(fontWeight: FontWeight.bold)),
-            Text(
-              '• Dinero y todos los negocios\n• Managers\n• Upgrades de efectivo',
+            _LossGain(
+              title: 'Se pierde',
+              body: 'Dinero y todos los negocios, managers y upgrades de efectivo.',
+              color: Color(0xFFFFD9D2),
+              icon: Icons.restart_alt,
             ),
-            SizedBox(height: 12),
-            Text('Se conserva:', style: TextStyle(fontWeight: FontWeight.bold)),
-            Text(
-              '• Parejas Reunidas e Hilvanes\n• Mejoras de la tienda\n• Compras y estampados',
+            SizedBox(height: 10),
+            _LossGain(
+              title: 'Se conserva',
+              body: 'Parejas Reunidas e Hilvanes, mejoras de la tienda, compras y estampados.',
+              color: Ui.tealSoft,
+              icon: Icons.favorite,
             ),
           ],
         ),
@@ -493,6 +496,60 @@ class _ShopCard extends StatelessWidget {
                   ? () => c.buyShop(item.id)
                   : null,
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Un panel del diálogo de confirmar: qué se pierde y qué se conserva.
+class _LossGain extends StatelessWidget {
+  const _LossGain({
+    required this.title,
+    required this.body,
+    required this.color,
+    required this.icon,
+  });
+
+  final String title;
+  final String body;
+  final Color color;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 22),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  body,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -646,9 +703,8 @@ class _CentrifugeDialogState extends State<_CentrifugeDialog>
       behavior: HitTestBehavior.opaque,
       onTap: () => _anim.value = 1,
       child: Dialog(
-        backgroundColor: Palette.cream,
         child: SizedBox(
-          height: 340,
+          height: 380,
           child: AnimatedBuilder(
             animation: _anim,
             builder: (context, _) {
@@ -718,19 +774,54 @@ class _CentrifugeDialogState extends State<_CentrifugeDialog>
                   if (!done)
                     const Text(
                       'Centrifugando...  (toca para saltar)',
-                      style: TextStyle(fontSize: 12),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Ui.ink2,
+                      ),
                     ),
                   if (done) ...[
                     const Text(
                       '¡Se reencontraron!',
                       style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                    Text(
-                      '+${widget.pairsText} Parejas Reunidas',
-                      key: const Key('centrifuge-result'),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Ui.tealSoft,
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Art(
+                            'icon_pareja_reunida',
+                            size: 28,
+                            fallback: Icons.favorite,
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                '+${widget.pairsText} Parejas Reunidas',
+                                key: const Key('centrifuge-result'),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 12),
                     FilledButton(
