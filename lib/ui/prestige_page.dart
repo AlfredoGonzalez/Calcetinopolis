@@ -7,6 +7,7 @@ import '../core/big_num.dart';
 import '../core/config/economy_config.dart';
 import '../core/number_format.dart';
 import 'art.dart';
+import 'cutscene_player.dart';
 import 'mascot_burst.dart';
 import 'theme.dart';
 
@@ -170,6 +171,16 @@ class PrestigePage extends StatelessWidget {
     if (ok != true || !context.mounted) return;
     final got = await controller.centrifuge();
     if (!context.mounted || !got.isPositive) return;
+    // La primera vez, antes del resultado, se ve el reencuentro.
+    if (controller.shouldShowCutscene('reunion')) {
+      await showCutscene(
+        context,
+        Cutscene.reunion,
+        sound: controller.state.settings.sound,
+      );
+      await controller.markCutsceneSeen('reunion');
+      if (!context.mounted) return;
+    }
     await showCentrifugeAnimation(context, formatter.format(got));
   }
 }

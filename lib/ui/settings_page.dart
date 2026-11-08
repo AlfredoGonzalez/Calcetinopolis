@@ -7,6 +7,7 @@ import '../core/big_num.dart';
 import '../core/economy/offline.dart';
 import '../core/number_format.dart';
 import 'animation_preview.dart';
+import 'cutscene_player.dart';
 import 'offline_dialog.dart';
 import 'prestige_page.dart';
 import 'theme.dart';
@@ -118,6 +119,22 @@ class SettingsPage extends StatelessWidget {
                 subtitle: const Text('Borra todo el progreso'),
                 onTap: () => _reset(context),
               ),
+              const Divider(height: 32),
+              const Text(
+                'Escenas',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              for (final scene in Cutscene.values)
+                ListTile(
+                  key: Key('scene-${scene.id}'),
+                  leading: const Icon(Icons.movie_outlined),
+                  title: Text(scene.title),
+                  onTap: () => showCutscene(
+                    context,
+                    scene,
+                    sound: c.state.settings.sound,
+                  ),
+                ),
               if (c.testMode) ...[
                 const Divider(height: 32),
                 const Text(

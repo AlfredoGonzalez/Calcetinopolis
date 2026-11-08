@@ -105,10 +105,12 @@ class GameState {
     this.warpCount = 0,
     this.dailyAdDay,
     this.firstReturnDone = false,
+    Set<String>? cutscenesSeen,
     this.boostSeconds = 0,
   }) : money = money ?? BigNum.zero,
        lifetimeEarnings = lifetimeEarnings ?? BigNum.zero,
        upgrades = upgrades ?? <String>{},
+       cutscenesSeen = cutscenesSeen ?? <String>{},
        pairsClaimed = pairsClaimed ?? BigNum.zero,
        hilvanes = hilvanes ?? BigNum.zero,
        shopLevels = shopLevels ?? <String, int>{},
@@ -169,6 +171,9 @@ class GameState {
 
   /// Ya vivió su primer regreso (los anuncios no aparecen antes; spec 9.10).
   bool firstReturnDone;
+
+  /// Cutscenes ya vistas (`intro`, `reunion`, `welcome`).
+  final Set<String> cutscenesSeen;
   final PlayerSettings settings;
 
   /// Segundos restantes de boost por anuncio.
@@ -194,6 +199,7 @@ class GameState {
     'warpCount': warpCount,
     'dailyAdDay': dailyAdDay,
     'firstReturnDone': firstReturnDone,
+    'cutscenesSeen': cutscenesSeen.toList()..sort(),
     'settings': settings.toJson(),
     'boostSeconds': boostSeconds,
   };
@@ -242,6 +248,9 @@ class GameState {
       warpCount: ((j['warpCount'] as num?)?.toInt() ?? 0).clamp(0, 1 << 20),
       dailyAdDay: j['dailyAdDay'] as String?,
       firstReturnDone: j['firstReturnDone'] as bool? ?? false,
+      cutscenesSeen: {
+        for (final e in (j['cutscenesSeen'] as List?) ?? const []) e as String,
+      },
       settings: PlayerSettings.fromJson(j['settings'] as Map<String, dynamic>?),
       boostSeconds: boost.isNaN || boost < 0 ? 0 : boost,
     );
@@ -267,6 +276,7 @@ class GameState {
     warpCount: warpCount,
     dailyAdDay: dailyAdDay,
     firstReturnDone: firstReturnDone,
+    cutscenesSeen: {...cutscenesSeen},
     settings: settings.copy(),
     boostSeconds: boostSeconds,
   );

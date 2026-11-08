@@ -172,6 +172,28 @@ void main() {
       },
     );
 
+    test('migra una v4 a v5: la intro cuenta como vista', () {
+      String save(Map<String, dynamic> data) {
+        final d = jsonEncode(data);
+        return jsonEncode({'v': 4, 't': 0, 'h': SaveCodec.checksum(d), 'd': d});
+      }
+
+      final fresh = codec.decode(save({'money': '10'})).state;
+      expect(fresh.cutscenesSeen, {'intro'});
+      final veteran = codec
+          .decode(save({'money': '10', 'pairsClaimed': '5'}))
+          .state;
+      expect(veteran.cutscenesSeen, {'intro', 'reunion'});
+    });
+
+    test('las cutscenes vistas se guardan y se recuperan', () {
+      final st = GameState.initial(10)
+        ..cutscenesSeen.addAll(['welcome', 'intro']);
+      final back = codec.decode(codec.encode(st, DateTime.utc(2026))).state;
+      expect(back.cutscenesSeen, {'intro', 'welcome'});
+      expect(st.copy().cutscenesSeen, {'intro', 'welcome'});
+    });
+
     test('v0 llega hasta la versión actual encadenando migraciones', () {
       final d = jsonEncode({
         'money': '5',

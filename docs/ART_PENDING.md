@@ -4,13 +4,12 @@ Aquí solo está **lo que falta**. Lo ya entregado se quitó para no hacer ruido
 
 ## 1. Qué falta (resumen)
 
-La mascota (reposo, salto, celebra), el Centrifugado y los tres sprites de la mascota (idle, celebra, salto) ya están en el juego. Lo que queda es opcional:
+La mascota (reposo, salto, celebra), el Centrifugado, los tres sprites de la mascota (idle, celebra, salto) y las tres cutscenes ya están en el juego. Lo que queda es opcional:
 
 | # | Qué | Tipo | Dónde se usa | Prioridad |
 | --- | --- | --- | --- | --- |
-| 1 | Cutscenes (intro, primer reencuentro, bienvenida) | AutoSprite | Primera vez que abres el juego, primer Centrifugado, volver tras mucho tiempo | Media, opcional |
-| 2 | Sprites de los managers o de los negocios | AutoSprite | Mejoras y pantalla de Negocios | Baja |
-| 3 | Retoques de lo entregado | Regenerar | Ver sección 7 | Baja |
+| 1 | Sprites de los managers o de los negocios | AutoSprite | Mejoras y pantalla de Negocios | Baja |
+| 2 | Retoques de lo entregado | Regenerar | Ver sección 6 | Baja |
 
 Los prompts base (bloques A, B y C) siguen abajo por si regeneras algo.
 
@@ -52,33 +51,7 @@ Esto fue lo que funcionó para la mascota. Úsalo igual para cualquier otro pers
 - **Exporta** PNG transparente y súbelo a `assets/art/source/` como `spr_<nombre>.png`. Yo lo recorto, lo empaco y lo conecto.
 - Si el navegador conserva una hoja vieja, el archivo se publica con la cuadrícula en el nombre (`_4x4`, `_5x5`).
 
-## 6. Cutscenes en AutoSprite (punto 4, opcional)
-
-Si las haces, las integro como escenas cortas (se pueden saltar con un toque). Son tres, ordenadas por utilidad:
-
-| Cutscene | Cuándo sale | Duración | Para qué sirve |
-| --- | --- | --- | --- |
-| **Intro: "El calcetín que se quedó solo"** | Primera vez que abres el juego | 8 a 12 s | Cuenta la historia en una imagen: el calcetín pierde a su pareja en la lavadora y nace Calcetinópolis. Da el "por qué" antes del tutorial |
-| **Primer reencuentro** | El primer Centrifugado (tu primera Pareja) | 6 a 10 s | Es el momento más emotivo y solo ocurre una vez; hace que reiniciar se sienta como un premio y no como perder progreso |
-| **Bienvenida tras mucho tiempo** | Volver después de 4 h o más fuera | 4 a 6 s | La mascota recibe con las pelusas acumuladas; hace la recompensa offline más cálida |
-
-Prompts (inglés):
-
-```text
-Cutscene 1 (intro): Flat 2D cute children's storybook style with a subtle wool texture, same character and palette as the reference. A blue-cuffed sock and its matching partner (blue diamonds on the body) tumble together inside a washing machine drum; the partner sock is suddenly swept away through a small hole and disappears; the first sock is left alone, looks around with big sad eyes, then spots a tiny glowing lint puff and a sign of hope. Soft transitions, 3 to 4 short shots, no text.
-```
-
-```text
-Cutscene 2 (first reunion): Same style and characters. The lonely sock walks through a lavender spinning washing machine; from the other side its diamond-patterned partner appears; they see each other, run toward each other, hug, and a knitted lavender heart pops above them with white sparkles and confetti. Ends on both socks smiling side by side. 3 to 4 short shots, no text.
-```
-
-```text
-Cutscene 3 (welcome back): Same style. The protagonist sock sits happily next to a big pile of gray lint puffs and golden buttons under a clothesline, waves with one small oval hand, then hops joyfully. 2 short shots, no text.
-```
-
-Si el generador permite imágenes de arranque y de cierre, usa como primer cuadro `mascota_reposo` y como último `mascota_celebra`.
-
-## 7. Retoques de lo entregado (opcionales)
+## 6. Retoques de lo entregado (opcionales)
 
 - `store_feature_1024x500` (Google Play) llegó en 1024×765; hay que **regenerarlo en panorámico 1024×500** o recortarlo. No entra a la app. Prompt:
 

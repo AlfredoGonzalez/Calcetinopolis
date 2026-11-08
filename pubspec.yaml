@@ -37,6 +37,7 @@ dependencies:
   flame: ^1.38.2
   path_provider: ^2.1.6
   shared_preferences: ^2.5.6
+  video_player: ^2.14.1
 
 dev_dependencies:
   flutter_test:
@@ -48,6 +49,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  video_player_platform_interface: ^6.9.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -63,6 +65,7 @@ flutter:
   assets:
     - config/economy.json
     - assets/art/
+    - assets/video/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
