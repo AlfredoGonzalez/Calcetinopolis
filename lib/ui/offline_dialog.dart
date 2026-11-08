@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app/game_controller.dart';
+import '../core/economy/offline.dart';
 import '../core/number_format.dart';
 import 'art.dart';
 import 'theme.dart';
@@ -18,9 +19,10 @@ String formatDuration(double seconds) {
 Future<void> showOfflineDialog(
   BuildContext context,
   GameController c,
-  NumberFormatter f,
-) {
-  final r = c.pendingOffline;
+  NumberFormatter f, {
+  OfflineReport? preview,
+}) {
+  final r = preview ?? c.pendingOffline;
   if (r == null) return Future.value();
   return showDialog<void>(
     context: context,
@@ -54,7 +56,7 @@ Future<void> showOfflineDialog(
         ],
       ),
       actions: [
-        if (c.canDoubleOffline)
+        if (preview == null && c.canDoubleOffline)
           OutlinedButton(
             key: const Key('offline-x2'),
             onPressed: () async {
@@ -69,7 +71,7 @@ Future<void> showOfflineDialog(
           key: const Key('offline-claim'),
           onPressed: () async {
             Navigator.pop(ctx);
-            await c.claimOffline();
+            if (preview == null) await c.claimOffline();
           },
           child: const Text('Recoger'),
         ),
