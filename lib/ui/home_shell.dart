@@ -8,6 +8,7 @@ import 'settings_page.dart';
 import 'offline_dialog.dart';
 import 'prestige_page.dart';
 import 'shop_page.dart';
+import 'bottom_nav.dart';
 import 'cutscene_player.dart';
 import 'effects.dart';
 import 'mascot_burst.dart';
@@ -25,7 +26,10 @@ class HomeShell extends StatefulWidget {
 }
 
 class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
-  int _tab = 0;
+  /// Orden de la barra: Mejoras, Metas, Negocios, Centrifugado y Tienda.
+  static const _homeTab = 2;
+  static const _shopTab = 4;
+  int _tab = _homeTab;
   bool _dialogOpen = false;
 
   @override
@@ -120,16 +124,16 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       listenable: c,
       builder: (context, _) {
         final pages = <Widget>[
-          BusinessesPage(controller: c, formatter: widget.controller.formatter),
           UpgradesPage(controller: c, formatter: widget.controller.formatter),
-          PrestigePage(controller: c, formatter: widget.controller.formatter),
           GoalsPage(controller: c, formatter: c.formatter),
+          BusinessesPage(controller: c, formatter: widget.controller.formatter),
+          PrestigePage(controller: c, formatter: widget.controller.formatter),
           ShopPage(controller: c, formatter: c.formatter),
         ];
         return PopScope(
-          canPop: _tab == 0,
+          canPop: _tab == _homeTab,
           onPopInvokedWithResult: (didPop, _) {
-            if (!didPop) setState(() => _tab = 0);
+            if (!didPop) setState(() => _tab = _homeTab);
           },
           child: Scaffold(
             appBar: AppBar(
@@ -236,64 +240,41 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
               ],
             ),
             body: SafeArea(child: pages[_tab]),
-            bottomNavigationBar: NavigationBar(
-              selectedIndex: _tab,
-              onDestinationSelected: (i) {
+            bottomNavigationBar: AnimatedBottomNav(
+              selected: _tab,
+              onSelect: (i) {
                 setState(() => _tab = i);
-                if (i == 4) c.logIapView();
+                if (i == _shopTab) c.logIapView();
               },
-              destinations: [
-                const NavigationDestination(
-                  icon: Art(
-                    'icon_ui_negocios',
-                    size: 30,
-                    fallback: Icons.storefront,
-                  ),
-                  label: 'Negocios',
-                ),
-                NavigationDestination(
-                  icon: Badge(
-                    key: const Key('badge-mejoras'),
-                    isLabelVisible: c.hasAffordableUpgrade,
-                    smallSize: 8,
-                    backgroundColor: Palette.tomato,
-                    child: const Art(
-                      'icon_ui_mejoras',
-                      size: 30,
-                      fallback: Icons.arrow_circle_up,
-                    ),
-                  ),
+              tabs: [
+                NavTab(
                   label: 'Mejoras',
+                  art: 'icon_ui_mejoras',
+                  fallback: Icons.arrow_circle_up,
+                  badgeKey: const Key('badge-mejoras'),
+                  showBadge: c.hasAffordableUpgrade,
                 ),
-                const NavigationDestination(
-                  icon: Art(
-                    'icon_ui_centrifugado',
-                    size: 30,
-                    fallback: Icons.local_laundry_service,
-                  ),
-                  label: 'Centrifugado',
-                ),
-                NavigationDestination(
-                  icon: Badge(
-                    key: const Key('badge-metas'),
-                    isLabelVisible: c.hasGoalNotice,
-                    smallSize: 8,
-                    backgroundColor: Palette.tomato,
-                    child: const Art(
-                      'icon_ui_metas',
-                      size: 30,
-                      fallback: Icons.flag,
-                    ),
-                  ),
+                NavTab(
                   label: 'Metas',
+                  art: 'icon_ui_metas',
+                  fallback: Icons.flag,
+                  badgeKey: const Key('badge-metas'),
+                  showBadge: c.hasGoalNotice,
                 ),
-                const NavigationDestination(
-                  icon: Art(
-                    'icon_ui_tienda',
-                    size: 30,
-                    fallback: Icons.shopping_bag,
-                  ),
+                const NavTab(
+                  label: 'Negocios',
+                  art: 'icon_ui_negocios',
+                  fallback: Icons.storefront,
+                ),
+                const NavTab(
+                  label: 'Centrifugado',
+                  art: 'icon_ui_centrifugado',
+                  fallback: Icons.local_laundry_service,
+                ),
+                const NavTab(
                   label: 'Tienda',
+                  art: 'icon_ui_tienda',
+                  fallback: Icons.shopping_bag,
                 ),
               ],
             ),
