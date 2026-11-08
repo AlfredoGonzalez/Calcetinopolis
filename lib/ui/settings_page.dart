@@ -4,7 +4,11 @@ import 'package:flutter/services.dart';
 import '../app/game_controller.dart';
 import '../app/save_manager.dart';
 import '../core/big_num.dart';
+import '../core/economy/offline.dart';
 import '../core/number_format.dart';
+import 'animation_preview.dart';
+import 'offline_dialog.dart';
+import 'prestige_page.dart';
 import 'theme.dart';
 
 const kAppVersion = '0.5.0';
@@ -114,6 +118,45 @@ class SettingsPage extends StatelessWidget {
                 subtitle: const Text('Borra todo el progreso'),
                 onTap: () => _reset(context),
               ),
+              if (c.testMode) ...[
+                const Divider(height: 32),
+                const Text(
+                  'Probar animaciones',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const Text(
+                  'Solo en modo de prueba. No cambian tu partida.',
+                  style: TextStyle(fontSize: 12),
+                ),
+                ListTile(
+                  key: const Key('preview-centrifuge'),
+                  leading: const Icon(Icons.local_laundry_service),
+                  title: const Text('Centrifugado'),
+                  onTap: () => showCentrifugeAnimation(context, '1.2K'),
+                ),
+                ListTile(
+                  key: const Key('preview-offline'),
+                  leading: const Icon(Icons.bedtime),
+                  title: const Text('Bienvenida offline'),
+                  onTap: () => showOfflineDialog(
+                    context,
+                    c,
+                    f,
+                    preview: OfflineReport(
+                      gain: BigNum.parse('2.5e6'),
+                      secondsAway: 3 * 3600,
+                      secondsCounted: 3 * 3600,
+                      clockWentBack: false,
+                    ),
+                  ),
+                ),
+                ListTile(
+                  key: const Key('preview-mascot'),
+                  leading: const Icon(Icons.emoji_emotions),
+                  title: const Text('Mascota (reposo, salto y celebra)'),
+                  onTap: () => showMascotPreview(context),
+                ),
+              ],
               const Divider(height: 32),
               const ListTile(
                 leading: Icon(Icons.info_outline),
