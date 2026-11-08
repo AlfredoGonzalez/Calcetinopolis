@@ -11,6 +11,7 @@ import 'services/file_save_service.dart';
 import 'services/prefs_save_service.dart';
 import 'services/services.dart';
 import 'ui/home_shell.dart';
+import 'ui/studio_splash.dart';
 import 'ui/test_services.dart';
 import 'ui/theme.dart';
 
@@ -58,10 +59,14 @@ class CalcetinopolisApp extends StatelessWidget {
     super.key,
     required this.controller,
     this.navigatorKey,
+    this.showSplash = true,
   });
 
   final GameController controller;
   final GlobalKey<NavigatorState>? navigatorKey;
+
+  /// Pantalla del estudio de 3 s antes del juego.
+  final bool showSplash;
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +83,9 @@ class CalcetinopolisApp extends StatelessWidget {
           ),
           child: child!,
         ),
-        home: HomeShell(controller: controller),
+        home: showSplash
+            ? StudioSplash(child: HomeShell(controller: controller))
+            : HomeShell(controller: controller),
       ),
     );
   }
