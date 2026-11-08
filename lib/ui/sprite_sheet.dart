@@ -46,6 +46,19 @@ class _SpriteSheetState extends State<SpriteSheet>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Con "reducir animaciones" activado se queda en el primer cuadro.
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _anim
+        ..stop()
+        ..value = 0;
+    } else if (!_anim.isAnimating) {
+      _anim.repeat();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final fw = widget.frameSize.width * widget.scale;
     final fh = widget.frameSize.height * widget.scale;
