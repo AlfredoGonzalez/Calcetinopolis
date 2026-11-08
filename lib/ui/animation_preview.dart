@@ -55,7 +55,7 @@ class _MascotPreviewState extends State<_MascotPreview>
               const Text('Sprites (idle, 16 cuadros)'),
               const SizedBox(height: 4),
               const SpriteSheet(
-                asset: 'assets/art/spr_mascota_idle.png',
+                asset: 'assets/art/spr_mascota_idle_4x4.png',
                 frameSize: Size(108, 157),
                 columns: 7,
                 rows: 7,

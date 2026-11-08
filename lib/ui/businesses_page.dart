@@ -357,7 +357,7 @@ class _TutorialBanner extends StatelessWidget {
       child: Row(
         children: [
           const SpriteSheet(
-            asset: 'assets/art/spr_mascota_idle.png',
+            asset: 'assets/art/spr_mascota_idle_4x4.png',
             frameSize: Size(209, 309),
             columns: 4,
             rows: 4,
