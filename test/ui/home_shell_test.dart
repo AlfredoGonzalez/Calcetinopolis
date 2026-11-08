@@ -352,9 +352,14 @@ void main() {
       t,
     ) async {
       await openTab(t);
+      await t.scrollUntilVisible(
+        find.byKey(const Key('shop-detergente')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(
         t
-            .widget<FilledButton>(find.byKey(const Key('shop-detergente')))
+            .widget<ChunkyButton>(find.byKey(const Key('shop-detergente')))
             .onPressed,
         isNull,
       );
