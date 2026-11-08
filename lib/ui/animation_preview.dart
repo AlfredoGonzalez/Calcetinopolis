@@ -26,6 +26,8 @@ class _MascotPreviewState extends State<_MascotPreview>
   static const _poses = ['mascota_reposo', 'mascota_salto', 'mascota_celebra'];
   static const _labels = ['Reposo', 'Salto', 'Celebra'];
 
+  int _replay = 0;
+
   late final AnimationController _anim = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1800),
@@ -61,6 +63,24 @@ class _MascotPreviewState extends State<_MascotPreview>
                 rows: 7,
                 fps: 12,
                 scale: 1.1,
+              ),
+              const Divider(height: 24),
+              const Text('Celebración (sprites, toca para repetir)'),
+              const SizedBox(height: 4),
+              GestureDetector(
+                key: const Key('replay-celebrate'),
+                onTap: () => setState(() => _replay++),
+                child: SpriteSheet(
+                  key: ValueKey(_replay),
+                  asset: 'assets/art/spr_mascota_celebra_5x5.png',
+                  frameSize: const Size(336, 385),
+                  columns: 5,
+                  rows: 5,
+                  frames: 21,
+                  fps: 10,
+                  scale: 0.5,
+                  loop: false,
+                ),
               ),
               const Divider(height: 24),
               const Text('Una imagen + rebote en código'),

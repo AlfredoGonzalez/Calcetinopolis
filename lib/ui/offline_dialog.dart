@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../app/game_controller.dart';
 import '../core/economy/offline.dart';
 import '../core/number_format.dart';
-import 'art.dart';
+import 'sprite_sheet.dart';
 import 'theme.dart';
 
 String formatDuration(double seconds) {
@@ -34,10 +34,15 @@ Future<void> showOfflineDialog(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Center(
-            child: Art(
-              'mascota_celebra',
-              size: 96,
-              fallback: Icons.celebration,
+            child: SpriteSheet(
+              asset: 'assets/art/spr_mascota_celebra_5x5.png',
+              frameSize: Size(336, 385),
+              columns: 5,
+              rows: 5,
+              frames: 21,
+              fps: 10,
+              scale: 0.4,
+              loop: false,
             ),
           ),
           const SizedBox(height: 8),
