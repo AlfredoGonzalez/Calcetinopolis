@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../app/game_controller.dart';
@@ -290,7 +292,7 @@ class _CentrifugeDialogState extends State<_CentrifugeDialog>
       child: Dialog(
         backgroundColor: Palette.cream,
         child: SizedBox(
-          height: 320,
+          height: 340,
           child: AnimatedBuilder(
             animation: _anim,
             builder: (context, _) {
@@ -303,34 +305,56 @@ class _CentrifugeDialogState extends State<_CentrifugeDialog>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SizedBox(
-                    height: 150,
+                    height: 160,
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        Transform.rotate(
-                          angle: t * 12.5,
-                          child: const Icon(
-                            Icons.local_laundry_service,
-                            size: 110,
-                            color: Palette.blue,
+                        // La lavadora tiembla mientras centrifuga.
+                        Transform.translate(
+                          offset: Offset(done ? 0 : math.sin(t * 90) * 2.5, 0),
+                          child: const Art(
+                            'anim_centrifugado_lavadora',
+                            size: 150,
+                            fallback: Icons.local_laundry_service,
                           ),
                         ),
                         Transform.translate(
-                          offset: Offset(-90 * (1 - meet), 0),
-                          child: const Text(
-                            '🧦',
-                            style: TextStyle(fontSize: 34),
+                          offset: Offset(-95 * (1 - meet), 12),
+                          child: const Art(
+                            'anim_centrifugado_calcetin_izq',
+                            size: 80,
+                            fallbackName: 'icon_pareja_reunida',
                           ),
                         ),
                         Transform.translate(
-                          offset: Offset(90 * (1 - meet), 0),
-                          child: const Text(
-                            '🧦',
-                            style: TextStyle(fontSize: 34),
+                          offset: Offset(95 * (1 - meet), 12),
+                          // El arte mira hacia la derecha: se voltea para que
+                          // los dos calcetines se miren al encontrarse.
+                          child: Transform.flip(
+                            flipX: true,
+                            child: const Art(
+                              'anim_centrifugado_calcetin_der',
+                              size: 80,
+                              fallbackName: 'icon_pareja_reunida',
+                            ),
                           ),
                         ),
                         if (done)
-                          const Text('💜', style: TextStyle(fontSize: 40)),
+                          Transform.translate(
+                            offset: const Offset(0, -62),
+                            child: TweenAnimationBuilder<double>(
+                              tween: Tween(begin: 0, end: 1),
+                              duration: const Duration(milliseconds: 450),
+                              curve: Curves.elasticOut,
+                              builder: (_, v, child) =>
+                                  Transform.scale(scale: v, child: child),
+                              child: const Art(
+                                'anim_centrifugado_corazon',
+                                size: 56,
+                                fallback: Icons.favorite,
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),

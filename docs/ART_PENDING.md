@@ -4,26 +4,23 @@ Aquí solo está **lo que falta**. Lo ya entregado se quitó para no hacer ruido
 
 ## 1. Qué falta (resumen)
 
+Las 7 imágenes de la mascota y del Centrifugado ya llegaron y están en el juego. Lo que queda es opcional:
+
 | # | Qué | Tipo | Dónde se usa | Prioridad |
 | --- | --- | --- | --- | --- |
-| 1 | `mascota_reposo`, `mascota_salto`, `mascota_celebra` | 3 imágenes | Tutorial, Metas, Tienda, bienvenida offline, resultado del Centrifugado | Alta |
-| 2 | `anim_centrifugado_lavadora`, `_calcetin_izq`, `_calcetin_der`, `_corazon` | 4 imágenes | Animación del reinicio (Centrifugado) | Alta |
-| 3 | Animación de la mascota (idle, salto, celebra) | Sprites (AutoSprite) | Los mismos lugares que la mascota | Media, opcional |
-| 4 | Cutscenes (intro, primer reencuentro, bienvenida) | AutoSprite | Primera vez que abres el juego, primer Centrifugado, volver tras mucho tiempo | Media, opcional |
-| 5 | Retoques de lo entregado | Regenerar | Ver sección 5 | Baja |
+| 1 | Animación de la mascota (idle, salto, celebra) | Sprites (AutoSprite) | Tutorial, Metas, Tienda, bienvenida offline | Media, opcional |
+| 2 | Cutscenes (intro, primer reencuentro, bienvenida) | AutoSprite | Primera vez que abres el juego, primer Centrifugado, volver tras mucho tiempo | Media, opcional |
+| 3 | Retoques de lo entregado | Regenerar | Ver sección 7 | Baja |
 
-**Orden recomendado:** primero el punto 1 y 2 (son siete imágenes; con eso ya puedo dejar listo el Centrifugado y la mascota). Los puntos 3 y 4 son un extra: el juego funciona y se ve bien sin ellos.
+Los prompts base (bloques A, B y C) siguen abajo por si regeneras algo.
 
-## 2. Cómo generar las imágenes (puntos 1 y 2)
+## 2. Cómo generar las imágenes
 
 - 1024×1024, un solo objeto, centrado, ~10% de margen.
 - **Fondo magenta liso #FF00FF**, sin degradado, sin marco, sin esquinas redondeadas, sin sombra de suelo.
 - Sin texto ni números.
-- Adjunta de referencia `assets/art/source/biz_01_tendedero.jpg` (calcetín base) en cada generación. Si el modelo cambia de estilo, vuelve a adjuntarla y repite el bloque A.
-- Genera cada tanda seguida (las 3 poses juntas, las 4 piezas juntas) para que el estilo no cambie.
-- Nombra el archivo exactamente como en la tabla y súbelo a `assets/art/source/` como JPG.
-
-Cada prompt = **A (estilo) + `Asset:` + C (fondo)**. La mascota lleva además **B (calcetín)**.
+- Adjunta de referencia `assets/art/source/mascota_reposo.webp` (calcetín base). Si el modelo cambia de estilo, vuelve a adjuntarla y repite el bloque A.
+- Se acepta JPG o WebP. Nombra el archivo como en las tablas y súbelo a `assets/art/source/`.
 
 ### Bloque A: estilo (al inicio de todos)
 
@@ -31,7 +28,7 @@ Cada prompt = **A (estilo) + `Asset:` + C (fondo)**. La mascota lleva además **
 Flat 2D illustration, cute children's storybook style, with a subtle knitted wool texture. Warm brown outline (#5A3E36), thick and soft, never black. Flat single-tone shading, light coming from the top left. Limited palette: cream #FFF4E0, pink #FF9EB5, blue #7EC8E3, mint #A8E6CF, butter yellow #FFE29A, soft orange #FFB36B, lavender #C3A6E8, tomato red #E85D5D, gold #F2B93B. Same style as the attached reference image. Very readable silhouette at small sizes.
 ```
 
-### Bloque B: el calcetín (solo mascota)
+### Bloque B: el calcetín (si lleva al personaje)
 
 ```text
 Character: a sock with a blue (#7EC8E3) cuff on top, cream body, rounded heel and toe, big wide-set eyes with a highlight, a small mouth, pink cheeks and one loose thread at the toe. No legs.
@@ -43,61 +40,11 @@ Character: a sock with a blue (#7EC8E3) cuff on top, cream body, rounded heel an
 A single object, centered, front view, filling about 80% of the frame with even margins. Solid flat magenta background #FF00FF, no gradient, no frame, no rounded corners, no ground shadow, no reflections or glow on the background. No text, no letters, no numbers, no watermarks, no characters from other brands. Square format 1024x1024.
 ```
 
-## 3. Prompts: mascota (punto 1)
-
-Usa A + B + C. Pide el mismo personaje en las tres poses, con la referencia adjunta.
-
-**`mascota_reposo`**
-
-```text
-Asset: the protagonist sock standing upright, relaxed, with a calm smile and eyes open; the loose thread at the toe hangs straight down. Full body, front view.
-```
-
-**`mascota_salto`**
-
-```text
-Asset: the same sock jumping, stretched upward (exaggerated squash and stretch), eyes wide open and mouth in a happy "o" shape; the loose thread flutters downward; a few soft motion lines below. Full body.
-```
-
-**`mascota_celebra`**
-
-```text
-Asset: the same sock with two small oval hands raised, eyes closed in happy arcs, mouth open in a big smile and stronger pink cheeks; small confetti in the palette colors floating around. Full body.
-```
-
-## 4. Prompts: Centrifugado (punto 2)
-
-Usa A + C (sin B; los calcetines ya describen su diseño). Yo los animo en código: giro, encuentro y corazón.
-
-**`anim_centrifugado_lavadora`**
-
-```text
-Asset: a front-loading washing machine seen from the front, cream body, orange knob, a large round door with translucent light-blue glass and, inside, a lavender #C3A6E8 spiral suggesting the spinning drum. No socks inside.
-```
-
-**`anim_centrifugado_calcetin_izq`**
-
-```text
-Asset: a single sock in side profile facing right, blue cuff, a circular yellow patch on the toe, big eyes with a highlight and a hopeful expression. Full body.
-```
-
-**`anim_centrifugado_calcetin_der`**
-
-```text
-Asset: the matching partner sock of the previous one, in side profile facing left, same blue cuff but with blue diamonds on the body, big eyes with a highlight and a joyful expression. Full body.
-```
-
-**`anim_centrifugado_corazon`**
-
-```text
-Asset: a knitted wool heart in lavender #C3A6E8 with a brown outline and two white four-pointed sparkles. Icon style.
-```
-
 ## 5. Animación con sprites en AutoSprite (punto 3, opcional)
 
 **Qué reemplaza:** hoy muevo la mascota en código (estirar, rebotar, girar) a partir de una sola imagen. Eso ya se ve bien. Con sprites tendríamos movimiento "dibujado" (parpadeo, el hilo ondeando, brazos que aparecen), que se nota más.
 
-**Cómo:** primero genera las 3 imágenes de la mascota (sección 3) y usa `mascota_reposo` como personaje base en AutoSprite. Pide estas tres animaciones:
+**Cómo:** usa `mascota_reposo` como personaje base en AutoSprite. Pide estas tres animaciones:
 
 | Animación | Cuadros | Bucle | Dónde |
 | --- | --- | --- | --- |
@@ -174,6 +121,9 @@ Flat 2D illustration, cute children's storybook style with a subtle knitted wool
 - `icon_ui_negocios` llegó en 1024×559; conviene regenerarlo cuadrado 1024×1024 (mismo prompt, mismo estilo de ícono).
 - `biz_10_portal` trae una placa gris que los demás negocios no tienen; regenerarlo con "no plaque, no background panel".
 - `mgr_10_gran_centrifugadora`: el brillo de la corona se pierde un poco al quitar el fondo; regenerar con la corona sin halo luminoso sobre el fondo.
+
+- `anim_centrifugado_calcetin_der` mira hacia la **derecha** igual que el izquierdo (el prompt pedía que mirara a la izquierda) y no trae los rombos pedidos, solo parches cosidos. Lo volteo en código y sirve, pero si quieres los rombos, regenerarlo. También tiene un detalle en la boca que parece un aparato dental.
+- `mascota_*` y `anim_centrifugado_calcetin_*` llevan un parche amarillo en la punta: es un detalle distinto al calcetín de los negocios. Si quieres un solo diseño, hay que elegir uno.
 
 ## Lo que hago yo sin arte nuevo
 
