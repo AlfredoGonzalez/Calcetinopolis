@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../app/game_controller.dart';
 import '../core/number_format.dart';
 import 'art.dart';
+import 'mascot_burst.dart';
 import 'theme.dart';
 
 /// Metas guiadas y regalo diario (spec 9.12).
@@ -121,6 +122,7 @@ class _DailyCard extends StatelessWidget {
                     ? () {
                         final r = c.claimDaily();
                         if (r != null) {
+                          playMascot(context, MascotMove.celebrate);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
@@ -218,7 +220,12 @@ class _GoalTile extends StatelessWidget {
             else
               FilledButton(
                 key: Key('claim-${g.id}'),
-                onPressed: met ? () => c.claimGoal(g.id) : null,
+                onPressed: met
+                    ? () {
+                        c.claimGoal(g.id);
+                        playMascot(context, MascotMove.celebrate);
+                      }
+                    : null,
                 child: const Text('Reclamar'),
               ),
           ],

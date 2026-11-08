@@ -8,6 +8,7 @@ import 'settings_page.dart';
 import 'offline_dialog.dart';
 import 'prestige_page.dart';
 import 'shop_page.dart';
+import 'mascot_burst.dart';
 import 'theme.dart';
 import 'upgrades_page.dart';
 
@@ -30,6 +31,8 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     widget.controller.addListener(_maybeShowOffline);
+    _lastTutorial = widget.controller.tutorialStep;
+    widget.controller.addListener(_tutorialMascot);
     WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowOffline());
   }
 
@@ -37,6 +40,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     widget.controller.removeListener(_maybeShowOffline);
+    widget.controller.removeListener(_tutorialMascot);
     super.dispose();
   }
 
@@ -47,6 +51,21 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       widget.controller.onPaused();
     } else if (state == AppLifecycleState.resumed) {
       widget.controller.onResumed();
+    }
+  }
+
+  int? _lastTutorial;
+
+  /// La mascota salta al avanzar un paso del tutorial y celebra al terminar.
+  void _tutorialMascot() {
+    final step = widget.controller.tutorialStep;
+    final last = _lastTutorial;
+    _lastTutorial = step;
+    if (!mounted || last == null || step == last) return;
+    if (step != null && step > last) {
+      playMascot(context, MascotMove.jump);
+    } else if (step == null && last == 2) {
+      playMascot(context, MascotMove.celebrate);
     }
   }
 

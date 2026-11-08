@@ -386,6 +386,9 @@ void main() {
       await t.pump();
       expect(c.state.money > money, isTrue);
       expect(find.text('Cobrada'), findsOneWidget);
+      expect(find.byKey(const Key('mascot-burst')), findsOneWidget);
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('mascot-burst')), findsNothing);
     });
 
     testWidgets('regalo diario: recoger y volver mañana', (t) async {
@@ -422,6 +425,35 @@ void main() {
       await t.tap(find.byKey(const Key('tutorial-skip')));
       await t.pump();
       expect(find.byKey(const Key('tutorial')), findsNothing);
+    });
+
+    testWidgets('la mascota salta al avanzar un paso y se va sola', (t) async {
+      await pumpApp(t);
+      expect(find.byKey(const Key('mascot-burst')), findsNothing);
+      c.tap(0);
+      c.advance(1);
+      await t.pump();
+      expect(find.byKey(const Key('mascot-burst')), findsOneWidget);
+      await t.pump(const Duration(seconds: 5));
+      expect(find.byKey(const Key('mascot-burst')), findsNothing);
+    });
+
+    testWidgets('sin animaciones no aparece la mascota', (t) async {
+      c = GameController(Economy(config));
+      await t.pumpWidget(
+        MaterialApp(
+          theme: buildTheme(),
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: child!,
+          ),
+          home: HomeShell(controller: c),
+        ),
+      );
+      c.tap(0);
+      c.advance(1);
+      await t.pump();
+      expect(find.byKey(const Key('mascot-burst')), findsNothing);
     });
 
     testWidgets('el texto cambia con el progreso', (t) async {

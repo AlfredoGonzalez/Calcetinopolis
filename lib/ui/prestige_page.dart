@@ -7,6 +7,7 @@ import '../core/big_num.dart';
 import '../core/config/economy_config.dart';
 import '../core/number_format.dart';
 import 'art.dart';
+import 'mascot_burst.dart';
 import 'theme.dart';
 
 /// Pantalla de Centrifugado: antes/después y tienda de Hilvanes (spec 9.12).
@@ -276,6 +277,21 @@ class _CentrifugeDialogState extends State<_CentrifugeDialog>
     vsync: this,
     duration: const Duration(milliseconds: 3500),
   )..forward();
+
+  bool _celebrated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _anim.addListener(() {
+      if (_anim.value >= 1 && !_celebrated) {
+        _celebrated = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) playMascot(context, MascotMove.celebrate);
+        });
+      }
+    });
+  }
 
   @override
   void dispose() {
