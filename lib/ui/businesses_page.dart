@@ -56,18 +56,7 @@ class BusinessesPage extends StatelessWidget {
         _TutorialBanner(controller: c),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: SegmentedButton<BuyAmount>(
-            showSelectedIcon: false,
-            segments: [
-              for (final e in _amountLabels.entries)
-                ButtonSegment(
-                  value: e.key,
-                  label: Text(e.value, key: Key('amount-${e.key.name}')),
-                ),
-            ],
-            selected: {c.amount},
-            onSelectionChanged: (s) => c.setAmount(s.first),
-          ),
+          child: _AmountPicker(selected: c.amount, onPick: c.setAmount),
         ),
         Expanded(
           child: ListView.builder(
@@ -103,34 +92,66 @@ class _LockedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cfg = controller.economy.config.businesses[index];
-    return Card(
-      color: Palette.lint,
-      child: ListTile(
-        leading: SizedBox(
-          width: 56,
-          height: 56,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // Silueta del negocio: se ve qué viene, pero no cuál es.
-              ColorFiltered(
-                key: Key('silhouette-$index'),
-                colorFilter: const ColorFilter.mode(
-                  Color(0xFF9A8F88),
-                  BlendMode.srcATop,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Ui.bg2,
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: const [BoxShadow(color: Ui.disabled, offset: Offset(0, 4))],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              color: Ui.disabled,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Silueta del negocio: se ve qué viene, pero no cuál es.
+                ColorFiltered(
+                  key: Key('silhouette-$index'),
+                  colorFilter: const ColorFilter.mode(
+                    Color(0xFF9A8F88),
+                    BlendMode.srcATop,
+                  ),
+                  child: Art(cfg.art, size: 46),
                 ),
-                child: Art(cfg.art, size: 52),
+                const Positioned(
+                  right: 3,
+                  bottom: 3,
+                  child: Icon(Icons.lock, size: 18, color: Ui.disabledInk),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '???',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                  color: Ui.disabledInk,
+                ),
               ),
-              const Positioned(
-                right: 0,
-                bottom: 0,
-                child: Icon(Icons.lock, size: 20, color: Palette.outline),
+              Text(
+                'Cuesta ${formatter.format(cfg.baseCost)}',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Ui.disabledInk,
+                ),
               ),
             ],
           ),
-        ),
-        title: const Text('???'),
-        subtitle: Text('Cuesta ${formatter.format(cfg.baseCost)}'),
+        ],
       ),
     );
   }
@@ -166,113 +187,199 @@ class BusinessCard extends StatelessWidget {
         : cycle;
 
     final income = owned ? eco.incomePerCycle(c.state, index) : cfg.baseIncome;
-
     final level = eco.config.thresholds.where((t) => b.owned >= t).length;
+    final accent = Ui.accent(index);
 
     return ThresholdFx(
       level: level,
-      child: Card(
-        color: Colors.white,
+      child: Container(
         margin: const EdgeInsets.only(bottom: 10),
-        child: InkWell(
-          key: Key('card-$index'),
-          borderRadius: BorderRadius.circular(12),
-          onTap: owned ? () => c.tap(index) : null,
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    WorkingBob(
-                      active: owned && !fast && (b.running || b.hasManager),
-                      progress: b.progress,
-                      child: Art(cfg.art, size: 64, fallback: Icons.store),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(color: Ui.soft(accent), offset: const Offset(0, 4)),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(22),
+          child: InkWell(
+            key: Key('card-$index'),
+            borderRadius: BorderRadius.circular(22),
+            onTap: owned ? () => c.tap(index) : null,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            width: 62,
+                            height: 62,
+                            decoration: BoxDecoration(
+                              color: Ui.soft(accent).withValues(alpha: 0.55),
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            alignment: Alignment.center,
+                            child: WorkingBob(
+                              active:
+                                  owned && !fast && (b.running || b.hasManager),
+                              progress: b.progress,
+                              child: Art(
+                                cfg.art,
+                                size: 54,
+                                fallback: Icons.store,
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            right: -8,
+                            top: -8,
+                            child: Container(
+                              constraints: const BoxConstraints(minWidth: 26),
+                              height: 26,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                              ),
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: Ui.ink,
+                                borderRadius: BorderRadius.circular(13),
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Text(
+                                'x${b.owned}',
+                                key: Key('owned-$index'),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              cfg.name,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                                height: 1.15,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: LinearProgressIndicator(
+                                minHeight: 12,
+                                value: fast ? 1 : (owned ? b.progress : 0),
+                                color: accent,
+                                backgroundColor: Ui.track,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    fast
+                                        ? '${formatter.format(eco.incomePerSecond(c.state, index))}/s'
+                                        : '${formatter.format(income)} por ciclo',
+                                    key: Key('income-$index'),
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: Ui.ink2,
+                                    ),
+                                  ),
+                                ),
+                                if (!fast && owned)
+                                  Text(
+                                    '${remaining.toStringAsFixed(1)} s',
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: Ui.ink2,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (toNext != null && owned)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
                       child: Text(
-                        cfg.name,
+                        'Faltan $toNext para el doble de velocidad',
                         style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Ui.ink2,
                         ),
                       ),
                     ),
-                    Text(
-                      'x${b.owned}',
-                      key: Key('owned-$index'),
-                      style: const TextStyle(fontSize: 18),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: LinearProgressIndicator(
-                    minHeight: 16,
-                    value: fast ? 1 : (owned ? b.progress : 0),
-                    color: Palette.blue,
-                    backgroundColor: Palette.lint,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      fast
-                          ? '${formatter.format(eco.incomePerSecond(c.state, index))}/s'
-                          : '${formatter.format(income)} por ciclo',
-                      key: Key('income-$index'),
-                    ),
-                    if (!fast && owned)
-                      Text('${remaining.toStringAsFixed(1)} s'),
-                  ],
-                ),
-                if (toNext != null && owned)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      'Faltan $toNext para el doble de velocidad',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _BuyButton(
-                        key: Key('buy-$index'),
-                        enabled: canBuy,
-                        label: 'Comprar ${c.unitsFor(index)}',
-                        detail: canBuy
-                            ? formatter.format(c.costFor(index))
-                            : 'Faltan ${formatter.format(c.missing(index))}',
-                        onTap: () => c.buy(index),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    if (owned && !b.hasManager)
-                      OutlinedButton(
-                        key: Key('manager-$index'),
-                        onPressed: cfg.manager.cost <= c.state.money
-                            ? () => c.buyManager(index)
-                            : null,
-                        child: Text(
-                          'Manager\n${formatter.format(cfg.manager.cost)}',
-                          textAlign: TextAlign.center,
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _BuyButton(
+                          key: Key('buy-$index'),
+                          enabled: canBuy,
+                          label: 'Comprar ${c.unitsFor(index)}',
+                          detail: canBuy
+                              ? formatter.format(c.costFor(index))
+                              : 'Faltan ${formatter.format(c.missing(index))}',
+                          onTap: () => c.buy(index),
                         ),
-                      )
-                    else if (b.hasManager)
-                      const Chip(
-                        label: Text('Manager ✓'),
-                        backgroundColor: Palette.mint,
                       ),
-                  ],
-                ),
-              ],
+                      const SizedBox(width: 8),
+                      if (owned && !b.hasManager)
+                        _ManagerButton(
+                          key: Key('manager-$index'),
+                          enabled: cfg.manager.cost <= c.state.money,
+                          cost: formatter.format(cfg.manager.cost),
+                          onTap: () => c.buyManager(index),
+                        )
+                      else if (b.hasManager)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Ui.tealSoft,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Text(
+                            'Manager ✓',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -315,9 +422,9 @@ class _BuyButtonState extends State<_BuyButton> {
 
   @override
   Widget build(BuildContext context) {
-    final bg = widget.enabled ? Palette.tomato : Palette.lint;
+    final on = widget.enabled;
     return GestureDetector(
-      onLongPressStart: widget.enabled
+      onLongPressStart: on
           ? (_) {
               widget.onTap();
               _burst = Timer.periodic(
@@ -328,37 +435,137 @@ class _BuyButtonState extends State<_BuyButton> {
           : null,
       onLongPressEnd: (_) => _stop(),
       onLongPressCancel: _stop,
-      child: Material(
-        color: bg,
-        borderRadius: BorderRadius.circular(10),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(10),
-          onTap: widget.enabled ? widget.onTap : null,
-          child: Container(
-            constraints: const BoxConstraints(minHeight: 48),
-            alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  widget.label,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: widget.enabled ? Colors.white : Palette.outline,
+      child: Container(
+        decoration: BoxDecoration(
+          color: on ? Ui.teal : Ui.disabled,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: on ? Ui.tealEdge : Ui.disabledInk.withValues(alpha: 0.5),
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: on ? widget.onTap : null,
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 54),
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    widget.label,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: on ? Ui.ink : Ui.disabledInk,
+                    ),
                   ),
-                ),
-                Text(
-                  widget.detail,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: widget.enabled ? Colors.white : Palette.outline,
+                  Text(
+                    widget.detail,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: on ? Ui.ink : Ui.disabledInk,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Botón secundario para contratar al manager.
+class _ManagerButton extends StatelessWidget {
+  const _ManagerButton({
+    super.key,
+    required this.enabled,
+    required this.cost,
+    required this.onTap,
+  });
+
+  final bool enabled;
+  final String cost;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(
+      onPressed: enabled ? onTap : null,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: Ui.ink,
+        disabledForegroundColor: Ui.disabledInk,
+        side: BorderSide(color: enabled ? Ui.orange : Ui.disabled, width: 2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        minimumSize: const Size(92, 58),
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+      ),
+      child: Text(
+        'Manager\n$cost',
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+      ),
+    );
+  }
+}
+
+/// Selector de cuántas unidades comprar: píldora blanca con la opción activa
+/// en azul marino.
+class _AmountPicker extends StatelessWidget {
+  const _AmountPicker({required this.selected, required this.onPick});
+
+  final BuyAmount selected;
+  final ValueChanged<BuyAmount> onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 46,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(23),
+        boxShadow: const [
+          BoxShadow(color: Ui.orangeSoft, offset: Offset(0, 3)),
+        ],
+      ),
+      child: Row(
+        children: [
+          for (final e in _amountLabels.entries)
+            Expanded(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => onPick(e.key),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 160),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: e.key == selected ? Ui.ink : Colors.transparent,
+                    borderRadius: BorderRadius.circular(19),
+                  ),
+                  child: Text(
+                    e.value,
+                    key: Key('amount-${e.key.name}'),
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: e.key == selected ? Colors.white : Ui.ink,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -371,7 +578,7 @@ class _TutorialBanner extends StatelessWidget {
 
   static const _texts = [
     'Toca el Tendedero para ganar tus primeras Pelusitas.',
-    'Compra otro Tendedero con el botón rojo.',
+    'Compra otro Tendedero con el botón verde.',
     'Contrata a tu primer manager: trabaja solo, incluso con la app cerrada.',
   ];
 
@@ -384,9 +591,9 @@ class _TutorialBanner extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
       padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
       decoration: BoxDecoration(
-        color: Palette.butter,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Palette.outline, width: 1.5),
+        color: Ui.yellow.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Ui.yellow, width: 2),
       ),
       child: Row(
         children: [

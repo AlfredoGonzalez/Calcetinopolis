@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../app/game_controller.dart';
-import 'art.dart';
 import 'businesses_page.dart';
 import 'goals_page.dart';
 import 'settings_page.dart';
@@ -10,7 +9,7 @@ import 'prestige_page.dart';
 import 'shop_page.dart';
 import 'bottom_nav.dart';
 import 'cutscene_player.dart';
-import 'effects.dart';
+import 'game_header.dart';
 import 'mascot_burst.dart';
 import 'theme.dart';
 import 'upgrades_page.dart';
@@ -136,110 +135,27 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
             if (!didPop) setState(() => _tab = _homeTab);
           },
           child: Scaffold(
-            appBar: AppBar(
-              backgroundColor: Palette.blue,
-              titleSpacing: 16,
-              title: Row(
-                children: [
-                  GainPulse(
-                    value: c.state.money,
-                    minRatio: 1.5,
-                    child: const Art('icon_pelusitas', size: 30),
-                  ),
-                  const SizedBox(width: 8),
-                  // El dinero cede espacio antes de que algo se desborde.
-                  Flexible(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        key: const Key('money'),
-                        widget.controller.formatter.format(c.state.money),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Palette.outline,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    flex: 2,
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerRight,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (c.state.boostSeconds > 0) ...[
-                            Chip(
-                              key: const Key('boost-chip'),
-                              visualDensity: VisualDensity.compact,
-                              backgroundColor: Palette.orange,
-                              label: Text(
-                                'x2 ${formatDuration(c.state.boostSeconds)}',
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                          ],
-                          if (c.state.goldButtons.isPositive) ...[
-                            GainPulse(
-                              value: c.state.goldButtons,
-                              child: const Art(
-                                'icon_botones_dorados',
-                                size: 24,
-                              ),
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              c.formatter.format(c.state.goldButtons),
-                              key: const Key('gold-top'),
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Palette.outline,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                          ],
-                          GainPulse(
-                            value: c.state.pairsClaimed,
-                            child: const Art('icon_pareja_reunida', size: 26),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            widget.controller.formatter.format(
-                              c.state.pairsClaimed,
-                            ),
-                            key: const Key('pairs-top'),
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Palette.outline,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                IconButton(
-                  key: const Key('settings'),
-                  tooltip: 'Ajustes',
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => SettingsPage(controller: c),
-                    ),
-                  ),
-                  icon: const Art(
-                    'icon_ui_ajustes',
-                    size: 30,
-                    fallback: Icons.settings,
+            appBar: PreferredSize(
+              preferredSize: Size.fromHeight(GameHeader.heightFor(context)),
+              child: GameHeader(
+                controller: c,
+                onSettings: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => SettingsPage(controller: c),
                   ),
                 ),
-              ],
+              ),
             ),
-            body: SafeArea(child: pages[_tab]),
+            body: DecoratedBox(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Ui.bg1, Ui.bg2],
+                ),
+              ),
+              child: SafeArea(top: false, child: pages[_tab]),
+            ),
             bottomNavigationBar: AnimatedBottomNav(
               selected: _tab,
               onSelect: (i) {
