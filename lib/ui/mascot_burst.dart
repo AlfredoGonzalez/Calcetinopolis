@@ -50,12 +50,31 @@ enum MascotMove {
 
 OverlayEntry? _current;
 
+/// Tiempo mínimo entre dos celebraciones, para que no cansen al reclamar
+/// varias metas seguidas.
+const mascotCelebrateCooldown = Duration(seconds: 30);
+
+DateTime? _lastCelebrate;
+
+/// Reloj de la regla de espera; las pruebas lo reemplazan.
+DateTime Function() mascotClock = DateTime.now;
+
+/// Olvida la última celebración (para pruebas).
+void resetMascotCooldown() => _lastCelebrate = null;
+
 /// Muestra a la mascota un momento sobre la pantalla (no bloquea toques).
 ///
-/// Si ya hay una en pantalla se reemplaza. Con "reducir animaciones" no se
+/// Si ya hay una en pantalla se reemplaza. La celebración espera
+/// [mascotCelebrateCooldown] desde la anterior. Con "reducir animaciones" no se
 /// muestra nada.
 void playMascot(BuildContext context, MascotMove move) {
   if (MediaQuery.disableAnimationsOf(context)) return;
+  if (move == MascotMove.celebrate) {
+    final now = mascotClock();
+    final last = _lastCelebrate;
+    if (last != null && now.difference(last) < mascotCelebrateCooldown) return;
+    _lastCelebrate = now;
+  }
   final overlay = Overlay.maybeOf(context, rootOverlay: true);
   if (overlay == null) return;
   _current?.remove();
