@@ -7,6 +7,7 @@ import 'package:calcetinopolis/core/economy/engine.dart';
 import 'package:calcetinopolis/app/save_manager.dart';
 import 'package:calcetinopolis/services/services.dart';
 import 'package:calcetinopolis/ui/home_shell.dart';
+import 'package:calcetinopolis/ui/mascot_burst.dart';
 import 'package:calcetinopolis/ui/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,6 +17,8 @@ void main() {
     File('config/economy.json').readAsStringSync(),
   );
   late GameController c;
+
+  setUp(resetMascotCooldown);
 
   Future<void> pumpApp(WidgetTester t) async {
     c = GameController(Economy(config));
@@ -436,6 +439,42 @@ void main() {
       expect(find.byKey(const Key('mascot-burst')), findsOneWidget);
       await t.pump(const Duration(seconds: 5));
       expect(find.byKey(const Key('mascot-burst')), findsNothing);
+    });
+
+    testWidgets('la celebración espera 30 s antes de repetirse', (t) async {
+      var now = DateTime.utc(2026, 11, 8, 12);
+      mascotClock = () => now;
+      addTearDown(() => mascotClock = DateTime.now);
+      await pumpApp(t);
+      final ctx = t.element(find.byType(HomeShell));
+      playMascot(ctx, MascotMove.celebrate);
+      await t.pump();
+      expect(find.byKey(const Key('mascot-burst')), findsOneWidget);
+      await t.pump(const Duration(seconds: 5));
+      expect(find.byKey(const Key('mascot-burst')), findsNothing);
+
+      now = now.add(const Duration(seconds: 29));
+      playMascot(ctx, MascotMove.celebrate);
+      await t.pump();
+      expect(find.byKey(const Key('mascot-burst')), findsNothing);
+
+      now = now.add(const Duration(seconds: 2));
+      playMascot(ctx, MascotMove.celebrate);
+      await t.pump();
+      expect(find.byKey(const Key('mascot-burst')), findsOneWidget);
+      await t.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('el salto no tiene espera', (t) async {
+      await pumpApp(t);
+      final ctx = t.element(find.byType(HomeShell));
+      playMascot(ctx, MascotMove.jump);
+      await t.pump();
+      await t.pump(const Duration(seconds: 5));
+      playMascot(ctx, MascotMove.jump);
+      await t.pump();
+      expect(find.byKey(const Key('mascot-burst')), findsOneWidget);
+      await t.pump(const Duration(seconds: 5));
     });
 
     testWidgets('sin animaciones no aparece la mascota', (t) async {
