@@ -4,12 +4,12 @@ Aquí solo está **lo que falta**. Lo ya entregado se quitó para no hacer ruido
 
 ## 1. Qué falta (resumen)
 
-Las 7 imágenes de la mascota y del Centrifugado ya llegaron y están en el juego. Lo que queda es opcional:
+La mascota (reposo, salto, celebra), el Centrifugado y los tres sprites de la mascota (idle, celebra, salto) ya están en el juego. Lo que queda es opcional:
 
 | # | Qué | Tipo | Dónde se usa | Prioridad |
 | --- | --- | --- | --- | --- |
-| 1 | Animación de la mascota (idle, salto, celebra) | Sprites (AutoSprite) | Tutorial, Metas, Tienda, bienvenida offline | Media, opcional |
-| 2 | Cutscenes (intro, primer reencuentro, bienvenida) | AutoSprite | Primera vez que abres el juego, primer Centrifugado, volver tras mucho tiempo | Media, opcional |
+| 1 | Cutscenes (intro, primer reencuentro, bienvenida) | AutoSprite | Primera vez que abres el juego, primer Centrifugado, volver tras mucho tiempo | Media, opcional |
+| 2 | Sprites de los managers o de los negocios | AutoSprite | Mejoras y pantalla de Negocios | Baja |
 | 3 | Retoques de lo entregado | Regenerar | Ver sección 7 | Baja |
 
 Los prompts base (bloques A, B y C) siguen abajo por si regeneras algo.
@@ -40,48 +40,17 @@ Character: a sock with a blue (#7EC8E3) cuff on top, cream body, rounded heel an
 A single object, centered, front view, filling about 80% of the frame with even margins. Solid flat magenta background #FF00FF, no gradient, no frame, no rounded corners, no ground shadow, no reflections or glow on the background. No text, no letters, no numbers, no watermarks, no characters from other brands. Square format 1024x1024.
 ```
 
-## 5. Animación con sprites en AutoSprite (punto 3, opcional)
+## 5. Cómo generar sprites en AutoSprite (referencia)
 
-**Qué reemplaza:** hoy muevo la mascota en código (estirar, rebotar, girar) a partir de una sola imagen. Eso ya se ve bien. Con sprites tendríamos movimiento "dibujado" (parpadeo, el hilo ondeando, brazos que aparecen), que se nota más.
+Esto fue lo que funcionó para la mascota. Úsalo igual para cualquier otro personaje:
 
-**Cómo:** usa `mascota_reposo` como personaje base en AutoSprite. Pide estas tres animaciones:
-
-| Animación | Cuadros | Bucle | Dónde |
-| --- | --- | --- | --- |
-| `spr_mascota_idle` | 6 a 8 | Sí | Tutorial y pantallas de espera: respira, parpadea, el hilo se mece |
-| `spr_mascota_salto` | 8 a 10 | No | Al comprar y al terminar un paso del tutorial |
-| `spr_mascota_celebra` | 8 a 12 | No | Al reclamar metas y al terminar el Centrifugado |
-
-Prompts para el generador de animación (inglés):
-
-```text
-Animation (idle loop): the sock character stands in place and breathes gently (a slight squash and stretch), blinks once, and the loose thread at the toe sways side to side. Seamless loop, 8 frames, same flat storybook style and proportions as the reference, character stays centered on the same spot in every frame.
-```
-
-```text
-Animation (jump): the sock character crouches (squash), launches upward (stretch) with eyes wide and a happy "o" mouth, reaches the top, and lands with a small squash before returning to rest. The loose thread trails behind. 10 frames, same style as the reference, same foot position on the ground at start and end.
-```
-
-```text
-Animation (celebrate): the sock character raises two small oval hands, bounces twice with closed happy eyes and a big open smile, with small confetti falling around it. 12 frames, same style as the reference.
-```
-
-**Qué necesito de ti al exportar:**
-
-- PNG con **fondo transparente** (si no se puede, fondo magenta liso #FF00FF y yo lo quito).
-- De preferencia una **hoja de sprites** (todas las celdas del mismo tamaño en una fila o cuadrícula), o los cuadros sueltos numerados (`spr_mascota_idle_01.png`...).
-- Dime los **cuadros por segundo** y el tamaño de cada cuadro. No conozco las opciones exactas de AutoSprite, así que dime qué formato sí te da y me adapto.
-- Súbelos a `assets/art/source/`.
-
-**Opcionales de menor prioridad (solo si quieres más):**
-
-```text
-Animation (washer spin loop): a front-loading washing machine with a lavender spiral inside the glass door; the spiral rotates continuously and the machine shakes very slightly. Seamless loop, 8 frames, same style as the reference.
-```
-
-```text
-Animation (working loop): the sock character peeks out of its home object (basket, clothesline, etc.) and ducks back in, smiling. Seamless loop, 6 frames.
-```
+- **Frame inicial y final:** el mismo cuadro (la imagen de reposo), con **Loop** apagado salvo en el idle.
+- **Paso 1, "Describe the pose":** cómo se ve el cuadro, quieto, con colores y detalles (parche, mejillas).
+- **Paso 2, "Action":** solo el movimiento, y siempre "same design, colors and yellow patch in every frame, static camera, no turning sideways, plain white background".
+- **Frame:** *Normal* para movimientos pequeños (idle); **Padded 2×** si salta, estira o hay confeti.
+- **Frames:** 16 basta (25 si el movimiento es grande). **Size:** 512. **Sharpen:** Light. **Compression:** apagado.
+- **Exporta** PNG transparente y súbelo a `assets/art/source/` como `spr_<nombre>.png`. Yo lo recorto, lo empaco y lo conecto.
+- Si el navegador conserva una hoja vieja, el archivo se publica con la cuadrícula en el nombre (`_4x4`, `_5x5`).
 
 ## 6. Cutscenes en AutoSprite (punto 4, opcional)
 
