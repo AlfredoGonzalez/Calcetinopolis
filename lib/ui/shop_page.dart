@@ -6,6 +6,7 @@ import '../core/economy/engine.dart';
 import '../core/number_format.dart';
 import 'art.dart';
 import 'offline_dialog.dart' show formatDuration;
+import 'mascot_burst.dart';
 import 'theme.dart';
 
 /// Tienda (spec 9.12 y 10): boost y saltos con anuncios opcionales, Botones
@@ -469,6 +470,7 @@ class _ProductCard extends StatelessWidget {
                     ? () async {
                         final ok = await c.purchase(product.id);
                         if (ok && context.mounted) {
+                          playMascot(context, MascotMove.celebrate);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('¡Listo! ${product.name}')),
                           );
