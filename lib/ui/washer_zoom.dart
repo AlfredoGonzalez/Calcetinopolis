@@ -7,17 +7,19 @@ import 'theme.dart';
 /// Fondo de la pantalla de carga: aparece la lavadora, la cámara se acerca a
 /// su ventanita y se va asomando el tambor, con los calcetines dando vueltas.
 ///
-/// [progress] (0 a 1) lleva el acercamiento; [spin] (0 a 1, en bucle) gira el
-/// tambor una vez dentro.
+/// [progress] (0 a 1) lleva el acercamiento. [center] es el punto de la
+/// pantalla al que se acerca la cámara: ahí queda el cristal de la lavadora y,
+/// después, el remolino del tambor. El tambor queda quieto; los calcetines se
+/// lavan encima, en otra capa.
 class WasherZoomBackdrop extends StatelessWidget {
   const WasherZoomBackdrop({
     super.key,
     required this.progress,
-    required this.spin,
+    required this.center,
   });
 
   final Animation<double> progress;
-  final Animation<double> spin;
+  final Offset center;
 
   /// Centro y radio del cristal de la puerta dentro de la imagen de la lavadora
   /// (fracciones del lado de la imagen).
@@ -25,8 +27,11 @@ class WasherZoomBackdrop extends StatelessWidget {
   static const doorCy = 0.512;
   static const doorR = 0.1665;
 
-  /// Proporción de la imagen del tambor (572 x 1024).
-  static const _interiorAspect = 1024 / 572;
+  /// Tamaño de la imagen del tambor (572 x 1024) y dónde queda su remolino.
+  static const interiorW = 572.0;
+  static const interiorH = 1024.0;
+  static const swirlX = 0.493;
+  static const swirlY = 0.498;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +39,7 @@ class WasherZoomBackdrop extends StatelessWidget {
       builder: (context, box) {
         final size = Size(box.maxWidth, box.maxHeight);
         return AnimatedBuilder(
-          animation: Listenable.merge([progress, spin]),
+          animation: progress,
           builder: (context, _) => _paint(size),
         );
       },
@@ -46,34 +51,29 @@ class WasherZoomBackdrop extends StatelessWidget {
     return t * t * (3 - 2 * t);
   }
 
-  /// El tambor girando. Cuando ya llenó la pantalla no necesita opacidad ni
-  /// recorte, que son las capas más caras.
+  /// El tambor. Cuando ya llenó la pantalla no necesita opacidad ni recorte,
+  /// que son las capas más caras.
   Widget _interior(
-    Size size,
     Offset center,
     double windowR,
     double diag,
     double opacity,
     double iw,
     double ih,
-    double angle,
   ) {
     Widget picture = Stack(
       children: [
         const Positioned.fill(child: ColoredBox(color: Ui.bg1)),
         Positioned(
-          left: center.dx - iw / 2,
-          top: center.dy - ih / 2,
+          left: center.dx - swirlX * iw,
+          top: center.dy - swirlY * ih,
           width: iw,
           height: ih,
-          child: Transform.rotate(
-            angle: angle,
-            child: Image.asset(
-              'assets/art/bg_tambor.jpg',
-              fit: BoxFit.fill,
-              filterQuality: FilterQuality.medium,
-              errorBuilder: (_, _, _) => const SizedBox.shrink(),
-            ),
+          child: Image.asset(
+            'assets/art/bg_tambor.jpg',
+            fit: BoxFit.fill,
+            filterQuality: FilterQuality.medium,
+            errorBuilder: (_, _, _) => const SizedBox.shrink(),
           ),
         ),
       ],
@@ -96,7 +96,6 @@ class WasherZoomBackdrop extends StatelessWidget {
 
   Widget _paint(Size size) {
     final t = progress.value;
-    final center = Offset(size.width / 2, size.height * 0.5);
     final washerW = math.min(size.width * 0.7, 300.0);
     final diag = math.sqrt(size.width * size.width + size.height * size.height);
     final r0 = doorR * washerW;
@@ -112,12 +111,11 @@ class WasherZoomBackdrop extends StatelessWidget {
     final interiorOpacity = _smooth(0.12, 0.5, z);
     final washerOpacity = enter * (1 - _smooth(0.7, 0.92, z));
 
-    // El tambor crece con la ventana y después gira.
-    // Los bordes de la imagen son crema, igual que el fondo, así que no se nota
-    // aunque al girar queden esquinas descubiertas.
-    final iw = size.width * 1.2 * (0.5 + 0.5 * _smooth(0, 1, z));
-    final ih = iw * _interiorAspect;
-    final angle = spin.value * 2 * math.pi;
+    // El tambor cubre la pantalla; mientras la ventana crece, él también.
+    final cover = math.max(size.width / interiorW, size.height / interiorH);
+    final f = 0.6 + 0.4 * _smooth(0, 1, z);
+    final iw = interiorW * cover * f;
+    final ih = interiorH * cover * f;
 
     // Oscurece arriba y abajo para que se lea el texto, y deja el centro claro
     // para que se vean los calcetines del tambor.
@@ -159,16 +157,7 @@ class WasherZoomBackdrop extends StatelessWidget {
             ),
           ),
         if (interiorOpacity > 0)
-          _interior(
-            size,
-            center,
-            windowR,
-            diag,
-            interiorOpacity,
-            iw,
-            ih,
-            angle,
-          ),
+          _interior(center, windowR, diag, interiorOpacity, iw, ih),
         IgnorePointer(
           child: DecoratedBox(
             decoration: BoxDecoration(
