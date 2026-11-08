@@ -96,7 +96,7 @@ void main() {
   testWidgets('negocios no desbloqueados son silueta con costo', (t) async {
     await pumpApp(t);
     await t.scrollUntilVisible(
-      find.text('???').first,
+      find.text('???'),
       200,
       scrollable: find.byType(Scrollable).first,
     );
@@ -110,15 +110,53 @@ void main() {
     expect(t.widget<ColorFiltered>(silhouettes.first).colorFilter, isNotNull);
   });
 
-  testWidgets('comprar manager desde la tarjeta', (t) async {
-    await pumpApp(t);
-    c.state.money = BigNum.fromInt(1000);
-    c.advance(0); // notifica a la UI
-    await t.pump();
-    await t.tap(find.byKey(const Key('manager-0')));
-    await t.pump();
-    expect(c.state.businesses[0].hasManager, isTrue);
-    expect(find.text('Manager ✓'), findsOneWidget);
+  group('manager en la tarjeta', () {
+    testWidgets('sin contratar es una silueta; se toca para contratarlo', (
+      t,
+    ) async {
+      await pumpApp(t);
+      c.state.tutorialDone = true;
+      c.state.money = BigNum.fromInt(1000);
+      c.advance(0); // notifica a la UI
+      await t.pump();
+      expect(find.byKey(const Key('manager-hired-0')), findsNothing);
+      // Se ve su precio y el retrato va teñido (silueta).
+      expect(find.byKey(const Key('manager-cost-0')), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('manager-0')),
+          matching: find.byType(ColorFiltered),
+        ),
+        findsOneWidget,
+      );
+      await t.tap(find.byKey(const Key('manager-0')));
+      await t.pump();
+      expect(c.state.businesses[0].hasManager, isTrue);
+      // Ya contratado: retrato con palomita, sin silueta ni precio.
+      expect(find.byKey(const Key('manager-hired-0')), findsOneWidget);
+      expect(find.byKey(const Key('manager-cost-0')), findsNothing);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('manager-0')),
+          matching: find.byType(ColorFiltered),
+        ),
+        findsNothing,
+      );
+    });
+
+    testWidgets('sin Pelusitas suficientes avisa cuánto cuesta y no contrata', (
+      t,
+    ) async {
+      await pumpApp(t);
+      c.state.tutorialDone = true;
+      c.state.money = BigNum.fromInt(5);
+      c.advance(0);
+      await t.pump();
+      await t.tap(find.byKey(const Key('manager-0')));
+      await t.pump();
+      expect(c.state.businesses[0].hasManager, isFalse);
+      expect(find.textContaining('necesitas'), findsOneWidget);
+    });
   });
 
   testWidgets('con manager la barra avanza sola', (t) async {
