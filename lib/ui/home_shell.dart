@@ -8,6 +8,7 @@ import 'settings_page.dart';
 import 'offline_dialog.dart';
 import 'prestige_page.dart';
 import 'shop_page.dart';
+import 'cutscene_player.dart';
 import 'mascot_burst.dart';
 import 'theme.dart';
 import 'upgrades_page.dart';
@@ -33,7 +34,10 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     widget.controller.addListener(_maybeShowOffline);
     _lastTutorial = widget.controller.tutorialStep;
     widget.controller.addListener(_tutorialMascot);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowOffline());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybeShowIntro();
+      _maybeShowOffline();
+    });
   }
 
   @override
@@ -52,6 +56,17 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     } else if (state == AppLifecycleState.resumed) {
       widget.controller.onResumed();
     }
+  }
+
+  /// La intro se ve una sola vez, al abrir una partida nueva.
+  Future<void> _maybeShowIntro() async {
+    final c = widget.controller;
+    if (!mounted || _dialogOpen || !c.shouldShowCutscene('intro')) return;
+    _dialogOpen = true;
+    await showCutscene(context, Cutscene.intro, sound: c.state.settings.sound);
+    await c.markCutsceneSeen('intro');
+    _dialogOpen = false;
+    if (mounted) _maybeShowOffline();
   }
 
   int? _lastTutorial;
@@ -76,6 +91,16 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     }
     _dialogOpen = true;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final c = widget.controller;
+      final away = c.pendingOffline?.secondsAway ?? 0;
+      if (mounted && away >= 4 * 3600 && c.shouldShowCutscene('welcome')) {
+        await showCutscene(
+          context,
+          Cutscene.welcome,
+          sound: c.state.settings.sound,
+        );
+        await c.markCutsceneSeen('welcome');
+      }
       if (mounted && widget.controller.pendingOffline != null) {
         await showOfflineDialog(
           context,

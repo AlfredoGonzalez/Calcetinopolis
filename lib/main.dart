@@ -46,6 +46,7 @@ Future<void> main() async {
     ads: TestAdService(navigatorKey),
     iap: iap,
     testMode: true,
+    cutscenes: true,
   );
   if (loaded.data != null) controller.checkOffline(loaded.data!.savedAt);
   controller.start();

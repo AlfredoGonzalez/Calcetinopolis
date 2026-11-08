@@ -25,6 +25,7 @@ class GameController extends ChangeNotifier {
     this.iap,
     this.analytics,
     this.testMode = false,
+    this.cutscenes = false,
     this.lastSeen,
   }) : state = initial ?? economy.newGame(),
        time = time ?? DeviceTimeService();
@@ -40,6 +41,9 @@ class GameController extends ChangeNotifier {
 
   /// Anuncios y compras simulados (versión web de prueba): se avisa en la Tienda.
   final bool testMode;
+
+  /// Si las cutscenes en video se muestran (la app real sí; las pruebas no).
+  final bool cutscenes;
   final AnalyticsService? analytics;
 
   /// Última vez que se guardó o se pausó la app; base de la ganancia offline.
@@ -360,6 +364,20 @@ class GameController extends ChangeNotifier {
 
   /// Punto de aviso en la pestaña Metas.
   bool get hasGoalNotice => economy.hasClaimableGoal(state) || canClaimDaily;
+
+  // ------------------------------------------------------------ cutscenes
+
+  bool hasSeenCutscene(String id) => state.cutscenesSeen.contains(id);
+
+  /// Una cutscene que toca mostrar ahora: activas y todavía no vistas.
+  bool shouldShowCutscene(String id) => cutscenes && !hasSeenCutscene(id);
+
+  Future<void> markCutsceneSeen(String id) async {
+    if (!state.cutscenesSeen.add(id)) return;
+    analytics?.log('cutscene_seen', {'id': id});
+    notifyListeners();
+    await save();
+  }
 
   // ------------------------------------------------------------ tutorial
 

@@ -5,7 +5,7 @@ import '../services/services.dart';
 
 /// Versión actual del esquema de guardado. Sube al cambiar el formato y
 /// agrega una migración en [SaveCodec._migrations].
-const int kSaveVersion = 4;
+const int kSaveVersion = 5;
 
 class SaveData {
   SaveData(this.state, this.savedAt);
@@ -42,6 +42,17 @@ class SaveCodec {
     2: (d) => {...d, 'tutorialDone': d['tutorialDone'] ?? true},
     // v3 -> v4: monetización. Quien ya jugaba en v3 ya vivió su primer regreso.
     3: (d) => {...d, 'firstReturnDone': d['firstReturnDone'] ?? true},
+    // v4 -> v5: cutscenes. Quien ya jugaba vio el inicio; el reencuentro solo
+    // cuenta como visto si ya había reunido parejas.
+    4: (d) {
+      final pairs = d['pairsClaimed'];
+      final hadPairs = pairs != null && pairs != '0';
+      return {
+        ...d,
+        'cutscenesSeen':
+            d['cutscenesSeen'] ?? ['intro', if (hadPairs) 'reunion'],
+      };
+    },
   };
 
   static int checksum(String s) {
