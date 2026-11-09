@@ -345,10 +345,22 @@ class Economy {
     base: config.prestige.base,
   );
 
-  /// "Buen momento": por cobrar >= actuales (y hay algo por cobrar).
+  /// Parejas por cobrar que se recomiendan antes de centrifugar: las que ya
+  /// tienes (para al menos duplicar tu bono) y, en la primera vuelta,
+  /// `first_target_pairs`.
+  BigNum recommendedPairs(GameState s) {
+    final first = BigNum.fromInt(config.prestige.firstTargetPairs);
+    return s.pairsClaimed > first ? s.pairsClaimed : first;
+  }
+
+  /// E_vida con la que las Parejas por cobrar llegan a [recommendedPairs].
+  BigNum lifetimeForRecommended(GameState s) =>
+      lifetimeForPairs(s.pairsClaimed + recommendedPairs(s));
+
+  /// "Buen momento": las Parejas por cobrar llegan a las recomendadas.
   bool isGoodTimeToPrestige(GameState s) {
     final pending = pairsPending(s);
-    return pending.isPositive && pending >= s.pairsClaimed;
+    return pending.isPositive && pending >= recommendedPairs(s);
   }
 
   /// Multiplicador de ganancias después de centrifugar.

@@ -324,6 +324,18 @@ void main() {
       expect(eco.multiplier(s, 0) >= before, isTrue);
     });
 
+    test(
+      'Parejas recomendadas: 100 la primera vez y luego las que ya tienes',
+      () {
+        expect(eco.recommendedPairs(s), BigNum.fromInt(100));
+        s.pairsClaimed = BigNum.fromInt(280);
+        expect(eco.recommendedPairs(s), BigNum.fromInt(280));
+        // 280 + 280 = 560 en total: E = 1e13 * (560/150)^2.
+        final e = eco.lifetimeForRecommended(s).toDouble();
+        expect(e, closeTo(1e13 * (560 / 150) * (560 / 150), 1e9));
+      },
+    );
+
     test('buen momento: por cobrar >= actuales', () {
       s.lifetimeEarnings = n('1e13');
       expect(eco.isGoodTimeToPrestige(s), isTrue);

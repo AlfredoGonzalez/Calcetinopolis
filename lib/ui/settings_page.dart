@@ -136,6 +136,24 @@ class SettingsPage extends StatelessWidget {
                     ],
                   ),
                 ),
+                const SectionTitle('Ayuda'),
+                UiCard(
+                  edge: Ui.soft(Ui.yellow),
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: ListTile(
+                    key: const Key('replay-tutorial'),
+                    leading: const Icon(Icons.school_outlined, color: Ui.ink2),
+                    title: const Text(
+                      'Ver el tutorial otra vez',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: const Text('Te vuelve a guiar paso a paso'),
+                    onTap: () {
+                      c.restartTutorial();
+                      Navigator.of(context).maybePop();
+                    },
+                  ),
+                ),
                 const SectionTitle('Escenas'),
                 UiCard(
                   edge: Ui.soft(Ui.violet),

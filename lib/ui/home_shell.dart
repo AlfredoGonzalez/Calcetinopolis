@@ -14,7 +14,9 @@ import 'cutscene_player.dart';
 import 'game_header.dart';
 import 'mascot_burst.dart';
 import 'theme.dart';
+import 'tutorial_overlay.dart';
 import 'upgrades_page.dart';
+import '../app/tutorial.dart';
 
 /// Barra superior con monedas + 5 pestañas (spec 9.11).
 class HomeShell extends StatefulWidget {
@@ -39,7 +41,8 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     widget.controller.addListener(_maybeShowOffline);
-    _lastTutorial = widget.controller.tutorialStep;
+    _lastTutorial = widget.controller.activeTutorial?.id;
+    _wasDone = widget.controller.state.tutorialDone;
     widget.controller.addListener(_tutorialMascot);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _maybeShowIntro();
@@ -76,18 +79,30 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     if (mounted) _maybeShowOffline();
   }
 
-  int? _lastTutorial;
+  String? _lastTutorial;
+  bool _wasDone = false;
+  final Map<String, GlobalKey> _targetKeys = {};
 
-  /// La mascota salta al avanzar un paso del tutorial y celebra al terminar.
+  /// La mascota salta cuando se cumple un paso del tutorial y celebra al terminarlo.
   void _tutorialMascot() {
-    final step = widget.controller.tutorialStep;
+    final c = widget.controller;
+    final id = c.activeTutorial?.id;
     final last = _lastTutorial;
-    _lastTutorial = step;
-    if (!mounted || last == null || step == last) return;
-    if (step != null && step > last) {
-      playMascot(context, MascotMove.jump);
-    } else if (step == null && last == 2) {
-      playMascot(context, MascotMove.celebrate);
+    _lastTutorial = id;
+    final done = c.state.tutorialDone;
+    final justFinished = done && !_wasDone && last != null;
+    _wasDone = done;
+    if (!mounted || last == null || id == last) return;
+    playMascot(context, justFinished ? MascotMove.celebrate : MascotMove.jump);
+  }
+
+  /// Al aparecer un paso, abre la pestaña donde está lo que hay que tocar.
+  void _openTabFor(TutorialStep step) {
+    final tab = step.tab;
+    if (tab != null && tab != _tab) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _go(tab);
+      });
     }
   }
 
@@ -122,6 +137,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   /// Cambia de pestaña (barra inferior o toque a los contadores del encabezado).
   void _go(int i) {
     setState(() => _tab = i);
+    widget.controller.noteTabVisit(i);
     if (i == _shopTab) widget.controller.logIapView();
   }
 
@@ -156,7 +172,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
           ),
           ShopPage(controller: c, formatter: c.formatter),
         ];
-        return PopScope(
+        final shell = PopScope(
           canPop: _tab == _homeTab,
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop) setState(() => _tab = _homeTab);
@@ -220,6 +236,22 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
                 ),
               ],
             ),
+          ),
+        );
+        return TutorialScope(
+          keys: _targetKeys,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              shell,
+              Positioned.fill(
+                child: TutorialOverlay(
+                  controller: c,
+                  keys: _targetKeys,
+                  onStepShown: _openTabFor,
+                ),
+              ),
+            ],
           ),
         );
       },

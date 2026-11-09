@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import 'tutorial.dart';
 import '../core/big_num.dart';
 import '../core/economy/engine.dart';
 import '../core/economy/offline.dart';
@@ -383,6 +384,7 @@ class GameController extends ChangeNotifier {
 
   /// Un toque a la lavadora.
   void tapWasher() {
+    washerTaps++;
     economy.tapWasher(state);
     notifyListeners();
   }
@@ -403,36 +405,95 @@ class GameController extends ChangeNotifier {
 
   // ------------------------------------------------------------ tutorial
 
-  /// Paso actual del tutorial (0 a 2), o null si ya terminó o se saltó (spec 9.12).
-  int? get tutorialStep {
-    if (state.tutorialDone) return null;
-    if (state.lifetimeEarnings.isZero) return 0; // toca el Tendedero
-    if (state.businesses[0].owned < 2) return 1; // compra el siguiente
-    if (!state.businesses.any((b) => b.hasManager)) {
-      return 2; // contrata un manager
+  /// Toques a la lavadora en esta sesión (para el paso del tutorial).
+  int washerTaps = 0;
+  final Set<int> _visitedTabs = {};
+
+  /// La pestaña se visitó en esta sesión.
+  bool hasVisitedTab(int i) => _visitedTabs.contains(i);
+
+  void noteTabVisit(int i) {
+    if (_visitedTabs.add(i)) {
+      _trackTutorial();
+      notifyListeners();
     }
-    return null;
   }
 
-  int? _lastTutorialStep;
+  TutorialStep? _activeTutorial;
+
+  /// El paso del tutorial que se muestra ahora, o null.
+  TutorialStep? get activeTutorial =>
+      state.tutorialDone ? null : _activeTutorial;
+
+  /// Posición del paso (1 a N) y total, para "Paso 3 de 9".
+  int get tutorialTotal => kTutorialSteps.length;
+
+  void _markTutorialSeen(String id) {
+    if (state.tutorialSeen.add(id)) {
+      analytics?.log('tutorial_step', {'step': id, 'done': true});
+    }
+  }
 
   void _trackTutorial() {
-    final step = tutorialStep;
-    if (step == _lastTutorialStep) return;
-    _lastTutorialStep = step;
-    if (step == null) {
-      if (!state.tutorialDone) state.tutorialDone = true;
-      analytics?.log('tutorial_step', {'step': 'done'});
-      save();
-    } else {
-      analytics?.log('tutorial_step', {'step': step});
+    if (state.tutorialDone) {
+      _activeTutorial = null;
+      return;
     }
+    TutorialStep? next;
+    var changedSeen = false;
+    for (final s in kTutorialSteps) {
+      if (state.tutorialSeen.contains(s.id)) continue;
+      if (s.done(this)) {
+        _markTutorialSeen(s.id);
+        changedSeen = true;
+        continue;
+      }
+      if (s.trigger(this)) {
+        next = s;
+        break;
+      }
+      if (s.gate) break;
+    }
+    if (next == null &&
+        kTutorialSteps.every((s) => state.tutorialSeen.contains(s.id))) {
+      state.tutorialDone = true;
+      analytics?.log('tutorial_step', {'step': 'done'});
+      changedSeen = true;
+    }
+    if (next?.id != _activeTutorial?.id) {
+      if (next != null) analytics?.log('tutorial_step', {'step': next.id});
+      _activeTutorial = next;
+    }
+    if (changedSeen) save();
+  }
+
+  /// "Ahora no": el paso en pantalla se da por visto.
+  void dismissTutorialStep() {
+    final s = _activeTutorial;
+    if (s == null || state.tutorialDone) return;
+    _markTutorialSeen(s.id);
+    _trackTutorial();
+    notifyListeners();
+    save();
   }
 
   void skipTutorial() {
     if (state.tutorialDone) return;
     state.tutorialDone = true;
+    _activeTutorial = null;
     analytics?.log('tutorial_step', {'step': 'skipped'});
+    notifyListeners();
+    save();
+  }
+
+  /// Vuelve a mostrar el tutorial desde el principio (Ajustes).
+  void restartTutorial() {
+    state.tutorialSeen.clear();
+    state.tutorialDone = false;
+    washerTaps = 0;
+    _visitedTabs.clear();
+    _activeTutorial = null;
+    _trackTutorial();
     notifyListeners();
     save();
   }
@@ -495,7 +556,9 @@ class GameController extends ChangeNotifier {
       ..settings.sound = settings.sound
       ..settings.vibration = settings.vibration;
     pendingOffline = null;
-    _lastTutorialStep = null;
+    washerTaps = 0;
+    _visitedTabs.clear();
+    _activeTutorial = null;
     analytics?.log('game_reset');
     notifyListeners();
     await save();
