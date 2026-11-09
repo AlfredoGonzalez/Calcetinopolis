@@ -95,6 +95,8 @@ class CalcetinopolisApp extends StatelessWidget {
         ),
         home: showSplash
             ? StudioSplash(
+                videoAsset: 'assets/video/studio_logo.mp4',
+                sound: controller.state.settings.sound,
                 child: LoadingScreen(
                   characters: _pileCharacters(controller),
                   child: HomeShell(controller: controller),
