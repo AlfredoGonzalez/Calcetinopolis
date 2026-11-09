@@ -151,7 +151,18 @@ class _StudioSplashState extends State<StudioSplash>
   }
 }
 
-/// El video del estudio sobre negro (mientras carga, solo negro).
+/// Color de fondo del video del estudio (el de sus bordes).
+const _studioBg = Color(0xFF0E0F12);
+
+/// El logo ocupa ~88% del ancho del video. Para que en pantalla mida como
+/// máximo el 60% del ancho, el video se dibuja al 60% / 88% = 68% del ancho.
+const studioLogoMaxWidth = 0.60;
+const _logoShareOfVideo = 0.88;
+const studioVideoWidthFraction = studioLogoMaxWidth / _logoShareOfVideo;
+
+/// El video del estudio, centrado y sin recortar, sobre el mismo negro de su
+/// fondo (mientras carga, solo negro). Los bordes se funden con el fondo para
+/// que no se note dónde termina el video.
 class _VideoBody extends StatelessWidget {
   const _VideoBody({required this.video});
 
@@ -162,19 +173,73 @@ class _VideoBody extends StatelessWidget {
     final v = video;
     return ColoredBox(
       key: const Key('studio-video'),
-      color: const Color(0xFF0B0D14),
+      color: _studioBg,
       child: v == null
           ? const SizedBox.expand()
-          : SizedBox.expand(
-              child: FittedBox(
-                fit: BoxFit.cover,
-                clipBehavior: Clip.hardEdge,
-                child: SizedBox(
-                  width: v.value.size.width,
-                  height: v.value.size.height,
-                  child: VideoPlayer(v),
-                ),
-              ),
+          : LayoutBuilder(
+              builder: (context, box) {
+                final w = box.maxWidth * studioVideoWidthFraction;
+                final size = v.value.size;
+                final h = size.width <= 0
+                    ? w * 16 / 9
+                    : w * size.height / size.width;
+                const clear = Color(0x000E0F12);
+                Widget fade(Alignment from, Alignment to, double w, double h) =>
+                    Positioned(
+                      left: from == Alignment.centerRight ? null : 0,
+                      right: from == Alignment.centerLeft ? null : 0,
+                      top: from == Alignment.bottomCenter ? null : 0,
+                      bottom: from == Alignment.topCenter ? null : 0,
+                      width: w <= 0 ? null : w,
+                      height: h <= 0 ? null : h,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: from,
+                            end: to,
+                            colors: const [_studioBg, clear],
+                          ),
+                        ),
+                      ),
+                    );
+                return Center(
+                  child: SizedBox(
+                    key: const Key('studio-video-frame'),
+                    width: w,
+                    height: h,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        VideoPlayer(v),
+                        fade(
+                          Alignment.centerLeft,
+                          Alignment.centerRight,
+                          w * 0.08,
+                          0,
+                        ),
+                        fade(
+                          Alignment.centerRight,
+                          Alignment.centerLeft,
+                          w * 0.08,
+                          0,
+                        ),
+                        fade(
+                          Alignment.topCenter,
+                          Alignment.bottomCenter,
+                          0,
+                          h * 0.05,
+                        ),
+                        fade(
+                          Alignment.bottomCenter,
+                          Alignment.topCenter,
+                          0,
+                          h * 0.05,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
     );
   }

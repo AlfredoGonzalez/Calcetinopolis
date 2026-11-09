@@ -61,11 +61,22 @@ void main() {
     testWidgets('reproduce el video y un toque lo salta', (t) async {
       final fake = FakeVideoPlayer();
       VideoPlayerPlatform.instance = fake;
+      await t.binding.setSurfaceSize(const Size(400, 900));
+      addTearDown(() => t.binding.setSurfaceSize(null));
       await t.pumpWidget(videoApp());
       await t.pump();
       await t.pump(const Duration(milliseconds: 100));
       expect(find.byKey(const Key('studio-video')), findsOneWidget);
       expect(fake.calls, contains('play'));
+      // El video no se recorta y el logo mide como máximo el 60% del ancho.
+      final screen = t.getSize(find.byKey(const Key('studio-video')));
+      final frame = t.getSize(find.byKey(const Key('studio-video-frame')));
+      expect(
+        frame.width,
+        closeTo(screen.width * studioVideoWidthFraction, 0.5),
+      );
+      expect(frame.width * 0.88, lessThanOrEqualTo(screen.width * 0.6 + 0.5));
+      expect(frame.height / frame.width, closeTo(16 / 9, 0.01));
       expect(find.text('juego'), findsNothing);
       await t.tap(find.byKey(const Key('studio-splash')));
       await t.pumpAndSettle();
