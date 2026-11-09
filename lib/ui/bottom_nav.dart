@@ -74,16 +74,41 @@ class AnimatedBottomNav extends StatelessWidget {
             ),
           ),
         ),
-        // Espuma sobre el borde de la barra.
-        const Positioned(
+        // Espuma sobre el borde de la barra: la imagen si existe y, si no,
+        // la dibujada en código.
+        Positioned(
           left: 0,
           right: 0,
-          top: -14,
-          height: 16,
-          child: IgnorePointer(
-            child: CustomPaint(
-              painter: FoamPainter(color: Ui.bg1, edge: Color(0xFF9FD7EE)),
-            ),
+          top: 0,
+          child: LayoutBuilder(
+            builder: (context, box) {
+              // La imagen mide 1024x114; ~55% de su alto sobresale de la barra.
+              final h = box.maxWidth * 114 / 1024;
+              return Transform.translate(
+                offset: Offset(0, -h * 0.55),
+                child: IgnorePointer(
+                  child: Image.asset(
+                    'assets/art/bg_nav_espuma.png',
+                    width: box.maxWidth,
+                    height: h,
+                    fit: BoxFit.fill,
+                    errorBuilder: (_, _, _) => Transform.translate(
+                      offset: Offset(0, h * 0.55 - 14),
+                      child: const SizedBox(
+                        height: 16,
+                        child: CustomPaint(
+                          size: Size.infinite,
+                          painter: FoamPainter(
+                            color: Ui.bg1,
+                            edge: Color(0xFF9FD7EE),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ),
         SafeArea(
