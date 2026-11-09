@@ -55,14 +55,14 @@ class BusinessesPage extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(24, 22, 24, 8),
+          padding: const EdgeInsets.fromLTRB(14, 10, 14, 4),
           child: TutorialTarget(
             id: 'washer',
             child: WasherCard(controller: c),
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           child: _AmountPicker(selected: c.amount, onPick: c.setAmount),
         ),
         Expanded(
@@ -282,30 +282,84 @@ class BusinessCard extends StatelessWidget {
                       ),
                       Expanded(
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
+                          padding: const EdgeInsets.fromLTRB(12, 8, 10, 8),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Expanded(
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(top: 2),
-                                      child: Text(
-                                        cfg.name,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 16,
-                                          height: 1.15,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          cfg.name,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 16,
+                                            height: 1.15,
+                                          ),
                                         ),
-                                      ),
+                                        const SizedBox(height: 6),
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                                child: LinearProgressIndicator(
+                                                  minHeight: 12,
+                                                  value: fast
+                                                      ? 1
+                                                      : (owned
+                                                            ? b.progress
+                                                            : 0),
+                                                  color: accent,
+                                                  backgroundColor: Ui.track,
+                                                ),
+                                              ),
+                                            ),
+                                            if (!fast && owned) ...[
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                '${remaining.toStringAsFixed(1)} s',
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Ui.ink2,
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          [
+                                            fast
+                                                ? '${formatter.format(eco.incomePerSecond(c.state, index))}/s'
+                                                : '${formatter.format(income)} por ciclo',
+                                            if (toNext != null && owned)
+                                              'con $toNext más, el doble de rápido',
+                                          ].join(' · '),
+                                          key: Key('income-$index'),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w500,
+                                            color: Ui.ink2,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(width: 6),
+                                  const SizedBox(width: 8),
                                   TutorialTarget(
                                     id: 'manager-$index',
                                     child: _ManagerSlot(
@@ -316,53 +370,6 @@ class BusinessCard extends StatelessWidget {
                                     ),
                                   ),
                                 ],
-                              ),
-                              const SizedBox(height: 6),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(6),
-                                      child: LinearProgressIndicator(
-                                        minHeight: 12,
-                                        value: fast
-                                            ? 1
-                                            : (owned ? b.progress : 0),
-                                        color: accent,
-                                        backgroundColor: Ui.track,
-                                      ),
-                                    ),
-                                  ),
-                                  if (!fast && owned) ...[
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      '${remaining.toStringAsFixed(1)} s',
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: Ui.ink2,
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                [
-                                  fast
-                                      ? '${formatter.format(eco.incomePerSecond(c.state, index))}/s'
-                                      : '${formatter.format(income)} por ciclo',
-                                  if (toNext != null && owned)
-                                    'con $toNext más, el doble de rápido',
-                                ].join(' · '),
-                                key: Key('income-$index'),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  color: Ui.ink2,
-                                ),
                               ),
                               const SizedBox(height: 8),
                               TutorialTarget(
@@ -595,7 +602,7 @@ class _BuyButtonState extends State<_BuyButton> {
             borderRadius: BorderRadius.circular(16),
             onTap: on ? widget.onTap : null,
             child: Container(
-              constraints: const BoxConstraints(minHeight: 54),
+              constraints: const BoxConstraints(minHeight: 46),
               alignment: Alignment.center,
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               child: Column(
