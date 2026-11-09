@@ -45,7 +45,18 @@ void main() {
       t.widget<Text>(find.byKey(const Key('washer-hint'))).data,
       contains('¡Toca para lavar!'),
     );
-    expect(find.byKey(const Key('washer-chip')), findsNothing);
+    // El multiplicador se ve siempre, aun en +0%.
+    expect(
+      t
+          .widget<Text>(
+            find.descendant(
+              of: find.byKey(const Key('washer-chip')),
+              matching: find.byType(Text),
+            ),
+          )
+          .data,
+      '+0%',
+    );
   });
 
   testWidgets('cada toque suma 2% y el encabezado lo muestra', (t) async {
@@ -81,7 +92,18 @@ void main() {
     await t.pump();
     expect(c.washerBonus, 0);
     expect(bonusText(t), '+0%');
-    expect(find.byKey(const Key('washer-chip')), findsNothing);
+    // El multiplicador se ve siempre, aun en +0%.
+    expect(
+      t
+          .widget<Text>(
+            find.descendant(
+              of: find.byKey(const Key('washer-chip')),
+              matching: find.byType(Text),
+            ),
+          )
+          .data,
+      '+0%',
+    );
     await t.pump(const Duration(seconds: 2));
   });
 

@@ -7,6 +7,8 @@ import 'settings_page.dart';
 import 'offline_dialog.dart';
 import 'prestige_page.dart';
 import 'shop_page.dart';
+import 'art.dart';
+import 'backdrop.dart';
 import 'bottom_nav.dart';
 import 'cutscene_player.dart';
 import 'game_header.dart';
@@ -28,6 +30,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   /// Orden de la barra: Mejoras, Metas, Negocios, Centrifugado y Tienda.
   static const _homeTab = 2;
   static const _shopTab = 4;
+  static const _prestigeTab = 3;
   int _tab = _homeTab;
   bool _dialogOpen = false;
 
@@ -116,6 +119,12 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     });
   }
 
+  /// Cambia de pestaña (barra inferior o toque a los contadores del encabezado).
+  void _go(int i) {
+    setState(() => _tab = i);
+    if (i == _shopTab) widget.controller.logIapView();
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = widget.controller;
@@ -123,10 +132,26 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       listenable: c,
       builder: (context, _) {
         final pages = <Widget>[
-          UpgradesPage(controller: c, formatter: widget.controller.formatter),
-          GoalsPage(controller: c, formatter: c.formatter),
+          MenuBackdrop(
+            image: Art.bgRoom,
+            child: UpgradesPage(
+              controller: c,
+              formatter: widget.controller.formatter,
+            ),
+          ),
+          MenuBackdrop(
+            image: Art.bgShop,
+            child: GoalsPage(controller: c, formatter: c.formatter),
+          ),
           BusinessesPage(controller: c, formatter: widget.controller.formatter),
-          PrestigePage(controller: c, formatter: widget.controller.formatter),
+          MenuBackdrop(
+            image: 'assets/art/bg_tambor.jpg',
+            opacity: 0.16,
+            child: PrestigePage(
+              controller: c,
+              formatter: widget.controller.formatter,
+            ),
+          ),
           ShopPage(controller: c, formatter: c.formatter),
         ];
         return PopScope(
@@ -139,6 +164,8 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
               preferredSize: Size.fromHeight(GameHeader.heightFor(context)),
               child: GameHeader(
                 controller: c,
+                onGold: () => _go(_shopTab),
+                onPairs: () => _go(_prestigeTab),
                 onSettings: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (_) => SettingsPage(controller: c),
@@ -158,10 +185,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
             ),
             bottomNavigationBar: AnimatedBottomNav(
               selected: _tab,
-              onSelect: (i) {
-                setState(() => _tab = i);
-                if (i == _shopTab) c.logIapView();
-              },
+              onSelect: _go,
               tabs: [
                 NavTab(
                   label: 'Mejoras',

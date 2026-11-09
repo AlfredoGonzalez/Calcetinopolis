@@ -418,7 +418,7 @@ El jugador empieza con el negocio 1 gratis. Todos los valores viven en un archiv
 
 ### 9.4 Prestigio
 
-Se ganan Parejas Reunidas (el prestigio se llama Centrifugado) según el dinero ganado en toda la vida del jugador (*E_vida*, no solo desde el último reinicio). *S* es la constante de escala, ajustable en config; su valor inicial era `1e12` (placeholder); el simulador lo calibró a `1e14` (ver `docs/BALANCE.md`) para que el primer reinicio llegue entre los 45 y 90 minutos de juego.
+Se ganan Parejas Reunidas (el prestigio se llama Centrifugado) según el dinero ganado en toda la vida del jugador (*E_vida*, no solo desde el último reinicio). *S* es la constante de escala, ajustable en config; su valor inicial era `1e12` (placeholder); el simulador lo calibró a `1e13` (ver `docs/BALANCE.md`) para que el primer reinicio llegue entre los 30 y 45 minutos de juego.
 
 ```latex
 P_{total} = \left\lfloor 150 \cdot \sqrt{\frac{E_{vida}}{S}} \right\rfloor

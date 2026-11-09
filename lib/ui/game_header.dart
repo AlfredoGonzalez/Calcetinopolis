@@ -13,10 +13,16 @@ class GameHeader extends StatelessWidget {
     super.key,
     required this.controller,
     required this.onSettings,
+    this.onGold,
+    this.onPairs,
   });
 
   final GameController controller;
   final VoidCallback onSettings;
+
+  /// Tocar los Botones Dorados lleva a la tienda; tocar las Parejas, al Centrifugado.
+  final VoidCallback? onGold;
+  final VoidCallback? onPairs;
 
   /// Alto del contenido, sin la barra de estado.
   static const contentHeight = 84.0;
@@ -103,14 +109,18 @@ class GameHeader extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (c.washerBonus >= 0.005)
-                            _Tag(
-                              key: const Key('washer-chip'),
-                              color: Ui.teal,
-                              text: '+${(c.washerBonus * 100).round()}%',
-                            ),
-                          if (c.washerBonus >= 0.005 &&
-                              c.state.boostSeconds > 0)
+                          // El bono de la lavadora se ve siempre (+0% por defecto).
+                          _Tag(
+                            key: const Key('washer-chip'),
+                            color: c.washerBonus >= 0.005
+                                ? Ui.teal
+                                : const Color(0x33FFFFFF),
+                            textColor: c.washerBonus >= 0.005
+                                ? Ui.ink
+                                : Ui.headerSub,
+                            text: '+${(c.washerBonus * 100).round()}%',
+                          ),
+                          if (c.state.boostSeconds > 0)
                             const SizedBox(width: 6),
                           if (c.state.boostSeconds > 0)
                             _Tag(
@@ -130,6 +140,7 @@ class GameHeader extends StatelessWidget {
             const SizedBox(width: 8),
             // Derecha: siempre en el mismo lugar.
             _Pill(
+              onTap: onGold,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -148,6 +159,7 @@ class GameHeader extends StatelessWidget {
             ),
             const SizedBox(width: 6),
             _Pill(
+              onTap: onPairs,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -196,21 +208,26 @@ const _pillText = TextStyle(
 );
 
 class _Pill extends StatelessWidget {
-  const _Pill({required this.child});
+  const _Pill({required this.child, this.onTap});
 
   final Widget child;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 36,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: const Color(0x29FFFFFF),
+    return Material(
+      color: const Color(0x29FFFFFF),
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
         borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Container(
+          height: 36,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          alignment: Alignment.center,
+          child: child,
+        ),
       ),
-      child: child,
     );
   }
 }

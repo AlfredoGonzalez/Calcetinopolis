@@ -24,14 +24,21 @@ void main() {
     expect(report.runs.first.firstManager, lessThan(180));
   });
 
-  test('negocio 10 entre 40 y 60 min', () {
-    final t = report.runs.first.business10!;
-    expect(t, inInclusiveRange(40 * 60, 60 * 60));
-  });
+  test(
+    'primer prestigio sugerido entre 30 y 45 min (sin tocar la lavadora)',
+    () {
+      final t = report.runs.first.prestigeSuggested!;
+      expect(t, inInclusiveRange(30 * 60, 45 * 60));
+    },
+  );
 
-  test('primer prestigio sugerido entre 45 y 90 min', () {
-    final t = report.runs.first.prestigeSuggested!;
-    expect(t, inInclusiveRange(45 * 60, 90 * 60));
+  test('tocando la lavadora sin parar el primer prestigio baja de 30 min', () {
+    final r = Simulator(
+      Economy(config),
+      washerTapsPerSecond: 2,
+    ).run(maxRuns: 1);
+    final t = r.runs.first.prestigeSuggested!;
+    expect(t, inInclusiveRange(18 * 60, 30 * 60));
   });
 
   test('cada corrida llega al mismo punto más rápido que la anterior', () {

@@ -277,18 +277,18 @@ void main() {
     });
 
     test('cobra P_total - ya cobradas, usando E_vida', () {
-      s.lifetimeEarnings = n('1e14'); // S = 1e14 => 150 parejas
+      s.lifetimeEarnings = n('1e13'); // S = 1e13 => 150 parejas
       expect(eco.pairsTotal(s), BigNum.fromInt(150));
       expect(eco.prestige(s), BigNum.fromInt(150));
       expect(s.pairsClaimed, BigNum.fromInt(150));
       // Mismo E_vida: ya no hay nada por cobrar.
       expect(eco.pairsPending(s), BigNum.zero);
-      s.lifetimeEarnings = n('4e14'); // 2x sqrt => 300 en total
+      s.lifetimeEarnings = n('4e13'); // 2x sqrt => 300 en total
       expect(eco.pairsPending(s), BigNum.fromInt(150));
     });
 
     test('1 Hilván por Pareja nueva; las Parejas no se gastan', () {
-      s.lifetimeEarnings = n('1e14');
+      s.lifetimeEarnings = n('1e13');
       eco.prestige(s);
       expect(s.hilvanes, BigNum.fromInt(150));
       s.hilvanes = BigNum.zero; // gastar Hilvanes en la tienda
@@ -298,7 +298,7 @@ void main() {
 
     test('reinicia lo que debe y conserva lo que debe', () {
       s.money = n('1e9');
-      s.lifetimeEarnings = n('1e14');
+      s.lifetimeEarnings = n('1e13');
       s.upgrades.add('all_x3_1');
       s.businesses[0].owned = 90;
       s.businesses[0].hasManager = true;
@@ -311,12 +311,12 @@ void main() {
       expect(s.businesses[0].owned, 1);
       expect(s.businesses[0].hasManager, isFalse);
       expect(s.businesses[4].owned, 0);
-      expect(s.lifetimeEarnings, n('1e14'), reason: 'E_vida nunca se reinicia');
+      expect(s.lifetimeEarnings, n('1e13'), reason: 'E_vida nunca se reinicia');
       expect(s.pairsClaimed, BigNum.fromInt(150));
     });
 
     test('el multiplicador nunca baja al centrifugar', () {
-      s.lifetimeEarnings = n('1e14');
+      s.lifetimeEarnings = n('1e13');
       final before = eco.multiplier(s, 0);
       final after = eco.multiplierAfterPrestige(s);
       expect(after > before, isTrue);
@@ -325,14 +325,14 @@ void main() {
     });
 
     test('buen momento: por cobrar >= actuales', () {
-      s.lifetimeEarnings = n('1e14');
+      s.lifetimeEarnings = n('1e13');
       expect(eco.isGoodTimeToPrestige(s), isTrue);
       eco.prestige(s);
       expect(eco.isGoodTimeToPrestige(s), isFalse);
       s.lifetimeEarnings =
-          n('1e14') * n('2.5'); // 237 total: 87 por cobrar < 150
+          n('1e13') * n('2.5'); // 237 total: 87 por cobrar < 150
       expect(eco.isGoodTimeToPrestige(s), isFalse);
-      s.lifetimeEarnings = n('1e15'); // 474 total: 324 por cobrar
+      s.lifetimeEarnings = n('1e14'); // 474 total: 324 por cobrar
       expect(eco.isGoodTimeToPrestige(s), isTrue);
     });
   });

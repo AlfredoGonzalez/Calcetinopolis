@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'art.dart';
+import 'backdrop.dart';
 import 'theme.dart';
 
 /// Una pestaña de la barra inferior.
@@ -42,31 +43,70 @@ class AnimatedBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      elevation: 10,
-      shadowColor: Colors.black26,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: height,
-          child: Row(
-            children: [
-              for (var i = 0; i < tabs.length; i++)
-                Expanded(
-                  child: _NavButton(
-                    tab: tabs[i],
-                    selected: i == selected,
-                    onTap: () => onSelect(i),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Material(
+          elevation: 10,
+          shadowColor: Colors.black38,
+          color: Colors.transparent,
+          child: DecoratedBox(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Ui.navy2, Ui.navy1],
+              ),
+            ),
+            child: Stack(
+              children: [
+                const Positioned.fill(
+                  child: IgnorePointer(
+                    child: CustomPaint(
+                      painter: BubblesPainter(
+                        seed: 3,
+                        count: 9,
+                        maxRadius: 10,
+                        alpha: 0.3,
+                      ),
+                    ),
                   ),
                 ),
-            ],
+                SafeArea(
+                  top: false,
+                  child: SizedBox(
+                    height: height,
+                    child: Row(
+                      children: [
+                        for (var i = 0; i < tabs.length; i++)
+                          Expanded(
+                            child: _NavButton(
+                              tab: tabs[i],
+                              selected: i == selected,
+                              onTap: () => onSelect(i),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
+        // Espuma sobre el borde de la barra.
+        const Positioned(
+          left: 0,
+          right: 0,
+          top: -14,
+          height: 16,
+          child: IgnorePointer(
+            child: CustomPaint(
+              painter: FoamPainter(color: Ui.bg1, edge: Color(0xFF9FD7EE)),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -146,7 +186,7 @@ class _NavButtonState extends State<_NavButton>
                   fontWeight: widget.selected
                       ? FontWeight.w800
                       : FontWeight.w600,
-                  color: widget.selected ? Palette.outline : Colors.black54,
+                  color: widget.selected ? Ui.yellow : Ui.headerSub,
                 ),
               ),
             ),

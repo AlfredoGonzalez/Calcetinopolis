@@ -422,7 +422,7 @@
     }
   ],
   "prestige": {
-    "scale": "1e14",
+    "scale": "1e13",
     "base": 150,
     "pair_bonus": 0.02,
     "hilvanes_per_pair": 1,
