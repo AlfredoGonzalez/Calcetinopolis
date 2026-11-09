@@ -7,10 +7,10 @@ import '../app/game_controller.dart';
 import 'art.dart';
 import 'theme.dart';
 
-/// La lavadora que se toca, protagonista de Negocios: grande, con dos
-/// mascotas asomándose por arriba. Cada toque suma un bono temporal de
-/// velocidad que se consume solo en cuanto se deja de tocar, como la batería
-/// de la lavadora.
+/// La lavadora que se toca, protagonista de Negocios pero compacta (para que
+/// quepan 2 o 3 negocios debajo): la lavadora con dos mascotas asomándose, y a
+/// su lado la energía. Cada toque suma un bono temporal de velocidad que se
+/// consume solo en cuanto se deja de tocar, como la batería de la lavadora.
 class WasherCard extends StatefulWidget {
   const WasherCard({super.key, required this.controller});
 
@@ -50,16 +50,17 @@ class _WasherCardState extends State<WasherCard>
     final fill = c.washerFill;
     final pct = (c.washerBonus * 100).round();
     final reduce = MediaQuery.disableAnimationsOf(context);
-    // En pantallas bajas todo se encoge un poco.
-    final k = MediaQuery.sizeOf(context).height < 720 ? 0.78 : 1.0;
+    // Compacta; en pantallas bajas se encoge un poco más.
+    final h = MediaQuery.sizeOf(context).height;
+    final k = h < 720 ? 0.44 : (h < 800 ? 0.5 : 0.58);
     final washer = 205 * k;
     final mascot = 112 * k;
     return GestureDetector(
       key: const Key('washer'),
       behavior: HitTestBehavior.opaque,
       onTapDown: (_) => _tap(),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           AnimatedBuilder(
             animation: _pop,
@@ -74,6 +75,7 @@ class _WasherCardState extends State<WasherCard>
               // La lavadora tiembla más cuanto más energía tiene.
               final shake = reduce ? 0.0 : math.sin(time * 38) * 0.04 * fill;
               return SizedBox(
+                width: washer + 24,
                 height: washer + 34 * k,
                 child: Stack(
                   clipBehavior: Clip.none,
@@ -190,86 +192,94 @@ class _WasherCardState extends State<WasherCard>
               );
             },
           ),
-          const SizedBox(height: 6),
-          // La barra de energía, en una píldora debajo de la lavadora.
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 4),
-            padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: Ui.ink, width: 2.5),
-              boxShadow: const [
-                BoxShadow(color: Ui.tealSoft, offset: Offset(0, 4)),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          pct > 0
-                              ? 'Se consume si dejas de tocar'
-                              : '¡Toca para lavar!',
-                          key: const Key('washer-hint'),
-                          style: const TextStyle(
-                            fontSize: 14,
+          const SizedBox(width: 10),
+          // La energía, a un lado de la lavadora.
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: Ui.ink, width: 2.5),
+                boxShadow: const [
+                  BoxShadow(color: Ui.tealSoft, offset: Offset(0, 4)),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          '+$pct%',
+                          key: const Key('washer-bonus'),
+                          style: TextStyle(
+                            fontSize: 22,
                             fontWeight: FontWeight.w700,
+                            color: pct > 0 ? Ui.tealEdge : Ui.ink2,
                           ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '+$pct%',
-                      key: const Key('washer-bonus'),
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: pct > 0 ? Ui.tealEdge : Ui.ink2,
-                      ),
-                    ),
-                    const Text(
-                      ' velocidad',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: SizedBox(
-                    height: 12,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        const ColoredBox(color: Ui.track),
-                        FractionallySizedBox(
-                          key: const Key('washer-bar'),
-                          alignment: Alignment.centerLeft,
-                          widthFactor: fill,
-                          heightFactor: 1,
-                          child: const DecoratedBox(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [Ui.teal, Ui.yellow, Ui.orange],
-                              ),
-                            ),
+                        const Text(
+                          ' velocidad',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 6),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: SizedBox(
+                      height: 12,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          const ColoredBox(color: Ui.track),
+                          FractionallySizedBox(
+                            key: const Key('washer-bar'),
+                            alignment: Alignment.centerLeft,
+                            widthFactor: fill,
+                            heightFactor: 1,
+                            child: const DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [Ui.teal, Ui.yellow, Ui.orange],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      pct > 0
+                          ? 'Se consume si dejas de tocar'
+                          : '¡Toca para lavar!',
+                      key: const Key('washer-hint'),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Ui.ink2,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

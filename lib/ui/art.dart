@@ -16,6 +16,7 @@ class Art extends StatelessWidget {
     this.size = 40,
     this.fallback,
     this.fallbackName,
+    this.decodeScale = 1,
   });
 
   final String? name;
@@ -26,6 +27,10 @@ class Art extends StatelessWidget {
 
   /// Arte alterno por nombre, si [name] no existe.
   final String? fallbackName;
+
+  /// Cuánto se decodifica por encima del tamaño en pantalla. Con 2, un ícono
+  /// que se agranda al doble (la barra inferior) sigue nítido.
+  final double decodeScale;
 
   static const bgRoom = 'assets/art/bg_cuarto_lavado.jpg';
   static const bgShop = 'assets/art/bg_tienda.jpg';
@@ -50,13 +55,14 @@ class Art extends StatelessWidget {
     String file, {
     required Widget Function() onMissing,
   }) {
-    final px = (size * MediaQuery.devicePixelRatioOf(context)).round();
+    final px = (size * decodeScale * MediaQuery.devicePixelRatioOf(context))
+        .round();
     return Image.asset(
       'assets/art/$file.png',
       width: size,
       height: size,
       cacheWidth: px,
-      filterQuality: FilterQuality.medium,
+      filterQuality: FilterQuality.high,
       errorBuilder: (_, _, _) => onMissing(),
     );
   }

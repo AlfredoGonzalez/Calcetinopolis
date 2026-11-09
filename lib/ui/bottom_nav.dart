@@ -179,7 +179,13 @@ class _NavButtonState extends State<_NavButton>
   Widget build(BuildContext context) {
     final tab = widget.tab;
     final reduce = MediaQuery.disableAnimationsOf(context);
-    Widget icon = Art(tab.art, size: _iconSize, fallback: tab.fallback);
+    // Se decodifica al doble: la pestaña elegida se agranda 2x y debe verse nítida.
+    Widget icon = Art(
+      tab.art,
+      size: _iconSize,
+      fallback: tab.fallback,
+      decodeScale: _bigScale,
+    );
     if (tab.badgeKey != null) {
       icon = Badge(
         key: tab.badgeKey,
