@@ -21,8 +21,9 @@ void main() {
 
   setUp(resetMascotCooldown);
 
-  Future<void> pumpApp(WidgetTester t) async {
-    c = GameController(Economy(config));
+  Future<void> pumpApp(WidgetTester t, {bool tutorial = false}) async {
+    // El tutorial anima en bucle: solo lo prueban las pruebas del tutorial.
+    c = GameController(Economy(config))..state.tutorialDone = !tutorial;
     await t.binding.setSurfaceSize(const Size(400, 900));
     addTearDown(() => t.binding.setSurfaceSize(null));
     await t.pumpWidget(
@@ -95,11 +96,10 @@ void main() {
 
   testWidgets('negocios no desbloqueados son silueta con costo', (t) async {
     await pumpApp(t);
-    await t.scrollUntilVisible(
-      find.text('???'),
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
+    for (var i = 0; i < 6 && find.text('???').evaluate().isEmpty; i++) {
+      await t.drag(find.byType(ListView).last, const Offset(0, -300));
+      await t.pump();
+    }
     expect(find.text('???'), findsWidgets);
     expect(find.byIcon(Icons.lock), findsWidgets);
     // La silueta usa el arte del negocio, tintado de un solo color.
@@ -342,30 +342,50 @@ void main() {
       expect(t.widget<Text>(find.byKey(const Key('pairs-pending'))).data, '+0');
     });
 
-    testWidgets('dice cuánto falta para la primera pareja', (t) async {
+    testWidgets(
+      'dice con cuántas Parejas conviene centrifugar y cuánto falta',
+      (t) async {
+        await openTab(t);
+        // Primera vuelta: 100 Parejas por cobrar = 4.44T pelusas ganadas.
+        expect(
+          find.textContaining('Lo ideal es centrifugar con 100'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('4.44T'), findsOneWidget);
+        expect(
+          t
+              .widget<LinearProgressIndicator>(
+                find.byKey(const Key('prestige-goal')),
+              )
+              .value,
+          0,
+        );
+        c.state.lifetimeEarnings = BigNum.parse('2.22e12'); // ~70 Parejas
+        c.advance(0);
+        await t.pump();
+        expect(
+          t
+              .widget<LinearProgressIndicator>(
+                find.byKey(const Key('prestige-goal')),
+              )
+              .value,
+          closeTo(0.7, 0.02),
+        );
+      },
+    );
+
+    testWidgets('con Parejas ya cobradas la meta se recalcula', (t) async {
       await openTab(t);
-      // P = 150 * sqrt(E / 1e13) >= 1  =>  E >= 4.44e8 pelusas en total.
-      expect(find.textContaining('tu primera pareja'), findsOneWidget);
-      expect(find.textContaining('444'), findsOneWidget);
-      expect(
-        t
-            .widget<LinearProgressIndicator>(
-              find.byKey(const Key('prestige-goal')),
-            )
-            .value,
-        0,
-      );
-      c.state.lifetimeEarnings = BigNum.parse('2.22e8');
+      c.state.pairsClaimed = BigNum.fromInt(280);
+      c.state.lifetimeEarnings = BigNum.parse('3.495e13');
       c.advance(0);
       await t.pump();
+      // Recomendadas: 280 por cobrar (duplicar el bono), no "una más".
       expect(
-        t
-            .widget<LinearProgressIndicator>(
-              find.byKey(const Key('prestige-goal')),
-            )
-            .value,
-        closeTo(0.5, 0.01),
+        find.textContaining('Lo ideal es centrifugar con 280'),
+        findsOneWidget,
       );
+      expect(find.textContaining('llevas 0'), findsOneWidget);
     });
 
     testWidgets('muestra antes y después, y buen momento', (t) async {
@@ -526,17 +546,62 @@ void main() {
   });
 
   group('Tutorial', () {
-    testWidgets('se ve al inicio y se salta', (t) async {
-      await pumpApp(t);
+    Future<void> startTutorial(WidgetTester t) async {
+      await pumpApp(t, tutorial: true);
+      c.advance(0);
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 50)); // mide el destino
+    }
+
+    testWidgets('se ve al inicio, oscurece la pantalla y se salta', (t) async {
+      await startTutorial(t);
       expect(find.byKey(const Key('tutorial')), findsOneWidget);
-      expect(find.textContaining('Paso 1 de 3'), findsOneWidget);
+      expect(find.textContaining('Paso 1 de 9'), findsOneWidget);
+      expect(find.textContaining('Tendedero de pelusas'), findsWidgets);
       await t.tap(find.byKey(const Key('tutorial-skip')));
       await t.pump();
       expect(find.byKey(const Key('tutorial')), findsNothing);
     });
 
+    testWidgets('solo lo iluminado recibe toques', (t) async {
+      await startTutorial(t);
+      // Fuera del hueco: la pestaña Tienda no responde.
+      await t.tap(find.byKey(const Key('nav-Tienda')), warnIfMissed: false);
+      await t.pump();
+      expect(c.hasVisitedTab(4), isFalse);
+      // Dentro del hueco: el Tendedero sí.
+      await t.tap(find.byKey(const Key('card-0')));
+      c.advance(0);
+      await t.pump();
+      expect(c.state.businesses[0].running, isTrue);
+      expect(find.byKey(const Key('tutorial')), findsNothing);
+    });
+
+    testWidgets('"Ahora no" cierra el paso sin saltar todo', (t) async {
+      await startTutorial(t);
+      await t.tap(find.byKey(const Key('tutorial-later')));
+      await t.pump();
+      expect(c.state.tutorialSeen, contains('tendedero'));
+      expect(c.state.tutorialDone, isFalse);
+      expect(find.byKey(const Key('tutorial')), findsNothing);
+    });
+
+    testWidgets('al llegar a la condición aparece el siguiente paso', (
+      t,
+    ) async {
+      await startTutorial(t);
+      await t.tap(find.byKey(const Key('card-0')));
+      await t.pump();
+      c.state.money = BigNum.fromInt(100);
+      c.advance(0);
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 50));
+      expect(find.textContaining('Paso 2 de 9'), findsOneWidget);
+      expect(find.textContaining('otro Tendedero'), findsOneWidget);
+    });
+
     testWidgets('la mascota salta al avanzar un paso y se va sola', (t) async {
-      await pumpApp(t);
+      await startTutorial(t);
       expect(find.byKey(const Key('mascot-burst')), findsNothing);
       c.tap(0);
       c.advance(1);
@@ -599,14 +664,6 @@ void main() {
       await t.pump();
       expect(find.byKey(const Key('mascot-burst')), findsNothing);
     });
-
-    testWidgets('el texto cambia con el progreso', (t) async {
-      await pumpApp(t);
-      c.tap(0);
-      c.advance(1);
-      await t.pump();
-      expect(find.textContaining('Paso 2 de 3'), findsOneWidget);
-    });
   });
 
   group('Ajustes', () {
@@ -617,8 +674,8 @@ void main() {
       c = GameController(
         Economy(config),
         saveManager: SaveManager(store, SaveCodec(config.businesses.length)),
-      );
-      await t.binding.setSurfaceSize(const Size(400, 1200));
+      )..state.tutorialDone = true;
+      await t.binding.setSurfaceSize(const Size(400, 1500));
       addTearDown(() => t.binding.setSurfaceSize(null));
       await t.pumpWidget(
         MaterialApp(
@@ -629,6 +686,14 @@ void main() {
       await t.tap(find.byKey(const Key('settings')));
       await t.pumpAndSettle();
     }
+
+    testWidgets('Ver el tutorial otra vez lo reinicia', (t) async {
+      await openSettings(t);
+      c.skipTutorial();
+      await t.tap(find.byKey(const Key('replay-tutorial')));
+      await t.pump();
+      expect(c.state.tutorialDone, isFalse);
+    });
 
     testWidgets('cambiar el formato de números actualiza la pantalla', (
       t,

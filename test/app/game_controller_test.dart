@@ -306,32 +306,105 @@ void f5Tests() {
   });
 
   group('tutorial', () {
-    test('avanza en 3 pasos y termina solo', () {
-      c.advance(0); // el reloj del juego registra el paso 0
-      expect(c.tutorialStep, 0);
-      c.tap(0);
-      c.advance(1);
-      expect(c.tutorialStep, 1);
-      c.state.money = BigNum.fromInt(100);
-      c.buy(0);
+    String? active() => c.activeTutorial?.id;
+
+    test('la cadena inicial avanza con las condiciones', () {
       c.advance(0);
-      expect(c.tutorialStep, 2);
-      c.state.money = BigNum.fromInt(5000);
+      expect(active(), 'tendedero');
+      c.tap(0);
+      c.advance(0);
+      expect(active(), isNull, reason: 'aún no alcanza para otro Tendedero');
+      c.state.money = BigNum.fromInt(100);
+      c.advance(0);
+      expect(active(), 'comprar');
+      c.buy(0);
+      c.state.money = BigNum.zero;
+      c.advance(0);
+      expect(active(), isNull);
+      c.state.money = BigNum.fromInt(1000);
+      c.advance(0);
+      expect(active(), 'cesto');
+      c.state.money = BigNum.fromInt(1000);
+      c.state.businesses[1].owned = 1;
+      c.advance(0);
+      expect(active(), 'manager');
+      c.state.money = BigNum.fromInt(100000);
       c.buyManager(0);
-      c.advance(0.1);
-      expect(c.tutorialStep, isNull);
-      expect(c.state.tutorialDone, isTrue);
+      c.advance(0);
+      expect(active(), 'lavadora');
+      c.tapWasher();
+      c.tapWasher();
+      c.advance(0);
+      expect(active(), 'lavadora', reason: 'faltan toques');
+      c.tapWasher();
+      c.advance(0);
+      expect(c.state.tutorialSeen, containsAll(['tendedero', 'lavadora']));
       final steps = analytics.events
-          .where((e) => e.$1 == 'tutorial_step')
+          .where((e) => e.$1 == 'tutorial_step' && e.$2['done'] != true)
           .map((e) => e.$2['step']);
-      expect(steps, containsAllInOrder([0, 1, 2, 'done']));
+      expect(
+        steps,
+        containsAllInOrder(['tendedero', 'comprar', 'cesto', 'manager']),
+      );
+    });
+
+    test('Mejoras, Metas, Centrifugado y Tienda salen cuando toca', () {
+      c.state.tutorialSeen.addAll([
+        'tendedero',
+        'comprar',
+        'cesto',
+        'manager',
+        'lavadora',
+      ]);
+      c.advance(0);
+      // Regalo diario disponible: Metas.
+      expect(c.hasGoalNotice, isTrue);
+      expect(c.activeTutorial?.id, anyOf('metas', 'mejoras'));
+      c.noteTabVisit(1);
+      c.noteTabVisit(0);
+      c.advance(0);
+      expect(c.state.tutorialSeen, containsAll(['metas', 'mejoras']));
+      c.state.lifetimeEarnings = BigNum.parse('1e13');
+      c.advance(0);
+      expect(c.activeTutorial?.id, 'centrifugado');
+      c.noteTabVisit(3);
+      expect(c.activeTutorial?.id, isNull);
+      c.state.pairsClaimed = BigNum.fromInt(5);
+      c.advance(0);
+      expect(c.activeTutorial?.id, 'tienda');
+      c.noteTabVisit(4);
+      expect(c.state.tutorialDone, isTrue);
+    });
+
+    test('"Ahora no" da el paso por visto', () {
+      c.advance(0);
+      expect(active(), 'tendedero');
+      c.dismissTutorialStep();
+      expect(c.state.tutorialSeen, contains('tendedero'));
+      expect(active(), isNull);
     });
 
     test('se puede saltar en cualquier momento', () {
       c.skipTutorial();
-      expect(c.tutorialStep, isNull);
+      expect(c.activeTutorial, isNull);
       expect(c.state.tutorialDone, isTrue);
       expect(analytics.events.last.$2['step'], 'skipped');
+    });
+
+    test('repetir el tutorial lo reinicia', () {
+      c.skipTutorial();
+      c.restartTutorial();
+      expect(c.state.tutorialDone, isFalse);
+      expect(c.state.tutorialSeen, isNot(contains('lavadora')));
+      expect(active(), 'tendedero');
+    });
+
+    test('los pasos vistos se guardan', () {
+      c.state.tutorialSeen.add('tendedero');
+      final back = SaveCodec(
+        config.businesses.length,
+      ).decode(SaveCodec(config.businesses.length).encode(c.state, time.now()));
+      expect(back.state.tutorialSeen, {'tendedero'});
     });
 
     test('quien ya tiene todo no ve el tutorial', () {
@@ -340,7 +413,7 @@ void f5Tests() {
         ..businesses[0].owned = 5
         ..businesses[0].hasManager = true;
       final c2 = GameController(Economy(config), initial: g, time: time);
-      expect(c2.tutorialStep, isNull);
+      expect(c2.activeTutorial, isNull);
     });
   });
 
@@ -427,7 +500,8 @@ void f5Tests() {
       expect(c.state.businesses[0].owned, 1);
       expect(c.state.settings.numberFormat, 'names');
       expect(c.state.settings.fontScale, 1.3);
-      expect(c.tutorialStep, 0, reason: 'partida nueva, tutorial otra vez');
+      c.advance(0);
+      expect(c.activeTutorial?.id, 'tendedero', reason: 'partida nueva');
       final saved = (await manager.load()).data!.state;
       expect(saved.pairsClaimed, BigNum.zero);
     });

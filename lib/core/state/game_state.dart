@@ -106,11 +106,13 @@ class GameState {
     this.dailyAdDay,
     this.firstReturnDone = false,
     Set<String>? cutscenesSeen,
+    Set<String>? tutorialSeen,
     this.boostSeconds = 0,
   }) : money = money ?? BigNum.zero,
        lifetimeEarnings = lifetimeEarnings ?? BigNum.zero,
        upgrades = upgrades ?? <String>{},
        cutscenesSeen = cutscenesSeen ?? <String>{},
+       tutorialSeen = tutorialSeen ?? <String>{},
        pairsClaimed = pairsClaimed ?? BigNum.zero,
        hilvanes = hilvanes ?? BigNum.zero,
        shopLevels = shopLevels ?? <String, int>{},
@@ -174,6 +176,9 @@ class GameState {
 
   /// Cutscenes ya vistas (`intro`, `reunion`, `welcome`).
   final Set<String> cutscenesSeen;
+
+  /// Pasos del tutorial ya vistos (ver `lib/app/tutorial.dart`).
+  final Set<String> tutorialSeen;
   final PlayerSettings settings;
 
   /// Segundos restantes de boost por anuncio.
@@ -204,6 +209,7 @@ class GameState {
     'dailyAdDay': dailyAdDay,
     'firstReturnDone': firstReturnDone,
     'cutscenesSeen': cutscenesSeen.toList()..sort(),
+    'tutorialSeen': tutorialSeen.toList()..sort(),
     'settings': settings.toJson(),
     'boostSeconds': boostSeconds,
   };
@@ -255,6 +261,9 @@ class GameState {
       cutscenesSeen: {
         for (final e in (j['cutscenesSeen'] as List?) ?? const []) e as String,
       },
+      tutorialSeen: {
+        for (final e in (j['tutorialSeen'] as List?) ?? const []) e as String,
+      },
       settings: PlayerSettings.fromJson(j['settings'] as Map<String, dynamic>?),
       boostSeconds: boost.isNaN || boost < 0 ? 0 : boost,
     );
@@ -281,6 +290,7 @@ class GameState {
     dailyAdDay: dailyAdDay,
     firstReturnDone: firstReturnDone,
     cutscenesSeen: {...cutscenesSeen},
+    tutorialSeen: {...tutorialSeen},
     settings: settings.copy(),
     boostSeconds: boostSeconds,
   )..washerBonus = washerBonus;

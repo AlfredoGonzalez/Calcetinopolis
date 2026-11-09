@@ -6,8 +6,8 @@ import '../app/game_controller.dart';
 import '../core/number_format.dart';
 import 'art.dart';
 import 'effects.dart';
-import 'sprite_sheet.dart';
 import 'theme.dart';
+import 'tutorial_overlay.dart';
 import 'washer_card.dart';
 
 const _amountLabels = {
@@ -54,10 +54,12 @@ class BusinessesPage extends StatelessWidget {
   Widget _content(GameController c, int count) {
     return Column(
       children: [
-        _TutorialBanner(controller: c),
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 22, 24, 8),
-          child: WasherCard(controller: c),
+          child: TutorialTarget(
+            id: 'washer',
+            child: WasherCard(controller: c),
+          ),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -195,183 +197,192 @@ class BusinessCard extends StatelessWidget {
     final level = eco.config.thresholds.where((t) => b.owned >= t).length;
     final accent = Ui.accent(index);
 
-    return ThresholdFx(
-      level: level,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(22),
-          boxShadow: [
-            BoxShadow(color: Ui.soft(accent), offset: const Offset(0, 4)),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(22),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              key: Key('card-$index'),
-              onTap: owned ? () => c.tap(index) : null,
-              child: IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // El arte del negocio, a todo lo alto de la tarjeta.
-                    Container(
-                      width: 112,
-                      color: Ui.soft(accent).withValues(alpha: 0.55),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          // Fondo ilustrado del negocio (bg_<arte>.jpg), si ya existe.
-                          Positioned.fill(
-                            child: Image.asset(
-                              'assets/art/bg_${cfg.art}.jpg',
-                              fit: BoxFit.cover,
-                              cacheWidth: 336,
-                              errorBuilder: (_, _, _) =>
-                                  const SizedBox.shrink(),
-                            ),
-                          ),
-                          WorkingBob(
-                            active:
-                                owned && !fast && (b.running || b.hasManager),
-                            progress: b.progress,
-                            child: Art(
-                              cfg.art,
-                              size: 100,
-                              fallback: Icons.store,
-                            ),
-                          ),
-                          Positioned(
-                            left: 8,
-                            top: 8,
-                            child: Container(
-                              constraints: const BoxConstraints(minWidth: 28),
-                              height: 28,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 7,
-                              ),
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: Ui.ink,
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 2,
-                                ),
-                              ),
-                              child: Text(
-                                'x${b.owned}',
-                                key: Key('owned-$index'),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
+    return TutorialTarget(
+      id: 'biz-$index',
+      child: ThresholdFx(
+        level: level,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: [
+              BoxShadow(color: Ui.soft(accent), offset: const Offset(0, 4)),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(22),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                key: Key('card-$index'),
+                onTap: owned ? () => c.tap(index) : null,
+                child: IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // El arte del negocio, a todo lo alto de la tarjeta.
+                      Container(
+                        width: 112,
+                        color: Ui.soft(accent).withValues(alpha: 0.55),
+                        child: Stack(
+                          alignment: Alignment.center,
                           children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(top: 2),
-                                    child: Text(
-                                      cfg.name,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 16,
-                                        height: 1.15,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                _ManagerSlot(
-                                  key: Key('manager-$index'),
-                                  index: index,
-                                  controller: c,
-                                  formatter: formatter,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(6),
-                                    child: LinearProgressIndicator(
-                                      minHeight: 12,
-                                      value: fast
-                                          ? 1
-                                          : (owned ? b.progress : 0),
-                                      color: accent,
-                                      backgroundColor: Ui.track,
-                                    ),
-                                  ),
-                                ),
-                                if (!fast && owned) ...[
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '${remaining.toStringAsFixed(1)} s',
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      color: Ui.ink2,
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              [
-                                fast
-                                    ? '${formatter.format(eco.incomePerSecond(c.state, index))}/s'
-                                    : '${formatter.format(income)} por ciclo',
-                                if (toNext != null && owned)
-                                  'con $toNext más, el doble de rápido',
-                              ].join(' · '),
-                              key: Key('income-$index'),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: Ui.ink2,
+                            // Fondo ilustrado del negocio (bg_<arte>.jpg), si ya existe.
+                            Positioned.fill(
+                              child: Image.asset(
+                                'assets/art/bg_${cfg.art}.jpg',
+                                fit: BoxFit.cover,
+                                cacheWidth: 336,
+                                errorBuilder: (_, _, _) =>
+                                    const SizedBox.shrink(),
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            _BuyButton(
-                              key: Key('buy-$index'),
-                              enabled: canBuy,
-                              label: 'Comprar ${c.unitsFor(index)}',
-                              detail: canBuy
-                                  ? formatter.format(c.costFor(index))
-                                  : 'Faltan ${formatter.format(c.missing(index))}',
-                              onTap: () => c.buy(index),
+                            WorkingBob(
+                              active:
+                                  owned && !fast && (b.running || b.hasManager),
+                              progress: b.progress,
+                              child: Art(
+                                cfg.art,
+                                size: 100,
+                                fallback: Icons.store,
+                              ),
+                            ),
+                            Positioned(
+                              left: 8,
+                              top: 8,
+                              child: Container(
+                                constraints: const BoxConstraints(minWidth: 28),
+                                height: 28,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 7,
+                                ),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: Ui.ink,
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: Text(
+                                  'x${b.owned}',
+                                  key: Key('owned-$index'),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
                             ),
                           ],
                         ),
                       ),
-                    ),
-                  ],
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(top: 2),
+                                      child: Text(
+                                        cfg.name,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 16,
+                                          height: 1.15,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  TutorialTarget(
+                                    id: 'manager-$index',
+                                    child: _ManagerSlot(
+                                      key: Key('manager-$index'),
+                                      index: index,
+                                      controller: c,
+                                      formatter: formatter,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(6),
+                                      child: LinearProgressIndicator(
+                                        minHeight: 12,
+                                        value: fast
+                                            ? 1
+                                            : (owned ? b.progress : 0),
+                                        color: accent,
+                                        backgroundColor: Ui.track,
+                                      ),
+                                    ),
+                                  ),
+                                  if (!fast && owned) ...[
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '${remaining.toStringAsFixed(1)} s',
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: Ui.ink2,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                [
+                                  fast
+                                      ? '${formatter.format(eco.incomePerSecond(c.state, index))}/s'
+                                      : '${formatter.format(income)} por ciclo',
+                                  if (toNext != null && owned)
+                                    'con $toNext más, el doble de rápido',
+                                ].join(' · '),
+                                key: Key('income-$index'),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: Ui.ink2,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              TutorialTarget(
+                                id: 'buy-$index',
+                                child: _BuyButton(
+                                  key: Key('buy-$index'),
+                                  enabled: canBuy,
+                                  label: 'Comprar ${c.unitsFor(index)}',
+                                  detail: canBuy
+                                      ? formatter.format(c.costFor(index))
+                                      : 'Faltan ${formatter.format(c.missing(index))}',
+                                  onTap: () => c.buy(index),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -662,58 +673,6 @@ class _AmountPicker extends StatelessWidget {
                 ),
               ),
             ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Tutorial de 3 pasos con una flecha de hilo (spec 9.12). Se puede saltar en cualquier momento.
-class _TutorialBanner extends StatelessWidget {
-  const _TutorialBanner({required this.controller});
-  final GameController controller;
-
-  static const _texts = [
-    'Toca el Tendedero para ganar tus primeras Pelusitas.',
-    'Compra otro Tendedero con el botón verde.',
-    'Contrata a tu primer manager: trabaja solo, incluso con la app cerrada.',
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final step = controller.tutorialStep;
-    if (step == null) return const SizedBox.shrink();
-    return Container(
-      key: const Key('tutorial'),
-      margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-      padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
-      decoration: BoxDecoration(
-        color: Ui.yellow.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Ui.yellow, width: 2),
-      ),
-      child: Row(
-        children: [
-          const SpriteSheet(
-            asset: 'assets/art/spr_mascota_idle_4x4.png',
-            frameSize: Size(209, 309),
-            columns: 4,
-            rows: 4,
-            fps: 8,
-            scale: 0.17,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              'Paso ${step + 1} de 3: ${_texts[step]}',
-              key: const Key('tutorial-text'),
-            ),
-          ),
-          TextButton(
-            key: const Key('tutorial-skip'),
-            onPressed: controller.skipTutorial,
-            child: const Text('Saltar'),
-          ),
         ],
       ),
     );

@@ -5,7 +5,7 @@ import '../services/services.dart';
 
 /// Versión actual del esquema de guardado. Sube al cambiar el formato y
 /// agrega una migración en [SaveCodec._migrations].
-const int kSaveVersion = 5;
+const int kSaveVersion = 6;
 
 class SaveData {
   SaveData(this.state, this.savedAt);
@@ -53,6 +53,9 @@ class SaveCodec {
             d['cutscenesSeen'] ?? ['intro', if (hadPairs) 'reunion'],
       };
     },
+    // v5 -> v6: tutorial por fases. Los pasos vistos se guardan; quien ya
+    // terminó el tutorial viejo no lo ve de nuevo (puede repetirlo en Ajustes).
+    5: (d) => {...d, 'tutorialSeen': d['tutorialSeen'] ?? <String>[]},
   };
 
   static int checksum(String s) {

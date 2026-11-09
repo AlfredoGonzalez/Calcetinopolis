@@ -186,6 +186,17 @@ void main() {
       expect(veteran.cutscenesSeen, {'intro', 'reunion'});
     });
 
+    test('migra una v5 a v6: sin pasos de tutorial vistos', () {
+      final d = jsonEncode({'money': '10', 'tutorialDone': true});
+      final s = codec
+          .decode(
+            jsonEncode({'v': 5, 't': 0, 'h': SaveCodec.checksum(d), 'd': d}),
+          )
+          .state;
+      expect(s.tutorialSeen, isEmpty);
+      expect(s.tutorialDone, isTrue);
+    });
+
     test('las cutscenes vistas se guardan y se recuperan', () {
       final st = GameState.initial(10)
         ..cutscenesSeen.addAll(['welcome', 'intro']);
