@@ -133,14 +133,16 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       builder: (context, _) {
         final pages = <Widget>[
           MenuBackdrop(
-            image: Art.bgRoom,
+            image: 'assets/art/bg_mejoras.jpg',
+            fallbackImage: Art.bgRoom,
             child: UpgradesPage(
               controller: c,
               formatter: widget.controller.formatter,
             ),
           ),
           MenuBackdrop(
-            image: Art.bgShop,
+            image: 'assets/art/bg_metas.jpg',
+            fallbackImage: Art.bgShop,
             child: GoalsPage(controller: c, formatter: c.formatter),
           ),
           BusinessesPage(controller: c, formatter: widget.controller.formatter),

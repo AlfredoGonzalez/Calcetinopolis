@@ -12,6 +12,7 @@ La mascota (reposo, salto, celebra), el Centrifugado, los tres sprites de la mas
 | 2 | Retoques de lo entregado | Regenerar | Ver sección 6 | Baja |
 | 3 | Fondos de las 10 tarjetas de negocio | Imagen (sin magenta) | Panel izquierdo de cada tarjeta en Negocios | Media |
 | 4 | Fondo de la barra inferior (opcional) | Imagen | Hoy es espuma y burbujas dibujadas en código | Baja |
+| 5 | Fondos de Mejoras y Metas | Imagen (sin magenta) | Pantallas Mejoras y Metas | Media |
 
 Los prompts base (bloques A, B y C) siguen abajo por si regeneras algo.
 
@@ -105,6 +106,32 @@ Horizontal strip 1024x192, a row of soap bubbles and white foam forming a wavy s
 ```
 
 Sube el archivo como `bg_nav_espuma.png` y avísame; hoy el borde es código y se ve bien sin esto.
+
+## 9. Fondos de pantalla de Mejoras y Metas
+
+Son pantallas completas, **verticales 9:16 (1080×1920)**, opacas y **sin magenta**. El juego las dibuja atenuadas (~20%) detrás de las tarjetas, así que deben ser suaves y de poco contraste, con detalle solo en los bordes y el centro limpio. Súbelas como `bg_mejoras.jpg` y `bg_metas.jpg` a `assets/art/source/`. Si faltan, se usan los fondos de Negocios y Tienda.
+
+Pega primero el bloque A (estilo) y luego el bloque base con la escena.
+
+Bloque base:
+
+```text
+Vertical 9:16 full-screen background illustration for a mobile game menu, opaque, full bleed, no magenta. Flat 2D cute children's storybook style with a subtle knitted wool texture, soft gradient, gentle depth with 2 or 3 blurred layers, low contrast so cards can sit on top. Keep the center and most of the image calm and mostly empty; put the details near the top corners and the bottom edge. No characters, no sock, no text, no letters, no numbers, no frame, no vignette. Saturated but soft palette.
+```
+
+**Mejoras (managers, upgrades y umbrales): el taller de ayudantes**
+
+```text
+Scene: a cozy workshop corner for the sock helpers. Warm lavender and cream gradient wall with a subtle knitted-heart wallpaper pattern. At the top corners, blurred pegboards with tiny hanging tools (needle, scissors, thread spools, measuring tape) and a small lamp glow. At the bottom edge, a wooden shelf line with a few spools of colorful yarn and small gears, out of focus. Floating tiny sparkles, thread loops and gear shapes in the air. Soft upward arrows hidden as a faint pattern, hinting at improvements. Calm empty center.
+```
+
+**Metas (logros): el cielo de festejo**
+
+```text
+Scene: a celebration sky. Soft butter yellow to pink to light blue gradient, tiny clouds, a string of triangular bunting flags and small knitted stars across the top, confetti and sparkles scattered near the corners. At the bottom edge, a few soft rounded hills or cloud puffs with a small blurred golden trophy cup and a ribbon peeking at one corner. A faint ray of light from the top center. Calm empty center.
+```
+
+Si salen con elementos muy fuertes en el centro, agrega: `Reduce contrast by 30%, keep the center area plain.`
 
 ## Lo que hago yo sin arte nuevo
 

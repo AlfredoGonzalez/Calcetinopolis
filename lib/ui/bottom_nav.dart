@@ -43,54 +43,34 @@ class AnimatedBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Orden de capas (de atrás hacia adelante): barra con burbujas, espuma y,
+    // al final, los botones, para que nada tape los íconos.
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        Material(
-          elevation: 10,
-          shadowColor: Colors.black38,
-          color: Colors.transparent,
-          child: DecoratedBox(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Ui.navy2, Ui.navy1],
+        Positioned.fill(
+          child: Material(
+            elevation: 10,
+            shadowColor: Colors.black38,
+            color: Colors.transparent,
+            child: DecoratedBox(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Ui.navy2, Ui.navy1],
+                ),
               ),
-            ),
-            child: Stack(
-              children: [
-                const Positioned.fill(
-                  child: IgnorePointer(
-                    child: CustomPaint(
-                      painter: BubblesPainter(
-                        seed: 3,
-                        count: 9,
-                        maxRadius: 10,
-                        alpha: 0.3,
-                      ),
-                    ),
+              child: const IgnorePointer(
+                child: CustomPaint(
+                  painter: BubblesPainter(
+                    seed: 3,
+                    count: 9,
+                    maxRadius: 10,
+                    alpha: 0.3,
                   ),
                 ),
-                SafeArea(
-                  top: false,
-                  child: SizedBox(
-                    height: height,
-                    child: Row(
-                      children: [
-                        for (var i = 0; i < tabs.length; i++)
-                          Expanded(
-                            child: _NavButton(
-                              tab: tabs[i],
-                              selected: i == selected,
-                              onTap: () => onSelect(i),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -103,6 +83,24 @@ class AnimatedBottomNav extends StatelessWidget {
           child: IgnorePointer(
             child: CustomPaint(
               painter: FoamPainter(color: Ui.bg1, edge: Color(0xFF9FD7EE)),
+            ),
+          ),
+        ),
+        SafeArea(
+          top: false,
+          child: SizedBox(
+            height: height,
+            child: Row(
+              children: [
+                for (var i = 0; i < tabs.length; i++)
+                  Expanded(
+                    child: _NavButton(
+                      tab: tabs[i],
+                      selected: i == selected,
+                      onTap: () => onSelect(i),
+                    ),
+                  ),
+              ],
             ),
           ),
         ),

@@ -9,6 +9,7 @@ class MenuBackdrop extends StatelessWidget {
     super.key,
     required this.child,
     this.image,
+    this.fallbackImage,
     this.opacity = 0.2,
   });
 
@@ -16,6 +17,9 @@ class MenuBackdrop extends StatelessWidget {
 
   /// Ruta del asset (por ejemplo `assets/art/bg_cuarto_lavado.jpg`).
   final String? image;
+
+  /// Se usa si [image] todavía no existe en los assets.
+  final String? fallbackImage;
   final double opacity;
 
   @override
@@ -29,7 +33,13 @@ class MenuBackdrop extends StatelessWidget {
               child: Image.asset(
                 image!,
                 fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                errorBuilder: (_, _, _) => fallbackImage == null
+                    ? const SizedBox.shrink()
+                    : Image.asset(
+                        fallbackImage!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                      ),
               ),
             ),
           ),
