@@ -100,12 +100,12 @@ class BoostConfig {
 /// se consume solo, hasta un máximo. El bono se suma al del boost de anuncios.
 class WasherConfig {
   const WasherConfig({
-    this.tapBonus = 0.01,
+    this.tapBonus = 0.02,
     this.maxBonus = 1.0,
-    this.decayPerSecond = 0.03,
+    this.decayPerSecond = 0.015,
   });
 
-  /// Bono que suma cada toque (0.01 = +1%).
+  /// Bono que suma cada toque (0.02 = +2%).
   final double tapBonus;
 
   /// Bono máximo acumulable (1.0 = +100%, es decir x2).

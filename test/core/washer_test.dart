@@ -29,8 +29,8 @@ void main() {
   }
 
   group('configuración', () {
-    test('la lavadora trae valores por defecto: +1% por toque, máx +100%', () {
-      expect(config.washer.tapBonus, 0.01);
+    test('la lavadora trae valores por defecto: +2% por toque, máx +100%', () {
+      expect(config.washer.tapBonus, 0.02);
       expect(config.washer.maxBonus, 1.0);
       expect(config.washer.decayPerSecond, greaterThan(0));
     });
@@ -38,7 +38,7 @@ void main() {
     test('sin sección "washer" usa los valores por defecto', () {
       final j = jsonDecode(source) as Map<String, dynamic>..remove('washer');
       final c = EconomyConfig.fromJson(j);
-      expect(c.washer.tapBonus, 0.01);
+      expect(c.washer.tapBonus, 0.02);
     });
 
     test('valores inválidos se rechazan', () {
@@ -57,12 +57,24 @@ void main() {
     });
   });
 
+  group('factor en vivo', () {
+    test('liveFactor suma boost de anuncio y lavadora, igual que tick', () {
+      final eco = Economy(config);
+      final s = eco.newGame();
+      expect(eco.liveFactor(s), 1);
+      eco.tapWasher(s);
+      expect(eco.liveFactor(s), closeTo(1.02, 1e-9));
+      s.boostSeconds = 100;
+      expect(eco.liveFactor(s), closeTo(2.02, 1e-9));
+    });
+  });
+
   group('toques', () {
     test('cada toque suma su bono y se detiene en el máximo', () {
       final eco = Economy(config);
       final s = eco.newGame();
       eco.tapWasher(s);
-      expect(s.washerBonus, closeTo(0.01, 1e-9));
+      expect(s.washerBonus, closeTo(0.02, 1e-9));
       for (var i = 0; i < 500; i++) {
         eco.tapWasher(s);
       }
@@ -84,10 +96,10 @@ void main() {
       final eco = Economy(config);
       final s = eco.newGame();
       s.hilvanes = BigNum.fromInt(100000);
-      expect(eco.washerTapBonus(s), 0.01);
+      expect(eco.washerTapBonus(s), 0.02);
       expect(eco.washerMaxBonus(s), 1.0);
       expect(eco.buyShop(s, 'pulso'), isTrue);
-      expect(eco.washerTapBonus(s), closeTo(0.015, 1e-9));
+      expect(eco.washerTapBonus(s), closeTo(0.03, 1e-9));
       expect(eco.buyShop(s, 'tanque'), isTrue);
       expect(eco.washerMaxBonus(s), closeTo(1.5, 1e-9));
       for (var i = 0; i < 500; i++) {

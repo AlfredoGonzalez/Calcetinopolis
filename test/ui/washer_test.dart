@@ -48,14 +48,14 @@ void main() {
     expect(find.byKey(const Key('washer-chip')), findsNothing);
   });
 
-  testWidgets('cada toque suma 1% y el encabezado lo muestra', (t) async {
+  testWidgets('cada toque suma 2% y el encabezado lo muestra', (t) async {
     final c = await open(t);
     for (var i = 0; i < 12; i++) {
       await t.tap(find.byKey(const Key('washer')));
       await t.pump(const Duration(milliseconds: 20));
     }
-    expect(c.washerBonus, closeTo(0.12, 1e-9));
-    expect(bonusText(t), '+12%');
+    expect(c.washerBonus, closeTo(0.24, 1e-9));
+    expect(bonusText(t), '+24%');
     expect(find.byKey(const Key('washer-chip')), findsOneWidget);
     expect(
       t.widget<Text>(find.byKey(const Key('washer-hint'))).data,
@@ -99,11 +99,27 @@ void main() {
     expect(bar.widthFactor, 1);
   });
 
+  testWidgets('los pelusas/seg del encabezado suben con el bono', (t) async {
+    final c = await open(t);
+    c.state.businesses[0]
+      ..owned = 5
+      ..hasManager = true;
+    c.advance(0);
+    await t.pump();
+    final before = t.widget<Text>(find.byKey(const Key('income-rate'))).data!;
+    for (var i = 0; i < 10; i++) {
+      await t.tap(find.byKey(const Key('washer')));
+      await t.pump(const Duration(milliseconds: 20));
+    }
+    final after = t.widget<Text>(find.byKey(const Key('income-rate'))).data!;
+    expect(after, isNot(before));
+  });
+
   testWidgets('con reducir animaciones también suma, sin rebote', (t) async {
     final c = await open(t, reduce: true);
     await t.tap(find.byKey(const Key('washer')));
     await t.pump();
-    expect(c.washerBonus, closeTo(0.01, 1e-9));
+    expect(c.washerBonus, closeTo(0.02, 1e-9));
   });
 
   testWidgets('los botones de la derecha no se mueven cuando suben los bonos', (

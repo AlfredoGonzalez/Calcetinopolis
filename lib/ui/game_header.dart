@@ -28,7 +28,9 @@ class GameHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = controller;
     final f = c.formatter;
-    final rate = c.economy.managedIncomePerSecond(c.state);
+    final rate = c.economy
+        .managedIncomePerSecond(c.state)
+        .mulDouble(c.economy.liveFactor(c.state));
     return Container(
       padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top),
       decoration: const BoxDecoration(

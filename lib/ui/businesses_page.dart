@@ -336,7 +336,7 @@ class BusinessCard extends StatelessWidget {
                                     ? '${formatter.format(eco.incomePerSecond(c.state, index))}/s'
                                     : '${formatter.format(income)} por ciclo',
                                 if (toNext != null && owned)
-                                  'faltan $toNext p/ x2',
+                                  'con $toNext más, el doble de rápido',
                               ].join(' · '),
                               key: Key('income-$index'),
                               maxLines: 2,
@@ -486,16 +486,18 @@ class _ManagerSlot extends StatelessWidget {
                     ),
                 ],
               ),
-              if (!hired && owned)
+              if (!hired)
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
                   child: Text(
                     formatter.format(cfg.manager.cost),
                     key: Key('manager-cost-$index'),
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
-                      color: affordable ? Ui.tealEdge : Ui.ink2,
+                      color: affordable
+                          ? Ui.tealEdge
+                          : Ui.ink2.withValues(alpha: owned ? 1 : 0.6),
                     ),
                   ),
                 ),

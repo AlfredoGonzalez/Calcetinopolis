@@ -188,6 +188,13 @@ class Economy {
     s.washerBonus = washerEnd;
   }
 
+  /// Factor de velocidad de ahora mismo: 1 + boost de anuncio + lavadora.
+  /// Es el mismo que usa [tick], para que lo que se ve coincida con lo que se gana.
+  double liveFactor(GameState s) =>
+      1 +
+      (s.boostSeconds > 0 ? config.boost.multiplier - 1 : 0) +
+      s.washerBonus;
+
   // ------------------------------------------------------------ lavadora
 
   /// Lo que suma cada toque a la lavadora (la mejora de la tienda, si la hay).
@@ -330,6 +337,13 @@ class Economy {
     final d = pairsTotal(s) - s.pairsClaimed;
     return d.isPositive ? d : BigNum.zero;
   }
+
+  /// E_vida necesaria para tener [pairs] parejas en total.
+  BigNum lifetimeForPairs(BigNum pairs) => Formulas.lifetimeForPairs(
+    pairs,
+    config.prestige.scale,
+    base: config.prestige.base,
+  );
 
   /// "Buen momento": por cobrar >= actuales (y hay algo por cobrar).
   bool isGoodTimeToPrestige(GameState s) {
