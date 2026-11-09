@@ -289,7 +289,10 @@ def main():
             a, c = key_image(np.asarray(im).astype(np.float32))
             crop_square(to_rgba(a, c)).resize((256, 256), Image.LANCZOS).save(out / f'{name}.png', optimize=True)
         elif name.startswith('bg_'):
-            if is_magenta_corner(im):
+            if name == 'bg_nav_espuma':
+                # La generación deja una franja azul de ~9 px abajo: se corta.
+                im = im.crop((0, 0, im.width, im.height - 9))
+            if name == 'bg_nav_espuma' or is_magenta_corner(im):
                 a, c = key_image(np.asarray(im).astype(np.float32), drop_edge=False)
                 to_rgba(a, c).save(out / f'{name}.png', optimize=True)
             else:
