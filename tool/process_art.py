@@ -15,6 +15,7 @@ Reglas por nombre de archivo:
                          deben conservar el mismo encuadre y escala entre sí)
   ui_*                -> PNG 256x256 transparente, recortado al contenido
   logo_*.png          -> PNG transparente recortado al contenido, máx. 768 px
+  bg_biz_*            -> JPG opaco de máx. 400 px de ancho (fondo de la tarjeta del negocio)
   bg_*                -> si las esquinas son magenta, PNG transparente (overlay);
                          si no, JPG opaco (fondos de pantalla)
   store_*             -> se omite (gráficos de Google Play: no van dentro de la app)
@@ -292,6 +293,9 @@ def main():
                 a, c = key_image(np.asarray(im).astype(np.float32), drop_edge=False)
                 to_rgba(a, c).save(out / f'{name}.png', optimize=True)
             else:
+                if name.startswith('bg_biz_') and im.width > 400:
+                    # Fondos de las tarjetas de negocio: se ven a ~112 dp de ancho.
+                    im = im.resize((400, round(im.height * 400 / im.width)), Image.LANCZOS)
                 im.save(out / f'{name}.jpg', quality=88, optimize=True)
         else:
             print('omitido:', f.name)

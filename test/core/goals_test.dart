@@ -95,7 +95,7 @@ void main() {
     test('lo cobrado sobrevive al Centrifugado', () {
       s.businesses[0].hasManager = true;
       eco.claimGoal(s, 'first_manager');
-      s.lifetimeEarnings = n('1e14');
+      s.lifetimeEarnings = n('1e13');
       eco.prestige(s);
       expect(s.goalsClaimed, contains('first_manager'));
       expect(eco.canClaimGoal(s, 'first_manager'), isFalse);

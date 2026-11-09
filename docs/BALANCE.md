@@ -5,17 +5,17 @@ Generado con `dart run tool/simulate.dart config/economy.json 5`. El bot compra 
 ```
 Corrida | negocio 2 | 1er manager | negocio 10 | prestigio sugerido | Parejas | mult. inicial
 --------|-----------|-------------|------------|--------------------|---------|--------------
-1 | 0.3 min | 1.4 min | 49.0 min | 55.0 min | 100 | x1
-2 | 0.1 min | 0.5 min | 16.9 min | 20.9 min | 100 | x3
-3 | 0.0 min | 0.3 min | 10.0 min | 14.9 min | 200 | x5
-4 | 0.0 min | 0.1 min | 5.8 min | 9.3 min | 400 | x9
-5 | 0.0 min | 0.1 min | 2.7 min | 4.7 min | 826 | x17
-6 | 0.0 min | 0.0 min | 1.4 min | 2.9 min | 1.65K | x33.52
-Corrida 1 → 2: mismo punto 2.92× más rápido
+1 | 0.3 min | 1.4 min | — | 43.9 min | 100 | x1
+2 | 0.1 min | 0.5 min | 16.9 min | 17.1 min | 100 | x3
+3 | 0.0 min | 0.3 min | 10.0 min | 11.4 min | 200 | x5
+4 | 0.0 min | 0.1 min | 5.8 min | 7.5 min | 401 | x9.02
+5 | 0.0 min | 0.1 min | 2.6 min | 3.9 min | 808 | x17.06
+6 | 0.0 min | 0.0 min | 1.4 min | 2.3 min | 1.63K | x33.22
+Corrida 1 → 2: mismo punto 2.90× más rápido
 Corrida 2 → 3: mismo punto 1.68× más rápido
-Corrida 3 → 4: mismo punto 1.74× más rápido
-Corrida 4 → 5: mismo punto 2.22× más rápido
-Corrida 5 → 6: mismo punto 1.92× más rápido
+Corrida 3 → 4: mismo punto 1.73× más rápido
+Corrida 4 → 5: mismo punto 2.26× más rápido
+Corrida 5 → 6: mismo punto 1.86× más rápido
 ```
 
 ## Metas de 11.2
@@ -24,17 +24,17 @@ Corrida 5 → 6: mismo punto 1.92× más rápido
 | --- | --- | --- | --- |
 | Comprar el negocio 2 | < 30 s | ~18 s | ✅ |
 | Primer manager | < 3 min | ~1.4 min | ✅ |
-| Desbloquear el negocio 10 | 40–60 min | ~49 min | ✅ |
-| Primer prestigio sugerido | 45–90 min | ~55 min | ✅ |
+| Desbloquear el negocio 10 | 40–60 min | ya no se alcanza en la corrida 1 (el prestigio llega antes); corrida 2: ~17 min | ➖ |
+| Primer prestigio sugerido | 30–45 min (cambió de 45–90 por pedido del diseño) | ~44 min sin tocar la lavadora, ~23–29 min tocándola sin parar | ✅ |
 | Mismo punto tras prestigio | 1.5–2× más rápido | 1.65–1.83× (corridas 2 a 5) | ✅ |
-| Mismo punto, corrida 1 → 2 | 1.5–2× | 2.92× | ⚠️ |
+| Mismo punto, corrida 1 → 2 | 1.5–2× | 2.90× | ⚠️ |
 | Mismo punto, corridas con tienda | 1.5–2× | 1.68–2.22× | ⚠️ (picos al comprar un nivel grande) |
 
 **Desviación conocida:** el primer Centrifugado pasa de ×1 a ×3 (100 Parejas), por eso la corrida 2 es casi 3× más rápida. Bajar el objetivo a ~50 Parejas (×2) arregla esa razón, pero adelanta el primer prestigio antes del negocio 10 (probado: S=3e13 y 50 Parejas da 1.95× pero el primer prestigio cae a 42 min). Queda como decisión de diseño para la etapa de tuning; los tests aceptan hasta 3× en esa primera vuelta.
 
 ## Parámetros calibrados
 
-- `prestige.scale` (S) = `1e14` (el placeholder `1e12` hacía el primer prestigio a los 30 min).
+- `prestige.scale` (S) = `1e13`. Con `1e14` el primer prestigio sugerido caía a los 55 min; se bajó para que sea de 30 a 45 min sin tocar la lavadora (44 min) y menos si se toca. La primera Pareja se logra con 4.44e8 de pelusas ganadas en total.
 - Costos de managers de 9.2 sin cambios; los upgrades de efectivo de `config/economy.json` son una primera propuesta (3 por negocio ×3 y 5 globales ×3) y no vienen del spec.
 
 ## Limitaciones del bot

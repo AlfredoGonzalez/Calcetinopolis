@@ -224,6 +224,16 @@ class BusinessCard extends StatelessWidget {
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
+                          // Fondo ilustrado del negocio (bg_<arte>.jpg), si ya existe.
+                          Positioned.fill(
+                            child: Image.asset(
+                              'assets/art/bg_${cfg.art}.jpg',
+                              fit: BoxFit.cover,
+                              cacheWidth: 336,
+                              errorBuilder: (_, _, _) =>
+                                  const SizedBox.shrink(),
+                            ),
+                          ),
                           WorkingBob(
                             active:
                                 owned && !fast && (b.running || b.hasManager),

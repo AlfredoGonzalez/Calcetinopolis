@@ -10,6 +10,8 @@ La mascota (reposo, salto, celebra), el Centrifugado, los tres sprites de la mas
 | --- | --- | --- | --- | --- |
 | 1 | Sprites de los managers o de los negocios | AutoSprite | Mejoras y pantalla de Negocios | Baja |
 | 2 | Retoques de lo entregado | Regenerar | Ver sección 6 | Baja |
+| 3 | Fondos de las 10 tarjetas de negocio | Imagen (sin magenta) | Panel izquierdo de cada tarjeta en Negocios | Media |
+| 4 | Fondo de la barra inferior (opcional) | Imagen | Hoy es espuma y burbujas dibujadas en código | Baja |
 
 Los prompts base (bloques A, B y C) siguen abajo por si regeneras algo.
 
@@ -66,6 +68,43 @@ Flat 2D illustration, cute children's storybook style with a subtle knitted wool
 
 - `anim_centrifugado_calcetin_der` mira hacia la **derecha** igual que el izquierdo (el prompt pedía que mirara a la izquierda) y no trae los rombos pedidos, solo parches cosidos. Lo volteo en código y sirve. Los rombos son opcionales. Los braquets de la boca son intencionales.
 - `mascota_*` y `anim_centrifugado_calcetin_*` llevan un parche amarillo en la punta: es un detalle distinto al calcetín de los negocios. Si quieres un solo diseño, hay que elegir uno.
+
+## 7. Fondos de las tarjetas de negocio
+
+El panel izquierdo de cada tarjeta mide ~112×170 dp (vertical). Hoy lleva un color pastel liso. Si subes `bg_biz_XX_nombre.jpg` a `assets/art/source/`, `tool/process_art.py` lo reduce a 400 px de ancho y el juego lo usa solo (sin tocar código). Si falta, queda el color pastel.
+
+Reglas: **vertical 2:3 (1024×1536)**, **sin fondo magenta** (esta vez la imagen es el fondo completo, opaca), sin personajes, sin texto, sin el objeto del negocio (el negocio se dibuja encima, centrado). Deja libre el centro y la mitad baja. Colores más saturados que el pastel de hoy, pero suaves y con poco contraste, para que el negocio resalte. Nombres: `bg_biz_01_tendedero`, `bg_biz_02_cesto`, `bg_biz_03_sofa`, `bg_biz_04_burbujas`, `bg_biz_05_secadora`, `bg_biz_06_cajon`, `bg_biz_07_taller`, `bg_biz_08_fabrica`, `bg_biz_09_tren`, `bg_biz_10_portal`.
+
+Pega primero el bloque A (estilo) y después el bloque base y la escena de cada negocio:
+
+```text
+Vertical 2:3 background illustration for a mobile game card, full bleed, opaque, no magenta. Flat 2D cute children's storybook style with a subtle knitted wool texture, warm brown outlines only on small details, soft vertical gradient, gentle depth with 2 or 3 blurred layers. Keep the center and the lower half mostly empty and calm so a character sprite can sit on top. No characters, no sock, no building or machine in the middle, no text, no letters, no numbers, no frame, no vignette. Palette saturated but soft.
+```
+
+Escenas (una por imagen, se agregan al bloque base):
+
+| # | Escena |
+| --- | --- |
+| 01 Tendedero | Sunny laundry-yard sky: soft blue to peach gradient, tiny clouds, a far-away clothesline thread crossing the top, a few floating lint puffs and bubbles. |
+| 02 Cesto | A cozy dim laundry room corner: mint wall with subtle wallpaper pattern, a warm wooden floor line at the bottom, a small window light beam, scattered tiny lint. |
+| 03 Sofá | The dusty shadow under a sofa: lavender and plum dark-ish gradient, soft dust bunnies and sparkles in a thin light ray, a hint of wooden floor at the bottom. |
+| 04 Burbujas | Underwater-like soap scene: aqua to mint gradient, many bubbles of different sizes in the corners and edges, light caustics, no foam in the center. |
+| 05 Secadora | Warm laundromat wall: butter yellow and orange gradient, soft heat shimmer lines rising, a faint row of round tiles, little sparkles. |
+| 06 Cajón | The inside of a wooden drawer seen from the front: soft cream and tan wood-grain walls, a subtle vertical divider shadow at the edges, tiny knitted heart pattern at the borders. |
+| 07 Taller | Cozy sewing workshop wall: pink and cream striped wallpaper, a tiny out-of-focus shelf with thread spools at the top corners, floating threads and stitches in the air. |
+| 08 Fábrica | Wool factory interior: blue-gray gradient with soft rows of tiny round windows far away, drifting colorful yarn threads, gentle steam, a floor line at the bottom. |
+| 09 Tren | Evening sky with a long clothesline rail across the lower third: orange to lavender sunset gradient, tiny stars, a few bunting flags at the top. |
+| 10 Portal | Magical swirling lavender and mint spiral glow radiating from the center, stars and sparkles, soft nebula of bubbles, still readable and calm in the center. |
+
+## 8. Fondo de la barra inferior (opcional)
+
+Hoy la barra es azul marino con espuma y burbujas dibujadas en código. Si quieres una imagen propia (una orilla de espuma o una pila de burbujas), con **fondo magenta liso** (#FF00FF) y panorámica:
+
+```text
+Horizontal strip 1024x192, a row of soap bubbles and white foam forming a wavy scalloped top edge, light blue outlines, tiny sparkles, flat 2D cute storybook style with subtle wool texture, solid flat magenta background #FF00FF, no ground shadow, no text. The bottom 40% of the strip is solid cream foam so it can blend into a dark blue bar.
+```
+
+Sube el archivo como `bg_nav_espuma.png` y avísame; hoy el borde es código y se ve bien sin esto.
 
 ## Lo que hago yo sin arte nuevo
 

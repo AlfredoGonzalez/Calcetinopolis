@@ -309,6 +309,22 @@ void main() {
     expect(c.state.money, gain.mulDouble(2));
   });
 
+  group('contadores del encabezado', () {
+    testWidgets('los Botones Dorados llevan a la tienda', (t) async {
+      await pumpApp(t);
+      await t.tap(find.byKey(const Key('gold-top')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('gold-balance')), findsWidgets);
+    });
+
+    testWidgets('las Parejas llevan al Centrifugado', (t) async {
+      await pumpApp(t);
+      await t.tap(find.byKey(const Key('pairs-top')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('centrifuge')), findsOneWidget);
+    });
+  });
+
   group('Centrifugado', () {
     Future<void> openTab(WidgetTester t) async {
       await pumpApp(t);
@@ -328,9 +344,9 @@ void main() {
 
     testWidgets('dice cuánto falta para la primera pareja', (t) async {
       await openTab(t);
-      // P = 150 * sqrt(E / 1e14) >= 1  =>  E >= 4.44e9 pelusas en total.
+      // P = 150 * sqrt(E / 1e13) >= 1  =>  E >= 4.44e8 pelusas en total.
       expect(find.textContaining('tu primera pareja'), findsOneWidget);
-      expect(find.textContaining('4.44'), findsOneWidget);
+      expect(find.textContaining('444'), findsOneWidget);
       expect(
         t
             .widget<LinearProgressIndicator>(
@@ -339,7 +355,7 @@ void main() {
             .value,
         0,
       );
-      c.state.lifetimeEarnings = BigNum.parse('2.22e9');
+      c.state.lifetimeEarnings = BigNum.parse('2.22e8');
       c.advance(0);
       await t.pump();
       expect(
@@ -354,7 +370,7 @@ void main() {
 
     testWidgets('muestra antes y después, y buen momento', (t) async {
       await openTab(t);
-      c.state.lifetimeEarnings = BigNum.parse('1e14');
+      c.state.lifetimeEarnings = BigNum.parse('1e13');
       c.advance(0);
       await t.pump();
       expect(
@@ -368,7 +384,7 @@ void main() {
 
     testWidgets('cancelar no cambia nada', (t) async {
       await openTab(t);
-      c.state.lifetimeEarnings = BigNum.parse('1e14');
+      c.state.lifetimeEarnings = BigNum.parse('1e13');
       c.state.money = BigNum.fromInt(500);
       c.advance(0);
       await t.pump();
@@ -386,7 +402,7 @@ void main() {
       t,
     ) async {
       await openTab(t);
-      c.state.lifetimeEarnings = BigNum.parse('1e14');
+      c.state.lifetimeEarnings = BigNum.parse('1e13');
       c.state.money = BigNum.fromInt(500);
       c.advance(0);
       await t.pump();
@@ -414,7 +430,7 @@ void main() {
 
     testWidgets('la animación termina sola en 3.5 s', (t) async {
       await openTab(t);
-      c.state.lifetimeEarnings = BigNum.parse('1e14');
+      c.state.lifetimeEarnings = BigNum.parse('1e13');
       c.advance(0);
       await t.pump();
       await t.tap(find.byKey(const Key('centrifuge')));

@@ -292,24 +292,26 @@ class PrestigePage extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        const Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: _InfoCard(
-                title: 'Se reinicia',
-                body: 'Pelusas, negocios, managers y upgrades.',
+        // Las dos tarjetas miden lo mismo aunque el texto sea distinto.
+        const IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _InfoCard(
+                  title: 'Se reinicia',
+                  body: 'Pelusas, negocios, managers y upgrades.',
+                ),
               ),
-            ),
-            SizedBox(width: 10),
-            Expanded(
-              child: _InfoCard(
-                title: 'Te quedas con',
-                body:
-                    'Botones, parejas, Hilvanes, metas y compras de la Tienda.',
+              SizedBox(width: 10),
+              Expanded(
+                child: _InfoCard(
+                  title: 'Te quedas con',
+                  body: 'Botones, parejas, Hilvanes, metas y compras de la Tienda.',
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: 18),
         Row(
@@ -526,14 +528,20 @@ class _LossGain extends StatelessWidget {
   final Color color;
   final IconData icon;
 
+  static const _minHeight = 112.0;
+
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
+      // Las dos tarjetas miden lo mismo aunque el texto sea distinto.
+      constraints: const BoxConstraints(minHeight: _minHeight),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(18),
       ),
+      alignment: Alignment.centerLeft,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
