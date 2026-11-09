@@ -35,14 +35,24 @@ class PrestigePage extends StatelessWidget {
     final good = eco.isGoodTimeToPrestige(s);
 
     final claimed = s.pairsClaimed;
-    // Progreso hacia "buen momento": que lo por cobrar iguale lo que ya tienes.
-    final double goal = claimed.isPositive
-        ? (pending / claimed).toDouble().clamp(0.0, 1.0)
-        : (pending.isPositive ? 1.0 : 0.0);
-    final goalText = !pending.isPositive
-        ? 'Aún no hay parejas por cobrar: sigue produciendo.'
+    // Sin parejas por cobrar: el progreso es lo ganado en total contra lo que
+    // pide la primera pareja (o la siguiente). Con parejas por cobrar: contra
+    // el "buen momento" (que lo por cobrar iguale lo que ya tienes).
+    final lifetime = s.lifetimeEarnings;
+    final nextTarget = eco.lifetimeForPairs(claimed + BigNum.one);
+    final double goal = !pending.isPositive
+        ? (lifetime / nextTarget).toDouble().clamp(0.0, 1.0)
         : claimed.isPositive
-        ? '${formatter.format(pending)} por cobrar de ${formatter.format(claimed)} para un buen momento'
+        ? (pending / claimed).toDouble().clamp(0.0, 1.0)
+        : 1.0;
+    final goodAt = eco.lifetimeForPairs(claimed + claimed);
+    final goalText = !pending.isPositive
+        ? 'Para ${claimed.isPositive ? 'una pareja más' : 'tu primera pareja'} '
+              'necesitas ganar ${formatter.format(nextTarget)} pelusas en total. '
+              'Llevas ${formatter.format(lifetime)}.'
+        : claimed.isPositive
+        ? '${formatter.format(pending)} por cobrar de ${formatter.format(claimed)} para un buen momento. '
+              'Llegas a ${formatter.format(goodAt)} pelusas ganadas en total.'
         : 'Ya puedes ganar tus primeras parejas';
 
     return ListView(

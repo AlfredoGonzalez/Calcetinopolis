@@ -438,9 +438,9 @@
     "max_hours": 12
   },
   "washer": {
-    "tap_bonus": 0.01,
+    "tap_bonus": 0.02,
     "max_bonus": 1.0,
-    "decay_per_second": 0.03
+    "decay_per_second": 0.015
   },
   "prestige_shop": [
     {
@@ -547,19 +547,19 @@
       "levels": [
         {
           "cost": 300,
-          "value": 0.015
-        },
-        {
-          "cost": 900,
-          "value": 0.02
-        },
-        {
-          "cost": 2700,
           "value": 0.03
         },
         {
+          "cost": 900,
+          "value": 0.04
+        },
+        {
+          "cost": 2700,
+          "value": 0.06
+        },
+        {
           "cost": 8000,
-          "value": 0.05
+          "value": 0.09
         }
       ],
       "art": "anim_centrifugado_lavadora"

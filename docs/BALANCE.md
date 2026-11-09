@@ -57,9 +57,9 @@ Con costos bajos la tienda aceleraba las corridas hasta 4.4× (y 3× en vueltas 
 
 Un bono temporal de velocidad que da el jugador activo; no cambia la economía de quien no la toca.
 
-- **Mecánica:** cada toque suma `tap_bonus` (+1%) hasta `max_bonus` (+100%, es decir x2). El bono baja `decay_per_second` (3% por segundo) desde el momento en que se deja de tocar. No se guarda ni cuenta en las ganancias offline.
+- **Mecánica:** cada toque suma `tap_bonus` (+2%) hasta `max_bonus` (+100%, es decir x2). El bono baja `decay_per_second` (1.5% por segundo) desde el momento en que se deja de tocar. No se guarda ni cuenta en las ganancias offline.
 - **Se suma al boost de anuncios**, no se multiplica: boost x2 (+100%) con la lavadora al máximo (+100%) da x3, no x4.
-- **Mejoras con Hilvanes** (`config/economy.json`, `prestige_shop`): *Toque potente* (`tap_power`: 1.5%, 2%, 3%, 5% por toque) y *Tanque de energía* (`washer_max`: +150%, +200%, +300%, +400%).
+- **Mejoras con Hilvanes** (`config/economy.json`, `prestige_shop`): *Toque potente* (`tap_power`: 3%, 4%, 6%, 9% por toque) y *Tanque de energía* (`washer_max`: +150%, +200%, +300%, +400%).
 - **Parámetros** en `config/economy.json` → `washer`. Para afinarlos sin tocar código: `decay_per_second` es el más sensible.
 
 ### Calibración con el simulador
@@ -69,9 +69,10 @@ El bot base no toca la lavadora, así que la calibración anterior no cambió: p
 | Toques por segundo | Primer Centrifugado (corridas 1 / 2 / 3, min) |
 | --- | --- |
 | 0 | 55.0 / 20.9 / 14.9 |
-| 2 | 54.5 / 20.6 / 14.8 |
-| 4 | 28.5 / 10.6 / 7.8 |
-| 6 | 28.3 / 10.6 / 7.8 |
-| 8 | 28.3 / 10.6 / 7.8 |
+| 0.5 | 54.5 / 20.7 / 14.8 |
+| 0.75 | 54.1 / 20.6 / 14.8 |
+| 1 | 28.9 / 10.6 / 7.8 |
+| 2 | 28.2 / 10.6 / 7.8 |
+| 4 | 28.2 / 10.6 / 7.8 |
 
-Lectura: con un descenso de 3%/s hace falta tocar **más de 3 veces por segundo** para mantener el bono; por debajo se consume más rápido de lo que se llena y casi no ayuda, y por encima se queda cerca del máximo y casi duplica la velocidad. Es un caso extremo (tocar sin parar durante una hora). Si resulta demasiado, subir `decay_per_second` o bajar `max_bonus`; si resulta difícil mantenerlo, bajar `decay_per_second`.
+Lectura: cada toque suma 2% y el bono baja 1.5% por segundo, así que con **1 toque por segundo o más** el bono llega al máximo (x2) y se mantiene; a 0.75 se compensan exactamente y por debajo casi no ayuda. Subió de 3% a 1.5% de descenso (y de 1% a 2% por toque) porque en pruebas reales casi no se lograba subir el porcentaje. Es un caso extremo (tocar sin parar durante una hora). Si resulta demasiado, subir `decay_per_second` o bajar `max_bonus`; si resulta difícil mantenerlo, bajar `decay_per_second`.

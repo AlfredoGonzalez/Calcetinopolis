@@ -111,6 +111,19 @@ void main() {
   });
 
   group('manager en la tarjeta', () {
+    testWidgets('el precio del manager se ve aunque el negocio no se tenga', (
+      t,
+    ) async {
+      await pumpApp(t);
+      c.state.tutorialDone = true;
+      await t.scrollUntilVisible(
+        find.byKey(const Key('manager-cost-1')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.byKey(const Key('manager-cost-1')), findsOneWidget);
+    });
+
     testWidgets('sin contratar es una silueta; se toca para contratarlo', (
       t,
     ) async {
@@ -311,6 +324,32 @@ void main() {
       );
       expect(find.byKey(const Key('good-time')), findsNothing);
       expect(t.widget<Text>(find.byKey(const Key('pairs-pending'))).data, '+0');
+    });
+
+    testWidgets('dice cuánto falta para la primera pareja', (t) async {
+      await openTab(t);
+      // P = 150 * sqrt(E / 1e14) >= 1  =>  E >= 4.44e9 pelusas en total.
+      expect(find.textContaining('tu primera pareja'), findsOneWidget);
+      expect(find.textContaining('4.44'), findsOneWidget);
+      expect(
+        t
+            .widget<LinearProgressIndicator>(
+              find.byKey(const Key('prestige-goal')),
+            )
+            .value,
+        0,
+      );
+      c.state.lifetimeEarnings = BigNum.parse('2.22e9');
+      c.advance(0);
+      await t.pump();
+      expect(
+        t
+            .widget<LinearProgressIndicator>(
+              find.byKey(const Key('prestige-goal')),
+            )
+            .value,
+        closeTo(0.5, 0.01),
+      );
     });
 
     testWidgets('muestra antes y después, y buen momento', (t) async {
